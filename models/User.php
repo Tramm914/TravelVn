@@ -1,0 +1,185 @@
+<?php
+class User
+{
+
+    private $conn;
+
+    public function __construct($db)
+    {
+        $this->conn = $db;
+    }
+
+    // ================= CHECK EMAIL =================
+    public function emailExists($email, $excludeId = null)
+    {
+        $sql = "SELECT user_id FROM users WHERE email = ?";
+        $params = [$email];
+
+        if ($excludeId) {
+            $sql .= " AND user_id != ?";
+            $params[] = $excludeId;
+        }
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->rowCount() > 0;
+    }
+
+    // ================= REGISTER =================
+    public function register($name, $email, $password, $phone)
+    {
+
+        if ($this->emailExists($email)) {
+            return false;
+        }
+
+        $hash = password_hash($password, PASSWORD_BCRYPT);
+
+        $stmt = $this->conn->prepare("
+            INSERT INTO users(full_name,email,phone,password,role,status)
+            VALUES(?,?,?,?, 'customer','active')
+        ");
+
+        return $stmt->execute([$name, $email, $phone, $hash]);
+    }
+
+    // ================= LOGIN =================
+    public function login($email)
+    {
+
+        $stmt = $this->conn->prepare("
+            SELECT user_id, full_name, email, password, role, status 
+            FROM users WHERE email = ?
+        ");
+        $stmt->execute([$email]);
+
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user) {
+            if ($user['status'] != 'active')
+                return 'locked';
+            return $user;
+        }
+
+        return false;
+    }
+
+    // ================= GET ALL USERS =================
+    public function getAllUsers()
+    {
+        return $this->conn->query("SELECT * FROM users ORDER BY created_at DESC")
+            ->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // ================= GET USER BY ID =================
+    public function getUserById($id)
+    {
+        $stmt = $this->conn->prepare("SELECT * FROM users WHERE user_id=?");
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // ================= CREATE USER (ADMIN) =================
+    public function createUser($data)
+    {
+
+        if ($this->emailExists($data['email'])) {
+            return false;
+        }
+
+        $hash = password_hash($data['password'], PASSWORD_BCRYPT);
+
+        $stmt = $this->conn->prepare("
+            INSERT INTO users(full_name,email,phone,password,role,status)
+            VALUES(?,?,?,?,?, 'active')
+        ");
+
+        return $stmt->execute([
+            $data['full_name'],
+            $data['email'],
+            $data['phone'],
+            $hash,
+            $data['role']
+        ]);
+    }
+
+    // ================= UPDATE USER =================
+    public function updateUser($id, $data)
+    {
+
+        if ($this->emailExists($data['email'], $id)) {
+            return false;
+        }
+
+        $stmt = $this->conn->prepare("
+            UPDATE users 
+            SET full_name=?, email=?, phone=?, role=? 
+            WHERE user_id=?
+        ");
+
+        return $stmt->execute([
+            $data['full_name'],
+            $data['email'],
+            $data['phone'],
+            $data['role'],
+            $id
+        ]);
+    }
+
+   // ================= DELETE USER =================
+public function deleteUser($id)
+{
+    // 👉 kiểm tra booking
+    $stmt = $this->conn->prepare("
+        SELECT COUNT(*) as total FROM bookings WHERE user_id = ?
+    ");
+    $stmt->execute([$id]);
+    $hasBooking = $stmt->fetch()['total'];
+
+    // ❗ Nếu có booking → KHÔNG xóa, chỉ khóa
+    if ($hasBooking > 0) {
+        return $this->conn->prepare("
+            UPDATE users SET status='locked' WHERE user_id=?
+        ")->execute([$id]);
+    }
+
+    // ❗ Không cho xóa admin cuối cùng
+    $user = $this->getUserById($id);
+
+    if ($user['role'] == 'admin') {
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*) as total FROM users WHERE role = 'admin'
+        ");
+        $stmt->execute();
+        $count = $stmt->fetch()['total'];
+
+        if ($count <= 1) {
+            return false;
+        }
+    }
+
+    return $this->conn->prepare("DELETE FROM users WHERE user_id=?")
+        ->execute([$id]);
+}
+    // ================= TOGGLE STATUS =================
+    public function toggleStatus($id)
+    {
+        return $this->conn->prepare("
+            UPDATE users SET status =
+            CASE WHEN status='active' THEN 'locked' ELSE 'active' END
+            WHERE user_id=?
+        ")->execute([$id]);
+    }
+
+    // ================= RESET PASSWORD =================
+    public function resetPassword($id)
+    {
+        $hash = password_hash("123456", PASSWORD_BCRYPT);
+
+        return $this->conn->prepare("
+            UPDATE users SET password=? WHERE user_id=?
+        ")->execute([$hash, $id]);
+    }
+}
+?>

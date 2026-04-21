@@ -1,0 +1,13 @@
+null
+
+
+{"gateway":"TPBank","transactionDate":"2026-04-21 07:57:27","accountNumber":"00000419627","subAccount":null,"code":null,"content":"PAY24","transferType":"in","description":"BankAPINotify PAY24","transferAmount":2000,"referenceCode":"665ITC1261111621","accumulated":10000,"id":52313150}
+{"gateway":"TPBank","transactionDate":"2026-04-21 07:57:27","accountNumber":"00000419627","subAccount":null,"code":null,"content":"PAY24","transferType":"in","description":"BankAPINotify PAY24","transferAmount":2000,"referenceCode":"665ITC1261111621","accumulated":10000,"id":52313150}
+UPDATED: PAY24
+{"gateway":"TPBank","transactionDate":"2026-04-21 08:03:21","accountNumber":"00000419627","subAccount":null,"code":null,"content":"PAY25","transferType":"in","description":"BankAPINotify PAY25","transferAmount":2000,"referenceCode":"665ITC1261111668","accumulated":12000,"id":52314049}
+{"gateway":"TPBank","transactionDate":"2026-04-21 08:03:21","accountNumber":"00000419627","subAccount":null,"code":null,"content":"PAY25","transferType":"in","description":"BankAPINotify PAY25","transferAmount":2000,"referenceCode":"665ITC1261111668","accumulated":12000,"id":52314049}
+UPDATED: PAY25
+{"gateway":"TPBank","transactionDate":"2026-04-21 08:11:26","accountNumber":"00000419627","subAccount":null,"code":null,"content":"PAY27","transferType":"in","description":"BankAPINotify PAY27","transferAmount":2000,"referenceCode":"665ITC1261111731","accumulated":2000,"id":52315322}
+UPDATED: PAY27
+{"gateway":"TPBank","transactionDate":"2026-04-21 08:23:28","accountNumber":"00000419627","subAccount":null,"code":null,"content":"PAY24","transferType":"in","description":"BankAPINotify PAY24","transferAmount":2000,"referenceCode":"665ITC1261111834","accumulated":4000,"id":52317474}
+UPDATED: PAY24
