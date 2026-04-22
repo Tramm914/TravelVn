@@ -215,7 +215,7 @@ include 'layouts/header.php';
 </style>
 
 <div class="hero-detail"
-    style="background-image: url('<?= !empty($detail['image']) ? '../public/uploads/' . $detail['image'] : 'https://images.unsplash.com/photo-1501785888041-af3ef285b470' ?>');">
+    style="background-image: url('<?= !empty($detail['image']) ? '/uploads/' . $detail['image'] : 'https://images.unsplash.com/photo-1501785888041-af3ef285b470' ?>');">
     <div class="container hero-content">
         <div class="location-badge">
             <i class="bi bi-geo-alt-fill me-2"></i><?= htmlspecialchars($detail['destination']); ?>

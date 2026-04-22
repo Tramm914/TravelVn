@@ -150,7 +150,7 @@
                     <p class="text-muted mb-0 fw-medium">Theo dõi tiến độ bán chỗ và phân công lịch trình.</p>
                 </div>
                 <div>
-                    <a href="../public/manager.php?action=createDeparture" class="btn btn-primary fw-bold shadow-sm rounded-pill px-4">
+                    <a href="/manager.php?action=createDeparture" class="btn btn-primary fw-bold shadow-sm rounded-pill px-4">
                         <i class="bi bi-calendar-plus me-1"></i> Thêm Lịch Mới
                     </a>
                 </div>
@@ -212,10 +212,10 @@
                             </div>
 
                             <div class="action-block">
-                                <a href="../public/manager.php?action=editDeparture&id=<?= $d['departure_id'] ?>" class="btn btn-light border text-warning rounded-circle" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;" title="Sửa">
+                                <a href="/manager.php?action=editDeparture&id=<?= $d['departure_id'] ?>" class="btn btn-light border text-warning rounded-circle" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;" title="Sửa">
                                     <i class="bi bi-pencil-fill"></i>
                                 </a>
-                                <a href="../public/manager.php?action=deleteDeparture&id=<?= $d['departure_id'] ?>" class="btn btn-light border text-danger rounded-circle" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;" title="Xóa" onclick="return confirm('Xóa lịch vận hành này?')">
+                                <a href="/manager.php?action=deleteDeparture&id=<?= $d['departure_id'] ?>" class="btn btn-light border text-danger rounded-circle" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;" title="Xóa" onclick="return confirm('Xóa lịch vận hành này?')">
                                     <i class="bi bi-trash3-fill"></i>
                                 </a>
                             </div>

@@ -446,7 +446,7 @@
                         <div class="card-body-custom">
                             <div class="row">
                                 <div class="col-lg-3 col-md-4">
-                                    <img src="<?= !empty($b['image']) ? '../public/uploads/' . $b['image'] : 'https://images.unsplash.com/photo-1501785888041-af3ef285b470' ?>"
+                                    <img src="<?= !empty($b['image']) ? '/uploads/' . $b['image'] : 'https://images.unsplash.com/photo-1501785888041-af3ef285b470' ?>"
                                         class="tour-thumbnail" alt="Tour">
                                 </div>
 

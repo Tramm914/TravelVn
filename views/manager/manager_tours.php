@@ -87,7 +87,7 @@
                     <p class="text-muted mb-0 fw-medium">Quản lý tất cả các tour du lịch hiện có trên hệ thống.</p>
                 </div>
                 <div>
-                    <a href="../public/manager.php?action=createTour" class="btn btn-primary fw-bold shadow-sm rounded-pill px-4">
+                    <a href="/manager.php?action=createTour" class="btn btn-primary fw-bold shadow-sm rounded-pill px-4">
                         <i class="bi bi-plus-lg me-1"></i> Thêm Tour Mới
                     </a>
                 </div>
@@ -117,10 +117,10 @@
                                         <td><?= htmlspecialchars($row['duration']) ?> ngày</td>
                                         <td>
                                             <div class="d-flex justify-content-center gap-2">
-                                                <a href="../public/manager.php?action=editTour&id=<?= $row['tour_id'] ?>" class="btn btn-light border btn-sm text-warning" title="Sửa tour">
+                                                <a href="/manager.php?action=editTour&id=<?= $row['tour_id'] ?>" class="btn btn-light border btn-sm text-warning" title="Sửa tour">
                                                     <i class="bi bi-pencil-square"></i>
                                                 </a>
-                                                <a href="../public/manager.php?action=deleteTour&id=<?= $row['tour_id'] ?>" class="btn btn-light border btn-sm text-danger" title="Xóa tour" onclick="return confirm('Bạn có chắc chắn muốn xóa tour này? Dữ liệu sẽ không thể khôi phục.')">
+                                                <a href="/manager.php?action=deleteTour&id=<?= $row['tour_id'] ?>" class="btn btn-light border btn-sm text-danger" title="Xóa tour" onclick="return confirm('Bạn có chắc chắn muốn xóa tour này? Dữ liệu sẽ không thể khôi phục.')">
                                                     <i class="bi bi-trash"></i>
                                                 </a>
                                             </div>

@@ -99,7 +99,7 @@
                         <h5 class="fw-bold text-primary mb-4"><i class="bi bi-wallet2 me-2"></i>Dịch vụ & Thanh toán</h5>
                         
                         <div class="d-flex gap-3 mb-4 bg-light p-2 rounded-3">
-                            <img src="<?= !empty($detail['image']) ? '../public/uploads/'.$detail['image'] : 'https://images.unsplash.com/photo-1501785888041-af3ef285b470' ?>" class="tour-img" alt="Tour">
+                            <img src="<?= !empty($detail['image']) ? '/uploads/'.$detail['image'] : 'https://images.unsplash.com/photo-1501785888041-af3ef285b470' ?>" class="tour-img" alt="Tour">
                             <div class="overflow-hidden">
                                 <h6 class="fw-bold text-truncate mb-1"><?= htmlspecialchars($detail['tour_name']) ?></h6>
                                 <p class="mb-0 text-muted small"><i class="bi bi-calendar-check"></i> Đi: <?= date('d/m/Y', strtotime($detail['start_date'])) ?></p>

@@ -77,14 +77,14 @@
                     <p class="text-muted mb-0 fw-medium">Điền thông tin chi tiết để tạo tour du lịch mới trên hệ thống.</p>
                 </div>
                 <div>
-                    <a href="../public/manager.php?action=tours" class="btn btn-outline-secondary rounded-pill fw-bold shadow-sm">
+                    <a href="/manager.php?action=tours" class="btn btn-outline-secondary rounded-pill fw-bold shadow-sm">
                         <i class="bi bi-arrow-left me-1"></i> Quay lại
                     </a>
                 </div>
             </div>
 
             <div class="admin-card">
-                <form method="POST" action="../public/manager.php?action=storeTour" enctype="multipart/form-data">
+                <form method="POST" action="/manager.php?action=storeTour" enctype="multipart/form-data">
                     
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">

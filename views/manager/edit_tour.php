@@ -85,14 +85,14 @@
                     <p class="text-muted mb-0 fw-medium">Chỉnh sửa thông tin chi tiết tour #<?= htmlspecialchars($tour['tour_id']) ?>.</p>
                 </div>
                 <div>
-                    <a href="../public/manager.php?action=tours" class="btn btn-outline-secondary rounded-pill fw-bold">
+                    <a href="/manager.php?action=tours" class="btn btn-outline-secondary rounded-pill fw-bold">
                         <i class="bi bi-arrow-left me-1"></i> Quay lại
                     </a>
                 </div>
             </div>
 
             <div class="admin-card">
-                <form method="POST" action="../public/manager.php?action=updateTour" enctype="multipart/form-data">
+                <form method="POST" action="/manager.php?action=updateTour" enctype="multipart/form-data">
                     
                     <input type="hidden" name="tour_id" value="<?= htmlspecialchars($tour['tour_id']) ?>">
 
@@ -163,7 +163,7 @@
                         <div class="current-image-box mb-3 shadow-sm">
                             <p class="text-muted small fw-bold mb-2">Ảnh đang sử dụng:</p>
                             <?php if (!empty($tour['image'])): ?>
-                                <img src="../public/uploads/<?= htmlspecialchars($tour['image']) ?>" alt="Ảnh tour" class="img-thumbnail rounded-3 border-0 shadow-sm" style="max-height: 150px; object-fit: cover;">
+                                <img src="/uploads/<?= htmlspecialchars($tour['image']) ?>" alt="Ảnh tour" class="img-thumbnail rounded-3 border-0 shadow-sm" style="max-height: 150px; object-fit: cover;">
                             <?php else: ?>
                                 <span class="badge bg-secondary p-2"><i class="bi bi-image-alt me-1"></i> Chưa có ảnh</span>
                             <?php endif; ?>

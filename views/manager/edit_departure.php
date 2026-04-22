@@ -94,7 +94,7 @@
                     <p class="text-muted mb-0 fw-medium">Chỉnh sửa thông tin lịch trình #<?= htmlspecialchars($departure['departure_id']) ?>.</p>
                 </div>
                 <div>
-                    <a href="../public/manager.php?action=departures" class="btn btn-outline-secondary rounded-pill fw-bold">
+                    <a href="/manager.php?action=departures" class="btn btn-outline-secondary rounded-pill fw-bold">
                         <i class="bi bi-arrow-left me-1"></i> Quay lại
                     </a>
                 </div>

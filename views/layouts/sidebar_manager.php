@@ -91,28 +91,28 @@
         <div class="admin-menu">
             <?php $activeMenu = $activeMenu ?? 'dashboard'; // Mặc định là dashboard nếu không khai báo ?>
 
-            <a href="../public/manager.php?action=dashboard"
+            <a href="/manager.php?action=dashboard"
                 class="admin-menu-item <?= ($activeMenu === 'dashboard') ? 'active' : '' ?>">
                 <i class="bi bi-grid-1x2-fill"></i> Tổng quan
             </a>
-            <a href="../public/manager.php?action=tours"
+            <a href="/manager.php?action=tours"
                 class="admin-menu-item <?= ($activeMenu === 'tours') ? 'active' : '' ?>">
                 <i class="bi bi-map"></i> Quản lý Tour
             </a>
-            <a href="../public/manager.php?action=departures"
+            <a href="/manager.php?action=departures"
                 class="admin-menu-item <?= ($activeMenu === 'departures') ? 'active' : '' ?>">
                 <i class="bi bi-calendar2-week"></i> Vận hành & Lịch trình
             </a>
-            <a href="../public/manager.php?action=bookings"
+            <a href="/manager.php?action=bookings"
                 class="admin-menu-item <?= ($activeMenu === 'bookings') ? 'active' : '' ?>">
                 <i class="bi bi-receipt-cutoff"></i> Đơn đặt (Bookings)
             </a>
             
-            <a href="../public/manager.php?action=partners"
+            <a href="/manager.php?action=partners"
                 class="admin-menu-item <?= ($activeMenu === 'partners') ? 'active' : '' ?>">
                 <i class="bi bi-buildings"></i> Đối tác dịch vụ
             </a>
-            <a href="../public/manager.php?action=report"
+            <a href="/manager.php?action=report"
                 class="admin-menu-item <?= ($activeMenu === 'report') ? 'active' : '' ?>">
                 <i class="bi bi-graph-up-arrow"></i> Báo cáo doanh thu
             </a>

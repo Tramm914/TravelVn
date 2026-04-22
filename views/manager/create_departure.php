@@ -95,7 +95,7 @@
                     <p class="text-muted mb-0 fw-medium">Lên lịch chạy tour mới, thiết lập số lượng chỗ và chỉ định Hướng dẫn viên.</p>
                 </div>
                 <div>
-                    <a href="../public/manager.php?action=departures" class="btn btn-outline-secondary rounded-pill fw-bold">
+                    <a href="/manager.php?action=departures" class="btn btn-outline-secondary rounded-pill fw-bold">
                         <i class="bi bi-arrow-left me-1"></i> Quay lại
                     </a>
                 </div>

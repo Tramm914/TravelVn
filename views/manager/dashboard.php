@@ -226,25 +226,25 @@
                 <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Truy cập nhanh</h5>
                 <div class="row g-3">
                     <div class="col-6 col-md-3">
-                        <a href="../public/manager.php?action=createTour" class="action-btn btn-tour">
+                        <a href="/manager.php?action=createTour" class="action-btn btn-tour">
                             <i class="bi bi-map"></i>
                             Tạo Tour
                         </a>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a href="../public/manager.php?action=createDeparture" class="action-btn btn-schedule">
+                        <a href="/manager.php?action=createDeparture" class="action-btn btn-schedule">
                             <i class="bi bi-calendar-plus"></i>
                             Tạo Lịch
                         </a>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a href="../public/manager.php?action=bookings" class="action-btn btn-booking">
+                        <a href="/manager.php?action=bookings" class="action-btn btn-booking">
                             <i class="bi bi-check2-circle"></i>
                             Duyệt Đơn
                         </a>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a href="../public/manager.php?action=report" class="action-btn btn-report">
+                        <a href="/manager.php?action=report" class="action-btn btn-report">
                             <i class="bi bi-file-earmark-bar-graph"></i>
                             Thống kê
                         </a>
