@@ -387,7 +387,7 @@
                         <div class="tour-image-wrapper">
                             <div class="location-badge"><i
                                     class="bi bi-geo-alt-fill me-1"></i><?= htmlspecialchars($row['destination']) ?></div>
-                            <img src="<?= !empty($row['image']) ? '../public/uploads/' . $row['image'] : 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=500&q=80' ?>"
+                            <img src="<?= !empty($row['image']) ? '/uploads/' . $row['image'] : 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=500&q=80' ?>"
                                 alt="<?= htmlspecialchars($row['tour_name']); ?>">
                         </div>
 

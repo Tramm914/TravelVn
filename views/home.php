@@ -677,7 +677,7 @@
                 <div class="tour-item">
                     <div class="card tour-card">
                         <div class="tour-image-wrapper">
-                            <img src="<?= !empty($tour['image']) ? '../public/uploads/' . $tour['image'] : 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800' ?>"
+                            <img src="<?= !empty($tour['image']) ? '/uploads/' . $tour['image'] : 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800' ?>"
                                 alt="<?= htmlspecialchars($tour['tour_name']) ?>">
                             <span class="badge-duration"><i class="bi bi-clock-history me-1"></i><?= $tour['duration'] ?>
                                 ngày</span>
