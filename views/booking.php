@@ -205,7 +205,7 @@ $userPhone = $_SESSION['user']['phone'] ?? '';
 
             <div class="col-lg-5">
                 <div class="summary-card">
-                    <img src="<?= !empty($detail['image']) ? '../public/uploads/' . $detail['image'] : 'https://images.unsplash.com/photo-1501785888041-af3ef285b470' ?>" class="summary-img" alt="Tour image">
+                    <img src="<?= !empty($detail['image']) ? '/uploads/' . $detail['image'] : 'https://images.unsplash.com/photo-1501785888041-af3ef285b470' ?>" class="summary-img" alt="Tour image">
                     <div class="summary-body">
                         <h4 class="tour-name"><?= htmlspecialchars($detail['tour_name']); ?></h4>
                         <div class="summary-item border-bottom pb-2">
