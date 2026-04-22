@@ -128,50 +128,51 @@ class User
     }
 
    // ================= DELETE USER =================
-public function deleteUser($id)
-{
-    // 👉 kiểm tra booking
-    $stmt = $this->conn->prepare("
-        SELECT COUNT(*) as total FROM bookings WHERE user_id = ?
-    ");
-    $stmt->execute([$id]);
-    $hasBooking = $stmt->fetch()['total'];
-
-    // ❗ Nếu có booking → KHÔNG xóa, chỉ khóa
-    if ($hasBooking > 0) {
-        return $this->conn->prepare("
-            UPDATE users SET status='locked' WHERE user_id=?
-        ")->execute([$id]);
-    }
-
-    // ❗ Không cho xóa admin cuối cùng
-    $user = $this->getUserById($id);
-
-    if ($user['role'] == 'admin') {
+// ================= DELETE USER =================
+    public function deleteUser($id)
+    {
+        // 👉 kiểm tra booking
         $stmt = $this->conn->prepare("
-            SELECT COUNT(*) as total FROM users WHERE role = 'admin'
+            SELECT COUNT(*) as total FROM bookings WHERE user_id = ?
         ");
-        $stmt->execute();
-        $count = $stmt->fetch()['total'];
+        $stmt->execute([$id]);
+        $hasBooking = $stmt->fetch()['total'];
 
-        if ($count <= 1) {
-            return false;
+        // ❗ Nếu có booking → KHÔNG xóa, chỉ khóa
+        if ($hasBooking > 0) {
+            return $this->conn->prepare("
+                UPDATE users SET status='inactive' WHERE user_id=?
+            ")->execute([$id]);
         }
-    }
 
-    return $this->conn->prepare("DELETE FROM users WHERE user_id=?")
-        ->execute([$id]);
-}
+        // ❗ Không cho xóa admin cuối cùng
+        $user = $this->getUserById($id);
+
+        if ($user['role'] == 'admin') {
+            $stmt = $this->conn->prepare("
+                SELECT COUNT(*) as total FROM users WHERE role = 'admin'
+            ");
+            $stmt->execute();
+            $count = $stmt->fetch()['total'];
+
+            if ($count <= 1) {
+                return false;
+            }
+        }
+
+        return $this->conn->prepare("DELETE FROM users WHERE user_id=?")
+            ->execute([$id]);
+    }
+    // ================= TOGGLE STATUS =================
     // ================= TOGGLE STATUS =================
     public function toggleStatus($id)
     {
         return $this->conn->prepare("
             UPDATE users SET status =
-            CASE WHEN status='active' THEN 'locked' ELSE 'active' END
+            CASE WHEN status='active' THEN 'inactive' ELSE 'active' END
             WHERE user_id=?
         ")->execute([$id]);
     }
-
     // ================= RESET PASSWORD =================
     public function resetPassword($id)
     {
