@@ -27,8 +27,7 @@ $stmt_dest->execute();
 $topDestinations = $stmt_dest->fetchAll(PDO::FETCH_ASSOC);
 
 // Chuyển biến $topDestinations sang view home.php
-include 'views/home.php';
-        // require __DIR__ . '/../views/home.php';
+        require __DIR__ . '/../views/home.php';
     }
 
     public function detail()

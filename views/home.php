@@ -466,7 +466,7 @@
     </div>
 </div>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=THAY_API_KEY_CUA_BAN_VAO_DAY&libraries=places"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBwWwQ3tsJ5_hv-mV1pxMNSsC0bBKiBQk8&libraries=places"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         var input = document.getElementById('search-location');
