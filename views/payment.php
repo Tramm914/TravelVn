@@ -173,12 +173,12 @@ $payment_id = $payment['payment_id'] ?? $_GET['payment_id'] ?? 0;
                     </div>
                     <div class="info-row">
                         <span class="info-label">Ngân hàng</span>
-                        <span class="info-value">Sacombank</span>
+                        <span class="info-value">TPbank</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Số tài khoản</span>
                         <span class="info-value">
-                            <span id="copy-account"><?= htmlspecialchars($account_no) ?></span>
+                            <span id="copy-account"><?= htmlspecialchars($account_no ?? '00000419627') ?></span>
                             <button class="btn-copy" onclick="copyText('copy-account')" title="Sao chép"><i
                                     class="bi bi-clipboard"></i></button>
                         </span>
@@ -194,7 +194,7 @@ $payment_id = $payment['payment_id'] ?? $_GET['payment_id'] ?? 0;
                     <div class="info-row">
                         <span class="info-label">Nội dung</span>
                         <span class="info-value text-primary">
-                            <span id="copy-info"><?= htmlspecialchars($info) ?></span>
+                            <span id="copy-info"><?= htmlspecialchars($info ?? 'PAY' . ($payment['payment_id'] ?? $payment_id)) ?></span>
                             <button class="btn-copy" onclick="copyText('copy-info')" title="Sao chép"><i
                                     class="bi bi-clipboard"></i></button>
                         </span>
