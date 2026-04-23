@@ -148,20 +148,20 @@
                 <div class="col-lg-2 col-md-6">
                     <h5 class="footer-title">Về TravelVN</h5>
                     <ul class="footer-links">
-                        <li><a href="#">Giới thiệu</a></li>
-                        <li><a href="#">Tuyển dụng</a></li>
-                        <li><a href="#">Tin tức du lịch</a></li>
-                        <li><a href="#">Chương trình đại lý</a></li>
+                        <li><a href="index.php?action=about">Giới thiệu</a></li>
+                        <li><a href="index.php?action=careers">Tuyển dụng</a></li>
+                        <li><a href="index.php?action=blog">Tin tức du lịch</a></li>
+                        <li><a href="index.php?action=affiliate">Chương trình đại lý</a></li>
                     </ul>
                 </div>
 
                 <div class="col-lg-3 col-md-6">
                     <h5 class="footer-title">Hỗ trợ khách hàng</h5>
                     <ul class="footer-links">
-                        <li><a href="#">Hướng dẫn đặt tour</a></li>
-                        <li><a href="#">Câu hỏi thường gặp (FAQ)</a></li>
-                        <li><a href="#">Chính sách hoàn/hủy</a></li>
-                        <li><a href="#">Quy chế hoạt động</a></li>
+                        <li><a href="index.php?action=guide">Hướng dẫn đặt tour</a></li>
+                        <li><a href="index.php?action=faq">Câu hỏi thường gặp (FAQ)</a></li>
+                        <li><a href="index.php?action=policy">Chính sách hoàn/hủy</a></li>
+                        <li><a href="index.php?action=policy">Quy chế hoạt động</a></li>
                     </ul>
                 </div>
 

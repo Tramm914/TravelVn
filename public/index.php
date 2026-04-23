@@ -8,14 +8,30 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once '../controllers/TourController.php';
 require_once '../controllers/PaymentController.php';
 require_once '../controllers/AuthController.php';
-// BỔ SUNG DÒNG NÀY ĐỂ HỆ THỐNG TÌM THẤY REVIEWCONTROLLER
 require_once '../controllers/ReviewController.php';
 
 // 3. Lấy hành động từ URL
 $action = $_GET['action'] ?? 'home';
 
-// 4. Phân luồng Controller
-// Sửa thành: Bổ sung thêm 'webhook' và 'checkPaymentStatus'
+// =================================================================
+// BƯỚC MỚI: XỬ LÝ CÁC TRANG TĨNH (STATIC PAGES) TỪ FOOTER
+// =================================================================
+switch ($action) {
+    case 'about':
+    case 'careers':
+    case 'blog':
+    case 'affiliate':
+    case 'guide':
+    case 'faq':
+    case 'policy':
+        // Gọi thẳng file giao diện trong thư mục views
+        require_once "../views/{$action}.php";
+        exit; // Lệnh exit rất quan trọng: Nó dừng hệ thống tại đây, không chạy xuống phần Controller bên dưới nữa
+}
+// =================================================================
+
+
+// 4. Phân luồng Controller cho các trang có xử lý Database
 if ($action === 'payment' || $action === 'confirmPayment' || $action === 'webhook' || $action === 'checkPaymentStatus') {
     $c = new PaymentController();
 } elseif ($action === 'login' || $action === 'register' || $action === 'logout' || $action === 'profile' || $action === 'updateProfile' || $action === 'updatePassword') {
@@ -29,9 +45,9 @@ if ($action === 'payment' || $action === 'confirmPayment' || $action === 'webhoo
 
 // 5. Kiểm tra hàm có tồn tại không
 if (!method_exists($c, $action)) {
-    // Debug nhỏ: Nếu lỗi 404, hãy kiểm tra xem tên hàm trong Controller có viết hoa đúng bookingDetail không
     die("404 - Không tìm thấy hành động: " . htmlspecialchars($action) . " trong " . get_class($c));
 }
 
 // 6. Chạy hàm
 $c->$action();
+?>
