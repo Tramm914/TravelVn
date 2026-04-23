@@ -5,8 +5,22 @@ if (empty($payment)) {
     exit;
 }
 include 'layouts/header.php';
-// Tính toán thời gian đếm ngược không bị reset khi reload
+
+// 1. Lấy ID thanh toán
 $payment_id = $payment['payment_id'] ?? $_GET['payment_id'] ?? 0;
+
+// 2. KHAI BÁO THÔNG TIN TẠO MÃ QR (Đã thêm vào đây để tự động chạy)
+$bank_id = "TPBank"; 
+$account_no = "00000419627";
+$account_name = "DOAN THI TRAM"; // Tên in trên thẻ
+$amount = $payment['amount'] ?? 0;
+$info = "PAY" . $payment_id;
+
+// 3. Nối chuỗi tạo link ảnh QR của VietQR
+$qr_url = "https://img.vietqr.io/image/" . $bank_id . "-" . $account_no . "-compact2.png";
+$qr_url .= "?amount=" . $amount;
+$qr_url .= "&addInfo=" . $info;
+$qr_url .= "&accountName=" . urlencode($account_name);
 ?>
 
 <style>
@@ -117,28 +131,6 @@ $payment_id = $payment['payment_id'] ?? $_GET['payment_id'] ?? 0;
         color: var(--text-main);
     }
 
-    .btn-confirm {
-        background-color: var(--success-color);
-        color: white;
-        font-weight: 700;
-        border-radius: 12px;
-        padding: 14px;
-        font-size: 1.1rem;
-        width: 100%;
-        border: none;
-        transition: 0.3s;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .btn-confirm:hover {
-        background-color: #059669;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-    }
-
     .instruction {
         font-size: 0.9rem;
         color: #64748b;
@@ -163,22 +155,22 @@ $payment_id = $payment['payment_id'] ?? $_GET['payment_id'] ?? 0;
                     Quét mã QR bằng ứng dụng ngân hàng
                 </div>
                 <div class="qr-wrapper shadow-sm">
-                    <img src="<?= $qr_url ?>" alt="QR Code Payment">
+                    <img src="<?= htmlspecialchars($qr_url) ?>" alt="QR Code Payment">
                 </div>
 
                 <div class="mb-4">
                     <div class="info-row">
                         <span class="info-label">Khách hàng</span>
-                        <span class="info-value"><?= htmlspecialchars($payment['customer_name']) ?></span>
+                        <span class="info-value"><?= htmlspecialchars($payment['customer_name'] ?? 'Khách hàng') ?></span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Ngân hàng</span>
-                        <span class="info-value">TPbank</span>
+                        <span class="info-value">TPBank</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Số tài khoản</span>
                         <span class="info-value">
-                            <span id="copy-account"><?= htmlspecialchars($account_no ?? '00000419627') ?></span>
+                            <span id="copy-account"><?= htmlspecialchars($account_no) ?></span>
                             <button class="btn-copy" onclick="copyText('copy-account')" title="Sao chép"><i
                                     class="bi bi-clipboard"></i></button>
                         </span>
@@ -194,7 +186,7 @@ $payment_id = $payment['payment_id'] ?? $_GET['payment_id'] ?? 0;
                     <div class="info-row">
                         <span class="info-label">Nội dung</span>
                         <span class="info-value text-primary">
-                            <span id="copy-info"><?= htmlspecialchars($info ?? 'PAY' . ($payment['payment_id'] ?? $payment_id)) ?></span>
+                            <span id="copy-info"><?= htmlspecialchars($info) ?></span>
                             <button class="btn-copy" onclick="copyText('copy-info')" title="Sao chép"><i
                                     class="bi bi-clipboard"></i></button>
                         </span>
@@ -215,13 +207,6 @@ $payment_id = $payment['payment_id'] ?? $_GET['payment_id'] ?? 0;
                     </div>
                 </div>
 
-                <form method="POST" action="index.php?action=confirmPayment">
-                    <!-- <input type="hidden" name="payment_id" value="<?= $payment_id ?>">
-                    <button type="submit" class="btn-confirm bg-secondary"
-                        onclick="return confirm('Bạn chắc chắn đã chuyển khoản thành công? Vui lòng chỉ bấm nút này nếu sau 5 phút hệ thống vẫn chưa tự động chuyển trang.');">
-                        <i class="bi bi-check-circle-fill"></i> Tôi đã chuyển khoản (Báo cáo thủ công)
-                    </button> -->
-                </form>
             </div>
         </div>
 
@@ -234,7 +219,7 @@ $payment_id = $payment['payment_id'] ?? $_GET['payment_id'] ?? 0;
 </div>
 
 <script>
-    // 1. Hàm sao chép văn bản (Giữ nguyên logic của bạn)
+    // 1. Hàm sao chép văn bản
     function copyText(elementId, isAmount = false) {
         let textToCopy = document.getElementById(elementId).innerText;
         if (isAmount) {
@@ -247,8 +232,6 @@ $payment_id = $payment['payment_id'] ?? $_GET['payment_id'] ?? 0;
         });
     }
 
-    // --- ĐƯA CÁC LOGIC DƯỚI ĐÂY RA NGOÀI ĐỂ TỰ CHẠY KHI LOAD TRANG ---
-
     // 2. Lấy ID thanh toán từ PHP
     const currentPaymentId = <?= json_encode($payment_id) ?>;
 
@@ -260,6 +243,7 @@ $payment_id = $payment['payment_id'] ?? $_GET['payment_id'] ?? 0;
                 if (data.status === 'paid') {
                     // Xóa vòng lặp khi thành công
                     clearInterval(pollingInterval);
+                    localStorage.removeItem(STORAGE_KEY);
                     alert('Ting ting! Hệ thống đã nhận được thanh toán. Chúc bạn có chuyến đi vui vẻ!');
                     window.location.href = 'index.php?action=myBookings';
                 }
@@ -270,11 +254,10 @@ $payment_id = $payment['payment_id'] ?? $_GET['payment_id'] ?? 0;
     // Thiết lập vòng lặp: Cứ mỗi 3 giây kiểm tra 1 lần
     const pollingInterval = setInterval(checkStatus, 3000);
 
-    // --- 4. HÀM ĐẾM NGƯỢC THÔNG MINH (KHÔNG RESET KHI RELOAD) ---
+    // 4. HÀM ĐẾM NGƯỢC THÔNG MINH
     const STORAGE_KEY = `payment_expire_${currentPaymentId}`;
     let expireTime = localStorage.getItem(STORAGE_KEY);
 
-    // Nếu chưa có thời gian hết hạn trong máy khách, thì mới tạo mới (15 phút từ bây giờ)
     if (!expireTime) {
         expireTime = Date.now() + (15 * 60 * 1000);
         localStorage.setItem(STORAGE_KEY, expireTime);
@@ -289,7 +272,7 @@ $payment_id = $payment['payment_id'] ?? $_GET['payment_id'] ?? 0;
         if (timeRemaining <= 0) {
             clearInterval(countdown);
             clearInterval(pollingInterval);
-            localStorage.removeItem(STORAGE_KEY); // Xóa bộ nhớ khi hết hạn
+            localStorage.removeItem(STORAGE_KEY);
             alert('Đã hết thời gian thanh toán!');
             window.location.href = 'index.php?action=myBookings';
             return;
@@ -303,10 +286,6 @@ $payment_id = $payment['payment_id'] ?? $_GET['payment_id'] ?? 0;
 
         timerDisplay.textContent = minutes + ":" + seconds;
     }, 1000);
-
-    // Xóa localStorage khi thanh toán thành công (Sửa trong hàm checkStatus)
-    // Trong hàm checkStatus, chỗ data.status === 'paid', bạn thêm dòng:
-    // localStorage.removeItem(STORAGE_KEY);
 </script>
 
 <?php include 'layouts/footer.php'; ?>
