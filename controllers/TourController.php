@@ -16,20 +16,25 @@ class TourController
 
     public function home()
     {
-        // Đoạn code ví dụ thêm vào hàm home() trong TourController
-$sql = "SELECT destination, COUNT(tour_id) as tour_count, MIN(image) as image 
-        FROM tours 
-        GROUP BY destination 
-        ORDER BY tour_count DESC 
-        LIMIT 3";
-$stmt_dest = $this->db->prepare($sql);
-$stmt_dest->execute();
-$topDestinations = $stmt_dest->fetchAll(PDO::FETCH_ASSOC);
+        // 1. Lấy danh sách điểm đến thịnh hành (Code cũ của bạn)
+        $sql = "SELECT destination, COUNT(tour_id) as tour_count, MIN(image) as image 
+                FROM tours 
+                GROUP BY destination 
+                ORDER BY tour_count DESC 
+                LIMIT 3";
+        $stmt_dest = $this->db->prepare($sql);
+        $stmt_dest->execute();
+        $topDestinations = $stmt_dest->fetchAll(PDO::FETCH_ASSOC);
 
-// Chuyển biến $topDestinations sang view home.php
+        // 2. THÊM MỚI BƯỚC NÀY: Lấy danh sách "Tour giá tốt hôm nay" để truyền sang biến $stmt
+        // Bạn có thể tùy chỉnh lại câu SQL này theo logic "giá tốt" của bạn (ví dụ ORDER BY price ASC)
+        $sql_tours = "SELECT * FROM tours WHERE status = 'active' ORDER BY tour_id DESC LIMIT 10";
+        $stmt = $this->db->prepare($sql_tours);
+        $stmt->execute();
+
+        // 3. Chuyển biến $topDestinations và $stmt sang view home.php
         require __DIR__ . '/../views/home.php';
     }
-
     public function detail()
     {
         // Nhận ID từ URL và đảm bảo nó là số
