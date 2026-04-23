@@ -301,7 +301,12 @@
                 <div class="row g-3 align-items-center">
                     <div class="col-lg-4 col-md-6">
                         <label class="form-label text-muted fw-bold small ms-1 mb-1"><i class="bi bi-geo-alt"></i> Điểm đến</label>
-                        <input type="text" id="search-location" name="keyword" class="form-control form-control-custom border-0 shadow-sm" placeholder="Bạn muốn đi đâu? (Ví dụ: Đà Lạt)">
+<div class="input-group shadow-sm" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; background: #fff;">
+    <input type="text" id="search-location" name="keyword" class="form-control form-control-custom border-0 shadow-none" placeholder="Bạn muốn đi đâu? (Ví dụ: Đà Lạt)">
+    <button class="btn border-0" type="button" id="btn-open-map" title="Chọn trên bản đồ" style="background: #fff; color: var(--primary-color); font-size: 1.2rem; padding: 0 15px;">
+        <i class="bi bi-map-fill"></i>
+    </button>
+</div>
                     </div>
                     <div class="col-lg-3 col-md-6">
                         <label class="form-label text-muted fw-bold small ms-1 mb-1"><i class="bi bi-calendar-date"></i> Ngày đi</label>
@@ -418,7 +423,20 @@
         <button class="slider-btn right d-none d-md-flex" onclick="scrollRightTour()"><i class="bi bi-chevron-right"></i></button>
     </div>
 </div>
-
+<div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="mapModalLabel" style="color: var(--text-main);"><i class="bi bi-geo-alt-fill text-danger me-2"></i>Chọn điểm đến trên bản đồ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted small mb-3">Nhấp (click) vào vị trí bất kỳ trên bản đồ để tự động điền địa điểm tìm kiếm.</p>
+                <div id="picker-map" style="height: 450px; width: 100%; border-radius: 15px; border: 1px solid #e2e8f0;"></div>
+            </div>
+        </div>
+    </div>
+</div>
 <script>
     function scrollLeftTour() { document.getElementById('tourScroll').scrollBy({ left: -344, behavior: 'smooth' }); }
     function scrollRightTour() { document.getElementById('tourScroll').scrollBy({ left: 344, behavior: 'smooth' }); }
@@ -470,10 +488,74 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         var input = document.getElementById('search-location');
-        // Khởi tạo bộ gợi ý địa điểm của Google (Giới hạn tại Việt Nam)
+        
+        // 1. Khởi tạo gợi ý autocomplete như cũ
         var autocomplete = new google.maps.places.Autocomplete(input, {
             types: ['(regions)'],
             componentRestrictions: { country: "vn" }
+        });
+
+        // 2. Logic xử lý Chọn điểm trên Bản đồ (Map Picker)
+        var mapPicker;
+        var mapMarker;
+        var geocoder = new google.maps.Geocoder();
+        var mapModalElement = document.getElementById('mapModal');
+
+        if (mapModalElement) {
+            // Sự kiện của Bootstrap: Khi Modal bắt đầu hiển thị
+            mapModalElement.addEventListener('shown.bs.modal', function () {
+                // Chỉ khởi tạo bản đồ 1 lần duy nhất để tối ưu hiệu suất
+                if (!mapPicker) {
+                    mapPicker = new google.maps.Map(document.getElementById('picker-map'), {
+                        center: { lat: 16.047079, lng: 108.206230 }, // Mặc định hiển thị miền Trung (Đà Nẵng)
+                        zoom: 6,
+                        streetViewControl: false,
+                        mapTypeControl: false,
+                        fullscreenControl: false
+                    });
+
+                    // Lắng nghe sự kiện người dùng Click lên bản đồ
+                    mapPicker.addListener('click', function (mapsMouseEvent) {
+                        var clickedLocation = mapsMouseEvent.latLng;
+
+                        // Đặt hoặc di chuyển Marker (Ghim đỏ)
+                        if (!mapMarker) {
+                            mapMarker = new google.maps.Marker({
+                                position: clickedLocation,
+                                map: mapPicker,
+                                animation: google.maps.Animation.DROP
+                            });
+                        } else {
+                            mapMarker.setPosition(clickedLocation);
+                        }
+
+                        // Dùng Geocoder để dịch tọa độ thành địa chỉ
+                        geocoder.geocode({ location: clickedLocation }, function (results, status) {
+                            if (status === "OK" && results[0]) {
+                                // Lấy địa chỉ được Google trả về
+                                let address = results[0].formatted_address;
+                                
+                                // Điền vào ô input
+                                input.value = address;
+                                
+                                // Tự động đóng Modal sau nửa giây để tạo cảm giác mượt mà
+                                var bsModal = bootstrap.Modal.getInstance(mapModalElement);
+                                setTimeout(function() { 
+                                    bsModal.hide(); 
+                                }, 600);
+                            } else {
+                                alert("Không thể xác định địa chỉ tại vị trí này.");
+                            }
+                        });
+                    });
+                }
+            });
+        }
+        
+        // Mở modal khi bấm vào nút có icon bản đồ
+        document.getElementById('btn-open-map').addEventListener('click', function() {
+            var myModal = new bootstrap.Modal(document.getElementById('mapModal'));
+            myModal.show();
         });
     });
 </script>
