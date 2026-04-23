@@ -109,7 +109,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
                     <li class="nav-item me-3">
                         <a class="nav-link nav-link-custom" href="#">
-                            <i class="bi bi-headset me-1"></i> Hỗ trợ
+                            <li><a href="index.php?action=footer"> Hỗ trợ
                         </a>
                     </li>
                     <?php if (isset($_SESSION['user'])): ?>

@@ -16,8 +16,19 @@ class TourController
 
     public function home()
     {
-        $stmt = $this->db->query("SELECT * FROM tours LIMIT 8");
-        require __DIR__ . '/../views/home.php';
+        // Đoạn code ví dụ thêm vào hàm home() trong TourController
+$sql = "SELECT destination, COUNT(tour_id) as tour_count, MIN(image) as image 
+        FROM tours 
+        GROUP BY destination 
+        ORDER BY tour_count DESC 
+        LIMIT 3";
+$stmt_dest = $this->db->prepare($sql);
+$stmt_dest->execute();
+$topDestinations = $stmt_dest->fetchAll(PDO::FETCH_ASSOC);
+
+// Chuyển biến $topDestinations sang view home.php
+include 'views/home.php';
+        // require __DIR__ . '/../views/home.php';
     }
 
     public function detail()

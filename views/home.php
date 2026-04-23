@@ -38,7 +38,6 @@
         font-family: 'Dancing Script', cursive;
         font-size: 3.2rem;
         color: #ffda79;
-        /* Màu vàng nắng cực kỳ nổi bật */
         font-weight: 700;
         letter-spacing: 2px;
         text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6);
@@ -108,6 +107,15 @@
     .btn-search:hover {
         background-color: #e04d14;
         transform: translateY(-2px);
+    }
+
+    /* Tùy chỉnh kết quả dropdown của Google Maps */
+    .pac-container {
+        border-radius: 12px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        border: none;
+        padding: 5px;
+        font-family: 'Inter', sans-serif;
     }
 
     /* --- CATEGORY ICONS --- */
@@ -238,320 +246,48 @@
         opacity: 0.9;
     }
 
-    /* --- TOUR SLIDER --- */
-    .slider-wrapper {
-        position: relative;
-    }
+    /* --- TOUR SLIDER & CÁC STYLE KHÁC GIỮ NGUYÊN NHƯ CŨ --- */
+    .slider-wrapper { position: relative; }
+    .tour-scroll { display: flex; gap: 24px; overflow-x: auto; scroll-behavior: smooth; padding: 10px 5px 30px 5px; scroll-snap-type: x mandatory; margin-bottom: 40px; }
+    .tour-scroll::-webkit-scrollbar { display: none; }
+    .tour-item { min-width: 320px; max-width: 320px; scroll-snap-align: start; }
+    .tour-card { border-radius: 20px; border: 1px solid #f0f0f0; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04); transition: 0.3s; height: 100%; display: flex; flex-direction: column; background: white; }
+    .tour-card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1); border-color: #e2e8f0; }
+    .tour-image-wrapper { position: relative; overflow: hidden; border-radius: 20px 20px 0 0; }
+    .tour-card img { width: 100%; height: 220px; object-fit: cover; transition: 0.5s; }
+    .tour-card:hover img { transform: scale(1.08); }
+    .badge-duration { position: absolute; bottom: 12px; left: 12px; background: rgba(0, 0, 0, 0.7); color: white; padding: 5px 12px; border-radius: 30px; font-size: 0.8rem; font-weight: 600; backdrop-filter: blur(4px); }
+    .card-body-custom { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
+    .tour-title { font-size: 1.15rem; font-weight: 700; color: #2c3e50; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 12px; line-height: 1.4; }
+    .tour-price { color: var(--accent-color); font-weight: 800; font-size: 1.3rem; margin-top: auto; margin-bottom: 15px; }
+    .btn-outline-primary-custom { color: var(--primary-color); border: 2px solid #eef7ff; background: #eef7ff; border-radius: 12px; font-weight: 600; padding: 10px; transition: 0.3s; }
+    .tour-card:hover .btn-outline-primary-custom { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+    .slider-btn { position: absolute; top: 40%; transform: translateY(-50%); border: 1px solid #e2e8f0; width: 45px; height: 45px; border-radius: 50%; background: white; color: #2c3e50; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); cursor: pointer; font-size: 18px; z-index: 10; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
+    .slider-btn:hover { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+    .slider-btn.left { left: -15px; }
+    .slider-btn.right { right: -15px; }
 
-    .tour-scroll {
-        display: flex;
-        gap: 24px;
-        overflow-x: auto;
-        scroll-behavior: smooth;
-        padding: 10px 5px 30px 5px;
-        scroll-snap-type: x mandatory;
-        margin-bottom: 40px;
-    }
-
-    .tour-scroll::-webkit-scrollbar {
-        display: none;
-    }
-
-    .tour-item {
-        min-width: 320px;
-        max-width: 320px;
-        scroll-snap-align: start;
-    }
-
-    .tour-card {
-        border-radius: 20px;
-        border: 1px solid #f0f0f0;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
-        transition: 0.3s;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        background: white;
-    }
-
-    .tour-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-        border-color: #e2e8f0;
-    }
-
-    .tour-image-wrapper {
-        position: relative;
-        overflow: hidden;
-        border-radius: 20px 20px 0 0;
-    }
-
-    .tour-card img {
-        width: 100%;
-        height: 220px;
-        object-fit: cover;
-        transition: 0.5s;
-    }
-
-    .tour-card:hover img {
-        transform: scale(1.08);
-    }
-
-    .badge-duration {
-        position: absolute;
-        bottom: 12px;
-        left: 12px;
-        background: rgba(0, 0, 0, 0.7);
-        color: white;
-        padding: 5px 12px;
-        border-radius: 30px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        backdrop-filter: blur(4px);
-    }
-
-    .card-body-custom {
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        flex-grow: 1;
-    }
-
-    .tour-title {
-        font-size: 1.15rem;
-        font-weight: 700;
-        color: var(--text-dark);
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        margin-bottom: 12px;
-        line-height: 1.4;
-    }
-
-    .tour-price {
-        color: var(--accent-color);
-        font-weight: 800;
-        font-size: 1.3rem;
-        margin-top: auto;
-        margin-bottom: 15px;
-    }
-
-    .btn-outline-primary-custom {
-        color: var(--primary-color);
-        border: 2px solid #eef7ff;
-        background: #eef7ff;
-        border-radius: 12px;
-        font-weight: 600;
-        padding: 10px;
-        transition: 0.3s;
-    }
-
-    .tour-card:hover .btn-outline-primary-custom {
-        background-color: var(--primary-color);
-        color: white;
-        border-color: var(--primary-color);
-    }
-
-    .slider-btn {
-        position: absolute;
-        top: 40%;
-        transform: translateY(-50%);
-        border: 1px solid #e2e8f0;
-        width: 45px;
-        height: 45px;
-        border-radius: 50%;
-        background: white;
-        color: var(--text-dark);
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        cursor: pointer;
-        font-size: 18px;
-        z-index: 10;
-        transition: 0.3s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .slider-btn:hover {
-        background: var(--primary-color);
-        color: white;
-        border-color: var(--primary-color);
-    }
-
-    .slider-btn.left {
-        left: -15px;
-    }
-
-    .slider-btn.right {
-        right: -15px;
-    }
-
-    /* --- STATS PARALLAX BANNER (ĐIỂM NHẤN CẮT NGANG MÀU TRẮNG) --- */
-    .stats-section {
-        background: linear-gradient(rgba(1, 148, 243, 0.85), rgba(1, 148, 243, 0.95)), url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1') center/cover fixed;
-        padding: 70px 0;
-        color: white;
-        margin-bottom: 60px;
-    }
-
-    .stat-item h2 {
-        font-size: 3.2rem;
-        font-weight: 800;
-        margin-bottom: 5px;
-    }
-
-    .stat-item p {
-        font-size: 1.1rem;
-        font-weight: 500;
-        opacity: 0.9;
-        margin-bottom: 0;
-    }
-
-    /* --- WHY CHOOSE US & PARTNERS --- */
-    .features-section {
-        padding: 80px 0;
-        background-color: var(--bg-light);
-    }
-
-    .feature-box {
-        text-align: center;
-        padding: 35px 25px;
-        border-radius: 20px;
-        transition: 0.3s;
-        border: 1px solid transparent;
-        background: transparent;
-        height: 100%;
-    }
-
-    .feature-box:hover {
-        background: white;
-        border-color: #f0f0f0;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-        transform: translateY(-5px);
-    }
-
-    .feature-icon {
-        width: 70px;
-        height: 70px;
-        background: white;
-        color: var(--primary-color);
-        border-radius: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 32px;
-        margin: 0 auto 20px auto;
-        transform: rotate(-5deg);
-        transition: 0.3s;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    }
-
-    .feature-box:hover .feature-icon {
-        transform: rotate(0deg);
-        background: var(--primary-color);
-        color: white;
-    }
-
-    .partners-wrapper {
-        background: white;
-        border-radius: 24px;
-        padding: 40px 30px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-        margin-top: 50px;
-    }
-
-    .partners-scroll {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 30px;
-        opacity: 0.7;
-    }
-
-    .partners-scroll img {
-        height: 40px;
-        filter: grayscale(100%);
-        transition: 0.3s;
-        cursor: pointer;
-    }
-
-    .partners-scroll img:hover {
-        filter: grayscale(0%);
-        opacity: 1;
-        transform: scale(1.1);
-    }
-
-    /* --- NEWSLETTER --- */
-    .newsletter-section {
-        padding: 60px 0;
-        margin-bottom: 0;
-        background-color: var(--bg-light);
-        padding-bottom: 80px;
-    }
-
-    .newsletter-box {
-        background: linear-gradient(135deg, var(--primary-color), #00d2ff);
-        border-radius: 30px;
-        padding: 60px 40px;
-        text-align: center;
-        color: white;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .newsletter-box::before {
-        content: "\f124";
-        font-family: "bootstrap-icons";
-        position: absolute;
-        right: -20px;
-        top: -30px;
-        font-size: 200px;
-        opacity: 0.1;
-        transform: rotate(-15deg);
-    }
-
-    .nl-input-group {
-        max-width: 500px;
-        margin: 30px auto 0;
-        background: white;
-        padding: 8px;
-        border-radius: 50px;
-        display: flex;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-    }
-
-    .nl-input-group input {
-        border: none;
-        background: transparent;
-        padding-left: 20px;
-        flex-grow: 1;
-        outline: none;
-        font-weight: 500;
-        color: var(--text-dark);
-    }
-
-    .nl-btn {
-        background: var(--accent-color);
-        border: none;
-        color: white;
-        padding: 12px 30px;
-        border-radius: 50px;
-        font-weight: 700;
-        transition: 0.3s;
-    }
-
-    .nl-btn:hover {
-        background: #e04d14;
-    }
-    
+    /* Features & Newsletter */
+    .features-section { padding: 80px 0; background-color: var(--bg-light); }
+    .feature-box { text-align: center; padding: 35px 25px; border-radius: 20px; transition: 0.3s; border: 1px solid transparent; background: transparent; height: 100%; }
+    .feature-box:hover { background: white; border-color: #f0f0f0; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); transform: translateY(-5px); }
+    .feature-icon { width: 70px; height: 70px; background: white; color: var(--primary-color); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 20px auto; transform: rotate(-5deg); transition: 0.3s; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); }
+    .feature-box:hover .feature-icon { transform: rotate(0deg); background: var(--primary-color); color: white; }
+    .partners-wrapper { background: white; border-radius: 24px; padding: 40px 30px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); margin-top: 50px; }
+    .partners-scroll { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 30px; opacity: 0.7; }
+    .partners-scroll img { height: 40px; filter: grayscale(100%); transition: 0.3s; cursor: pointer; }
+    .partners-scroll img:hover { filter: grayscale(0%); opacity: 1; transform: scale(1.1); }
+    .newsletter-section { padding: 60px 0 80px; background-color: var(--bg-light); }
+    .newsletter-box { background: linear-gradient(135deg, var(--primary-color), #00d2ff); border-radius: 30px; padding: 60px 40px; text-align: center; color: white; position: relative; overflow: hidden; }
+    .nl-input-group { max-width: 500px; margin: 30px auto 0; background: white; padding: 8px; border-radius: 50px; display: flex; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15); }
+    .nl-input-group input { border: none; background: transparent; padding-left: 20px; flex-grow: 1; outline: none; font-weight: 500; color: #2c3e50; }
+    .nl-btn { background: var(--accent-color); border: none; color: white; padding: 12px 30px; border-radius: 50px; font-weight: 700; transition: 0.3s; }
+    .nl-btn:hover { background: #e04d14; }
 </style>
 
 <div class="hero-section">
     <div class="container">
         <span class="slogan-text">Xách balo lên và đi...</span>
-
         <h1 class="hero-title">Khám phá thế giới cùng TravelVN</h1>
         <p class="hero-subtitle">Hơn 500+ điểm đến tuyệt vời với giá cực kỳ ưu đãi đang chờ bạn.</p>
     </div>
@@ -564,25 +300,19 @@
                 <input type="hidden" name="action" value="tours">
                 <div class="row g-3 align-items-center">
                     <div class="col-lg-4 col-md-6">
-                        <label class="form-label text-muted fw-bold small ms-1 mb-1"><i class="bi bi-geo-alt"></i> Điểm
-                            đến</label>
-                        <input type="text" name="location" class="form-control form-control-custom border-0 shadow-sm"
-                            placeholder="Bạn muốn đi đâu?">
+                        <label class="form-label text-muted fw-bold small ms-1 mb-1"><i class="bi bi-geo-alt"></i> Điểm đến</label>
+                        <input type="text" id="search-location" name="keyword" class="form-control form-control-custom border-0 shadow-sm" placeholder="Bạn muốn đi đâu? (Ví dụ: Đà Lạt)">
                     </div>
                     <div class="col-lg-3 col-md-6">
-                        <label class="form-label text-muted fw-bold small ms-1 mb-1"><i class="bi bi-calendar-date"></i>
-                            Ngày đi</label>
-                        <input type="date" name="departure_date"
-                            class="form-control form-control-custom border-0 shadow-sm">
+                        <label class="form-label text-muted fw-bold small ms-1 mb-1"><i class="bi bi-calendar-date"></i> Ngày đi</label>
+                        <input type="date" name="departure_date" class="form-control form-control-custom border-0 shadow-sm">
                     </div>
                     <div class="col-lg-3 col-md-6">
-                        <label class="form-label text-muted fw-bold small ms-1 mb-1"><i class="bi bi-cash"></i> Ngân
-                            sách tối đa</label>
-                        <input type="number" name="max_price"
-                            class="form-control form-control-custom border-0 shadow-sm" placeholder="Ví dụ: 5000000">
+                        <label class="form-label text-muted fw-bold small ms-1 mb-1"><i class="bi bi-cash"></i> Ngân sách tối đa</label>
+                        <input type="number" name="max_price" min="0" onkeypress="return event.charCode >= 48" class="form-control form-control-custom border-0 shadow-sm" placeholder="Ví dụ: 5000000">
                     </div>
                     <div class="col-lg-2 col-md-6 d-flex align-items-end">
-                        <button class="btn btn-search w-100 mt-auto shadow-sm">Tìm tour</button>
+                        <button type="submit" class="btn btn-search w-100 mt-auto shadow-sm">Tìm tour</button>
                     </div>
                 </div>
             </form>
@@ -593,26 +323,11 @@
 <div class="container category-section">
     <h3 class="section-title-sm">Khám phá theo trải nghiệm</h3>
     <div class="row g-4 justify-content-center">
-        <div class="col-4 col-md-2"><a href="index.php?action=tours&cat=sea" class="cat-item">
-                <div class="cat-icon-box"><i class="bi bi-water"></i></div>
-                <div class="cat-title">Du lịch biển</div>
-            </a></div>
-        <div class="col-4 col-md-2"><a href="index.php?action=tours&cat=mountain" class="cat-item">
-                <div class="cat-icon-box"><i class="bi bi-tree"></i></div>
-                <div class="cat-title">Khám phá núi</div>
-            </a></div>
-        <div class="col-4 col-md-2"><a href="index.php?action=tours&cat=culture" class="cat-item">
-                <div class="cat-icon-box"><i class="bi bi-bank"></i></div>
-                <div class="cat-title">Văn hóa & Lịch sử</div>
-            </a></div>
-        <div class="col-4 col-md-2"><a href="index.php?action=tours&cat=resort" class="cat-item">
-                <div class="cat-icon-box"><i class="bi bi-house-heart"></i></div>
-                <div class="cat-title">Nghỉ dưỡng</div>
-            </a></div>
-        <div class="col-4 col-md-2"><a href="index.php?action=tours&cat=international" class="cat-item">
-                <div class="cat-icon-box"><i class="bi bi-airplane"></i></div>
-                <div class="cat-title">Quốc tế</div>
-            </a></div>
+        <div class="col-4 col-md-2"><a href="index.php?action=tours&cat=sea" class="cat-item"><div class="cat-icon-box"><i class="bi bi-water"></i></div><div class="cat-title">Du lịch biển</div></a></div>
+        <div class="col-4 col-md-2"><a href="index.php?action=tours&cat=mountain" class="cat-item"><div class="cat-icon-box"><i class="bi bi-tree"></i></div><div class="cat-title">Khám phá núi</div></a></div>
+        <div class="col-4 col-md-2"><a href="index.php?action=tours&cat=culture" class="cat-item"><div class="cat-icon-box"><i class="bi bi-bank"></i></div><div class="cat-title">Văn hóa & Lịch sử</div></a></div>
+        <div class="col-4 col-md-2"><a href="index.php?action=tours&cat=resort" class="cat-item"><div class="cat-icon-box"><i class="bi bi-house-heart"></i></div><div class="cat-title">Nghỉ dưỡng</div></a></div>
+        <div class="col-4 col-md-2"><a href="index.php?action=tours&cat=international" class="cat-item"><div class="cat-icon-box"><i class="bi bi-airplane"></i></div><div class="cat-title">Quốc tế</div></a></div>
     </div>
 </div>
 
@@ -623,37 +338,46 @@
             <p class="text-muted">Những địa danh được tìm kiếm và đặt chỗ nhiều nhất trong tháng</p>
         </div>
         <div class="row g-4">
+            
+            <?php 
+            // Fallback an toàn phòng khi Controller chưa kịp truyền biến $topDestinations sang
+            if (!isset($topDestinations) || empty($topDestinations)) {
+                $topDestinations = [
+                    ['destination' => 'Đà Nẵng', 'tour_count' => 0, 'image' => 'banner1.png'],
+                    ['destination' => 'Sapa', 'tour_count' => 0, 'image' => 'banner2.png'],
+                    ['destination' => 'Phú Quốc', 'tour_count' => 0, 'image' => 'banner3.png']
+                ];
+            }
+            ?>
+
+            <?php if(count($topDestinations) > 0): ?>
             <div class="col-md-6">
-                <div class="dest-card large" onclick="window.location.href='index.php?action=tours&keyword=Đà Nẵng'">
-                    <img src="uploads/banner1.png" alt="Da Nang">
+                <div class="dest-card large" onclick="window.location.href='index.php?action=tours&keyword=<?= urlencode($topDestinations[0]['destination']) ?>'">
+                    <img src="<?= !empty($topDestinations[0]['image']) ? '/uploads/' . $topDestinations[0]['image'] : 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800' ?>" alt="<?= htmlspecialchars($topDestinations[0]['destination']) ?>">
                     <div class="dest-overlay">
-                        <h3 class="dest-name">Đà Nẵng</h3>
-                        <div class="dest-count"><i class="bi bi-map me-1"></i> 24+ Tours</div>
+                        <h3 class="dest-name"><?= htmlspecialchars($topDestinations[0]['destination']) ?></h3>
+                        <div class="dest-count"><i class="bi bi-map me-1"></i> <?= $topDestinations[0]['tour_count'] ?>+ Tours</div>
                     </div>
                 </div>
             </div>
+
             <div class="col-md-6">
                 <div class="row g-4">
+                    <?php for($i = 1; $i < min(3, count($topDestinations)); $i++): ?>
                     <div class="col-12">
-                        <div class="dest-card" onclick="window.location.href='index.php?action=tours&keyword=Sapa'">
-                            <img src="uploads/banner2.png" alt="Sapa">
+                        <div class="dest-card" onclick="window.location.href='index.php?action=tours&keyword=<?= urlencode($topDestinations[$i]['destination']) ?>'">
+                            <img src="<?= !empty($topDestinations[$i]['image']) ? '/uploads/' . $topDestinations[$i]['image'] : 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800' ?>" alt="<?= htmlspecialchars($topDestinations[$i]['destination']) ?>">
                             <div class="dest-overlay">
-                                <h3 class="dest-name">Sapa</h3>
-                                <div class="dest-count"><i class="bi bi-map me-1"></i> 18+ Tours</div>
+                                <h3 class="dest-name"><?= htmlspecialchars($topDestinations[$i]['destination']) ?></h3>
+                                <div class="dest-count"><i class="bi bi-map me-1"></i> <?= $topDestinations[$i]['tour_count'] ?>+ Tours</div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-12">
-                        <div class="dest-card" onclick="window.location.href='index.php?action=tours&keyword=Phú Quốc'">
-                            <img src="uploads/banner3.png" alt="Phu Quoc">
-                            <div class="dest-overlay">
-                                <h3 class="dest-name">Phú Quốc</h3>
-                                <div class="dest-count"><i class="bi bi-map me-1"></i> 32+ Tours</div>
-                            </div>
-                        </div>
-                    </div>
+                    <?php endfor; ?>
                 </div>
             </div>
+            <?php endif; ?>
+
         </div>
     </div>
 </div>
@@ -664,48 +388,34 @@
             <h2 class="section-title mb-1" style="font-size: 2rem;">🔥 Tour giá tốt hôm nay</h2>
             <p class="text-muted mb-0">Đặt ngay kẻo lỡ - Số lượng có hạn</p>
         </div>
-        <a href="index.php?action=tours" class="text-decoration-none fw-bold" style="color: var(--primary-color);">Xem tất
-            cả <i class="bi bi-arrow-right"></i></a>
+        <a href="index.php?action=tours" class="text-decoration-none fw-bold" style="color: var(--primary-color);">Xem tất cả <i class="bi bi-arrow-right"></i></a>
     </div>
 
     <div class="slider-wrapper">
-        <button class="slider-btn left d-none d-md-flex" onclick="scrollLeftTour()"><i
-                class="bi bi-chevron-left"></i></button>
+        <button class="slider-btn left d-none d-md-flex" onclick="scrollLeftTour()"><i class="bi bi-chevron-left"></i></button>
 
         <div class="tour-scroll" id="tourScroll">
             <?php while ($tour = $stmt->fetch(PDO::FETCH_ASSOC)): ?>
                 <div class="tour-item">
                     <div class="card tour-card">
                         <div class="tour-image-wrapper">
-                            <img src="<?= !empty($tour['image']) ? '/uploads/' . $tour['image'] : 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800' ?>"
-                                alt="<?= htmlspecialchars($tour['tour_name']) ?>">
-                            <span class="badge-duration"><i class="bi bi-clock-history me-1"></i><?= $tour['duration'] ?>
-                                ngày</span>
+                            <img src="<?= !empty($tour['image']) ? '/uploads/' . $tour['image'] : 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800' ?>" alt="<?= htmlspecialchars($tour['tour_name']) ?>">
+                            <span class="badge-duration"><i class="bi bi-clock-history me-1"></i><?= $tour['duration'] ?> ngày</span>
                         </div>
                         <div class="card-body-custom">
-                            <div class="text-muted small mb-1"><i
-                                    class="bi bi-geo-alt-fill text-danger me-1"></i><?= htmlspecialchars($tour['destination']) ?>
-                            </div>
-                            
+                            <div class="text-muted small mb-1"><i class="bi bi-geo-alt-fill text-danger me-1"></i><?= htmlspecialchars($tour['destination']) ?></div>
                             <a href="index.php?action=detail&id=<?= $tour['tour_id'] ?>" class="text-decoration-none text-dark">
                                 <h5 class="tour-title"><?= htmlspecialchars($tour['tour_name']) ?></h5>
                             </a>
-                            
-                            <p class="tour-price"><?= number_format($tour['price']) ?> <span
-                                    style="font-size: 0.9rem; font-weight: 500; color: #6c757d;">VNĐ</span></p>
-
-                            <a href="index.php?action=detail&id=<?= $tour['tour_id'] ?>"
-                                class="btn btn-outline-primary-custom w-100 text-center d-block text-decoration-none mt-auto">
-                                Xem chi tiết
-                            </a>
+                            <p class="tour-price"><?= number_format($tour['price']) ?> <span style="font-size: 0.9rem; font-weight: 500; color: #6c757d;">VNĐ</span></p>
+                            <a href="index.php?action=detail&id=<?= $tour['tour_id'] ?>" class="btn btn-outline-primary-custom w-100 text-center d-block text-decoration-none mt-auto">Xem chi tiết</a>
                         </div>
                     </div>
                 </div>
             <?php endwhile; ?>
         </div>
 
-        <button class="slider-btn right d-none d-md-flex" onclick="scrollRightTour()"><i
-                class="bi bi-chevron-right"></i></button>
+        <button class="slider-btn right d-none d-md-flex" onclick="scrollRightTour()"><i class="bi bi-chevron-right"></i></button>
     </div>
 </div>
 
@@ -721,49 +431,20 @@
             <p class="text-muted">Chúng tôi cam kết mang lại trải nghiệm tuyệt vời nhất cho mỗi chuyến đi của bạn</p>
         </div>
         <div class="row g-4">
-            <div class="col-lg-3 col-md-6">
-                <div class="feature-box">
-                    <div class="feature-icon"><i class="bi bi-shield-check"></i></div>
-                    <h5 class="fw-bold">An toàn & Uy tín</h5>
-                    <p class="text-muted small mb-0">Đối tác của các hãng hàng không và khách sạn 5 sao hàng đầu.</p>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="feature-box">
-                    <div class="feature-icon"><i class="bi bi-wallet2"></i></div>
-                    <h5 class="fw-bold">Giá tốt nhất</h5>
-                    <p class="text-muted small mb-0">Cam kết hoàn tiền nếu bạn tìm thấy giá rẻ hơn ở nơi khác.</p>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="feature-box">
-                    <div class="feature-icon"><i class="bi bi-headset"></i></div>
-                    <h5 class="fw-bold">Hỗ trợ 24/7</h5>
-                    <p class="text-muted small mb-0">Đội ngũ CSKH luôn sẵn sàng giải quyết mọi vấn đề của bạn.</p>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="feature-box">
-                    <div class="feature-icon"><i class="bi bi-credit-card"></i></div>
-                    <h5 class="fw-bold">Thanh toán dễ dàng</h5>
-                    <p class="text-muted small mb-0">Hỗ trợ quét mã VietQR, thẻ tín dụng, ATM nội địa cực nhanh.</p>
-                </div>
-            </div>
+            <div class="col-lg-3 col-md-6"><div class="feature-box"><div class="feature-icon"><i class="bi bi-shield-check"></i></div><h5 class="fw-bold">An toàn & Uy tín</h5><p class="text-muted small mb-0">Đối tác của các hãng hàng không và khách sạn 5 sao hàng đầu.</p></div></div>
+            <div class="col-lg-3 col-md-6"><div class="feature-box"><div class="feature-icon"><i class="bi bi-wallet2"></i></div><h5 class="fw-bold">Giá tốt nhất</h5><p class="text-muted small mb-0">Cam kết hoàn tiền nếu bạn tìm thấy giá rẻ hơn ở nơi khác.</p></div></div>
+            <div class="col-lg-3 col-md-6"><div class="feature-box"><div class="feature-icon"><i class="bi bi-headset"></i></div><h5 class="fw-bold">Hỗ trợ 24/7</h5><p class="text-muted small mb-0">Đội ngũ CSKH luôn sẵn sàng giải quyết mọi vấn đề của bạn.</p></div></div>
+            <div class="col-lg-3 col-md-6"><div class="feature-box"><div class="feature-icon"><i class="bi bi-credit-card"></i></div><h5 class="fw-bold">Thanh toán dễ dàng</h5><p class="text-muted small mb-0">Hỗ trợ quét mã VietQR, thẻ tín dụng, ATM nội địa cực nhanh.</p></div></div>
         </div>
 
         <div class="partners-wrapper">
             <h5 class="text-center text-muted fw-bold mb-4">Các đối tác đồng hành cùng chúng tôi</h5>
             <div class="partners-scroll">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Vietnam_Airlines_logo.svg/512px-Vietnam_Airlines_logo.svg.png"
-                    alt="VN Airlines" style="height: 35px;">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/VietJet_Air_logo.svg/512px-VietJet_Air_logo.svg.png"
-                    alt="Vietjet" style="height: 40px;">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Agoda_transparent_logo.png/512px-Agoda_transparent_logo.png"
-                    alt="Agoda" style="height: 35px;">
-                <img src="https://upload.wikimedia.org/wikipedia/vi/thumb/8/87/Traveloka_Primary_Logo.png/512px-Traveloka_Primary_Logo.png"
-                    alt="Traveloka" style="height: 35px;">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Logo_MB_new.png/512px-Logo_MB_new.png"
-                    alt="MBBank" style="height: 40px;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Vietnam_Airlines_logo.svg/512px-Vietnam_Airlines_logo.svg.png" alt="VN Airlines" style="height: 35px;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/VietJet_Air_logo.svg/512px-VietJet_Air_logo.svg.png" alt="Vietjet" style="height: 40px;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Agoda_transparent_logo.png/512px-Agoda_transparent_logo.png" alt="Agoda" style="height: 35px;">
+                <img src="https://upload.wikimedia.org/wikipedia/vi/thumb/8/87/Traveloka_Primary_Logo.png/512px-Traveloka_Primary_Logo.png" alt="Traveloka" style="height: 35px;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Logo_MB_new.png/512px-Logo_MB_new.png" alt="MBBank" style="height: 40px;">
             </div>
         </div>
     </div>
@@ -784,5 +465,17 @@
         </div>
     </div>
 </div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=THAY_API_KEY_CUA_BAN_VAO_DAY&libraries=places"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var input = document.getElementById('search-location');
+        // Khởi tạo bộ gợi ý địa điểm của Google (Giới hạn tại Việt Nam)
+        var autocomplete = new google.maps.places.Autocomplete(input, {
+            types: ['(regions)'],
+            componentRestrictions: { country: "vn" }
+        });
+    });
+</script>
 
 <?php include __DIR__ . "/../views/layouts/footer.php"; ?>
