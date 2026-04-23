@@ -4,37 +4,37 @@ require_once __DIR__ . '/../config/database.php';
 class PaymentController
 {
     private $db;
+    // --- CẤU HÌNH SEPAY ---
+    private $sepayToken = "";
+    private $accountNumber = "";
 
     public function __construct()
     {
         $this->db = (new Database())->connect();
     }
 
-    // Hàm tạo mã QR của bạn (Giữ nguyên vì rất chuẩn)
+    // Hàm tạo mã QR (Đã chỉnh sang Sacombank để SePay dễ quét)
     public function createQR($amount, $info)
-{
-    $bank = "TPB"; // ✅ ĐÚNG: TPBank phải là TPB
-    $account = "0375452033"; 
-    $name = "CONG TY DU LICH TRAVELVN";
+    {
+        $bank = "Sacombank"; // Đổi thành Sacombank cho khớp với tài khoản bạn đã kết nối
+        $account = $this->accountNumber;
+        $name = "CONG TY DU LICH TRAVELVN";
 
-    $qr_url = "https://img.vietqr.io/image/"
-        . $bank . "-" . $account . "-compact2.png"
-        . "?amount=" . $amount
-        . "&addInfo=" . urlencode($info)
-        . "&accountName=" . urlencode($name)
-        . "&t=" . time();
+        $qr_url = "https://img.vietqr.io/image/"
+            . $bank . "-" . $account . "-compact2.png"
+            . "?amount=" . $amount
+            . "&addInfo=" . urlencode($info)
+            . "&accountName=" . urlencode($name)
+            . "&t=" . time();
 
-    return $qr_url;
-}
+        return $qr_url;
+    }
 
-    // Hàm hiển thị trang thanh toán đã được nâng cấp!
     public function payment()
     {
-        // 1. Nhận ID từ URL
-        $payment_id = isset($_GET['payment_id']) ? (int)$_GET['payment_id'] : 0;
-        $booking_id = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
+        $payment_id = isset($_GET['payment_id']) ? (int) $_GET['payment_id'] : 0;
+        $booking_id = isset($_GET['booking_id']) ? (int) $_GET['booking_id'] : 0;
 
-        // 2. CHÌA KHÓA Ở ĐÂY: Nếu payment_id = 0 nhưng có booking_id, ta đi tìm payment_id trong CSDL!
         if ($payment_id === 0 && $booking_id > 0) {
             $stmtFind = $this->db->prepare("SELECT payment_id FROM payments WHERE booking_id = ? LIMIT 1");
             $stmtFind->execute([$booking_id]);
@@ -44,12 +44,10 @@ class PaymentController
             }
         }
 
-        // Nếu tìm mọi cách vẫn bằng 0 thì mới báo lỗi
         if ($payment_id === 0) {
-            die("<div class='text-center mt-5' style='font-family: Arial;'><h3>Thiếu thông tin thanh toán!</h3><a href='index.php?action=myBookings'>Quay lại đơn của tôi</a></div>");
+            die("<div class='text-center mt-5'><h3>Thiếu thông tin thanh toán!</h3></div>");
         }
 
-        // 3. Lấy thông tin thanh toán, tên khách hàng và tên Tour
         $stmt = $this->db->prepare("
             SELECT p.*, b.customer_name, t.tour_name
             FROM payments p
@@ -58,39 +56,94 @@ class PaymentController
             JOIN tours t ON d.tour_id = t.tour_id
             WHERE p.payment_id = ?
         ");
-
         $stmt->execute([$payment_id]);
         $payment = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$payment) {
-            die("<div class='text-center mt-5' style='font-family: Arial;'><h3>Không tìm thấy giao dịch thanh toán</h3><a href='index.php?action=myBookings'>Quay lại</a></div>");
+            die("Không tìm thấy giao dịch");
         }
 
-        // 4. Chuẩn bị dữ liệu cho View
         $amount = (int) $payment['amount'];
-        $info = "PAY" . $payment_id;
-        
-        // 👇 THÊM DÒNG NÀY VÀO ĐỂ KHÔNG BỊ LỖI UNDEFINED VARIABLE
-        $account_no = "8609012004009"; 
-        
-        // Gọi hàm createQR ở ngay trên để sinh link ảnh
+        $info = "THANHTOAN " . $payment_id;
         $qr_url = $this->createQR($amount, $info);
 
-        // Gọi View hiển thị
         require __DIR__ . '/../views/payment.php';
-        
-
     }
-    public function checkPayment()
-{
-    $payment_id = $_GET['payment_id'] ?? 0;
 
-    $stmt = $this->db->prepare("SELECT payment_status FROM payments WHERE payment_id = ?");
-    $stmt->execute([$payment_id]);
+    // --- ĐÂY LÀ HÀM QUAN TRỌNG NHẤT: THAY THẾ WEBHOOK ---
+    public function checkPaymentStatus()
+    {
+        header('Content-Type: application/json');
+        $payment_id = $_GET['payment_id'] ?? 0;
 
-    $payment = $stmt->fetch(PDO::FETCH_ASSOC);
+        // 1. Gọi API SePay
+        $url = "https://my.sepay.vn/userapi/transactions/list?account_number=" . $this->accountNumber;
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Authorization: Bearer " . $this->sepayToken,
+            "Content-Type: application/json"
+        ]);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-    header('Content-Type: application/json');
-    echo json_encode($payment);
-}
+        // Nếu kết nối thất bại hoàn toàn (Lỗi 0)
+        if ($response === false) {
+            $error_msg = curl_error($ch); // Lấy tin nhắn lỗi thật
+            echo json_encode(["status" => "error", "message" => "Curl Error: " . $error_msg]);
+            curl_close($ch);
+            exit;
+        }
+        curl_close($ch);
+
+        // --- BƯỚC DEBUG: Nếu bạn muốn xem API SePay trả về gì, hãy tạm thời bỏ comment dòng dưới
+        // die($response); 
+
+        $result = json_decode($response, true);
+
+        // Kiểm tra nếu Token sai hoặc hết hạn
+        if ($httpCode !== 200) {
+            echo json_encode(["status" => "error", "message" => "API Error: " . $httpCode]);
+            exit;
+        }
+
+        $is_paid = false;
+        if (isset($result['transactions'])) {
+            foreach ($result['transactions'] as $trans) {
+                // SePay v2 thường dùng key 'content' cho nội dung chuyển khoản
+                $content = strtoupper($trans['content'] ?? $trans['transaction_content'] ?? '');
+
+                // Tìm mã THANHTOAN36 (không quan tâm dấu cách)
+                $search = "THANHTOAN" . $payment_id;
+                $cleanContent = str_replace(' ', '', $content);
+
+                if (strpos($cleanContent, $search) !== false) {
+                    $is_paid = true;
+                    break;
+                }
+            }
+        }
+
+        if ($is_paid) {
+            // Cập nhật Database
+            $stmt = $this->db->prepare("UPDATE payments SET payment_status = 'paid' WHERE payment_id = ?");
+            $stmt->execute([$payment_id]);
+
+            $stmtPay = $this->db->prepare("SELECT booking_id FROM payments WHERE payment_id = ?");
+            $stmtPay->execute([$payment_id]);
+            $payData = $stmtPay->fetch(PDO::FETCH_ASSOC);
+
+            if ($payData) {
+                $this->db->prepare("UPDATE bookings SET status = 'confirmed' WHERE booking_id = ?")
+                    ->execute([$payData['booking_id']]);
+            }
+            echo json_encode(["status" => "paid"]);
+        } else {
+            // Nếu chưa thấy tiền, trả về pending để JS tiếp tục đợi
+            echo json_encode(["status" => "pending"]);
+        }
+        exit;
+    }
 }
