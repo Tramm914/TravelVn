@@ -484,79 +484,77 @@
     </div>
 </div>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBwWwQ3tsJ5_hv-mV1pxMNSsC0bBKiBQk8&libraries=places"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         var input = document.getElementById('search-location');
-        
-        // 1. Khởi tạo gợi ý autocomplete như cũ
-        var autocomplete = new google.maps.places.Autocomplete(input, {
-            types: ['(regions)'],
-            componentRestrictions: { country: "vn" }
-        });
-
-        // 2. Logic xử lý Chọn điểm trên Bản đồ (Map Picker)
-        var mapPicker;
-        var mapMarker;
-        var geocoder = new google.maps.Geocoder();
         var mapModalElement = document.getElementById('mapModal');
+        var mapPicker = null;
+        var mapMarker = null;
 
-        if (mapModalElement) {
-            // Sự kiện của Bootstrap: Khi Modal bắt đầu hiển thị
-            mapModalElement.addEventListener('shown.bs.modal', function () {
-                // Chỉ khởi tạo bản đồ 1 lần duy nhất để tối ưu hiệu suất
-                if (!mapPicker) {
-                    mapPicker = new google.maps.Map(document.getElementById('picker-map'), {
-                        center: { lat: 16.047079, lng: 108.206230 }, // Mặc định hiển thị miền Trung (Đà Nẵng)
-                        zoom: 6,
-                        streetViewControl: false,
-                        mapTypeControl: false,
-                        fullscreenControl: false
-                    });
-
-                    // Lắng nghe sự kiện người dùng Click lên bản đồ
-                    mapPicker.addListener('click', function (mapsMouseEvent) {
-                        var clickedLocation = mapsMouseEvent.latLng;
-
-                        // Đặt hoặc di chuyển Marker (Ghim đỏ)
-                        if (!mapMarker) {
-                            mapMarker = new google.maps.Marker({
-                                position: clickedLocation,
-                                map: mapPicker,
-                                animation: google.maps.Animation.DROP
-                            });
-                        } else {
-                            mapMarker.setPosition(clickedLocation);
-                        }
-
-                        // Dùng Geocoder để dịch tọa độ thành địa chỉ
-                        geocoder.geocode({ location: clickedLocation }, function (results, status) {
-                            if (status === "OK" && results[0]) {
-                                // Lấy địa chỉ được Google trả về
-                                let address = results[0].formatted_address;
-                                
-                                // Điền vào ô input
-                                input.value = address;
-                                
-                                // Tự động đóng Modal sau nửa giây để tạo cảm giác mượt mà
-                                var bsModal = bootstrap.Modal.getInstance(mapModalElement);
-                                setTimeout(function() { 
-                                    bsModal.hide(); 
-                                }, 600);
-                            } else {
-                                alert("Không thể xác định địa chỉ tại vị trí này.");
-                            }
-                        });
-                    });
-                }
-            });
-        }
-        
-        // Mở modal khi bấm vào nút có icon bản đồ
+        // 1. Mở modal khi bấm vào nút icon bản đồ
         document.getElementById('btn-open-map').addEventListener('click', function() {
-            var myModal = new bootstrap.Modal(document.getElementById('mapModal'));
+            var myModal = new bootstrap.Modal(mapModalElement);
             myModal.show();
         });
+
+        // 2. Logic xử lý khi Modal hiển thị
+        if (mapModalElement) {
+            mapModalElement.addEventListener('shown.bs.modal', function () {
+                // Khởi tạo bản đồ nếu chưa có
+                if (!mapPicker) {
+                    // Tọa độ mặc định (Đà Nẵng)
+                    mapPicker = L.map('picker-map').setView([16.047079, 108.206230], 6);
+
+                    // Load lớp bản đồ từ OpenStreetMap
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(mapPicker);
+
+                    // Xử lý sự kiện click trên bản đồ
+                    mapPicker.on('click', function(e) {
+                        var lat = e.latlng.lat;
+                        var lng = e.latlng.lng;
+
+                        // Di chuyển hoặc tạo Marker mới
+                        if (mapMarker) {
+                            mapMarker.setLatLng(e.latlng);
+                        } else {
+                            mapMarker = L.marker(e.latlng).addTo(mapPicker);
+                        }
+
+                        // Gọi API miễn phí của Nominatim để dịch tọa độ thành địa chỉ
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if(data && data.display_name) {
+                                    // Rút gọn tên địa chỉ cho đẹp (tùy chọn)
+                                    let addressArr = data.display_name.split(',');
+                                    // Lấy 3 thành phần đầu tiên của địa chỉ để tránh quá dài
+                                    let shortAddress = addressArr.slice(0, 3).join(',').trim();
+                                    
+                                    input.value = shortAddress;
+
+                                    // Đóng modal tự động
+                                    var bsModal = bootstrap.Modal.getInstance(mapModalElement);
+                                    setTimeout(() => bsModal.hide(), 500);
+                                }
+                            })
+                            .catch(error => {
+                                console.error("Lỗi lấy địa chỉ:", error);
+                                alert("Không thể lấy địa chỉ. Vui lòng thử lại!");
+                            });
+                    });
+                }
+                
+                // Fix lỗi hiển thị xám bản đồ của Leaflet khi nằm trong Modal
+                setTimeout(function() {
+                    mapPicker.invalidateSize();
+                }, 100);
+            });
+        }
     });
 </script>
 
