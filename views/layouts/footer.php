@@ -113,6 +113,16 @@
     }
 
     .payment-methods i:hover { color: #0194f3; }
+    /* Style riêng cho các link trong phần contact (Địa chỉ, Email...) */
+    .footer-contact a {
+        color: #475569; /* Giữ màu chữ xám đồng bộ */
+        text-decoration: none; /* Bỏ gạch chân mặc định */
+        transition: color 0.3s ease;
+    }
+
+    .footer-contact a:hover {
+        color: #0194f3; /* Đổi sang màu xanh thương hiệu khi hover */
+    }
 </style>
 
 <footer class="footer-custom">
@@ -159,9 +169,11 @@
                     <h5 class="footer-title">Thông tin liên hệ</h5>
                     <ul class="footer-contact">
                         <li>
-                            <i class="bi bi-geo-alt-fill"></i>
-                            <span>Tòa nhà TravelVN, 123 Đường Du Lịch, Quận 1, TP.HCM</span>
-                        </li>
+    <i class="bi bi-geo-alt-fill"></i>
+    <a href="https://www.google.com/maps/search/?api=1&query=123+Đường+Du+Lịch,+Quận+1,+TP.HCM" target="_blank" rel="noopener noreferrer">
+        Tòa nhà TravelVN, 123 Đường Du Lịch, Quận 1, TP.HCM
+    </a>
+</li>
                         <li>
                             <i class="bi bi-telephone-fill"></i>
                             <span>Hotline: <strong>1900 1234</strong><br><small>(Hỗ trợ 24/7)</small></span>

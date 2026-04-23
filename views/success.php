@@ -125,7 +125,7 @@ $titleText = $isPaid ? "Đặt tour & Thanh toán thành công!" : "Đã ghi nh�
 
         <div class="col-lg-4">
             <div class="sidebar-img-card">
-                <img src="<?= !empty($data['image']) ? 'c/uploads/'.$data['image'] : 'https://images.unsplash.com/photo-1501785888041-af3ef285b470' ?>" alt="Destination">
+                <img src="<?= !empty($data['image']) ? '/uploads/'.$data['image'] : 'https://images.unsplash.com/photo-1501785888041-af3ef285b470' ?>" alt="Destination">
                 <div class="sidebar-img-overlay">
                     <h5 class="mb-0 fw-bold"><i class="bi bi-geo-alt-fill text-danger me-1"></i><?= htmlspecialchars($data['destination'] ?? 'Khám phá mới') ?></h5>
                 </div>

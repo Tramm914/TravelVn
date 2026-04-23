@@ -18,7 +18,7 @@ if (!empty($bookings)) {
 // Tính phần trăm làm tròn
 $progress = ($totalPax > 0) ? round(($checkedInPax / $totalPax) * 100) : 0;
 // Đường dẫn ảnh tour
-$imgUrl = !empty($departure['image']) ? '../public/uploads/' . $departure['image'] : 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800';
+$imgUrl = !empty($departure['image']) ? '/uploads/' . $departure['image'] : 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800';
 ?>
 
 <?php include __DIR__ . '/../layouts/header.php'; ?>
