@@ -170,8 +170,8 @@
                     <ul class="footer-contact">
                         <li>
     <i class="bi bi-geo-alt-fill"></i>
-    <a href="https://www.google.com/maps/search/?api=1&query=123+Đường+Du+Lịch,+Quận+1,+TP.HCM" target="_blank" rel="noopener noreferrer">
-        Tòa nhà TravelVN, 123 Đường Du Lịch, Quận 1, TP.HCM
+    <a href="https://www.google.com/maps/search/?api=1&query=123+Nguyễn+Văn+Bảo,+Quận+Gò Vấp,+TP.HCM" target="_blank" rel="noopener noreferrer">
+        Tòa nhà TravelVN, 12 Nguyễn Văn Bảo, quận Gò Vấp, TP.HCM
     </a>
 </li>
                         <li>

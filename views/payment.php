@@ -218,15 +218,25 @@ $qr_url .= "&accountName=" . urlencode($account_name);
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-    // 1. Hàm sao chép văn bản
+    // 1. Hàm sao chép văn bản (Giữ nguyên)
     function copyText(elementId, isAmount = false) {
         let textToCopy = document.getElementById(elementId).innerText;
         if (isAmount) {
             textToCopy = textToCopy.replace(/,/g, '');
         }
         navigator.clipboard.writeText(textToCopy).then(() => {
-            alert('Đã sao chép: ' + textToCopy);
+            // Thay thế luôn alert copy bằng Toast nhỏ gọn ở góc màn hình
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Đã sao chép!',
+                showConfirmButton: false,
+                timer: 1500
+            });
         }).catch(err => {
             console.error('Lỗi sao chép: ', err);
         });
@@ -244,8 +254,20 @@ $qr_url .= "&accountName=" . urlencode($account_name);
                     // Xóa vòng lặp khi thành công
                     clearInterval(pollingInterval);
                     localStorage.removeItem(STORAGE_KEY);
-                    alert('Ting ting! Hệ thống đã nhận được thanh toán. Chúc bạn có chuyến đi vui vẻ!');
-                    window.location.href = 'index.php?action=myBookings';
+                    
+                    // Giao diện thông báo chuyên nghiệp mới
+                    Swal.fire({
+                        title: 'Thanh toán thành công!',
+                        text: 'Cảm ơn bạn đã tin tưởng TravelVN. Đơn đặt tour của bạn đã được xác nhận.',
+                        icon: 'success',
+                        confirmButtonText: 'Xem chi tiết đơn hàng <i class="bi bi-arrow-right"></i>',
+                        confirmButtonColor: '#0194f3', // Màu xanh thương hiệu của bạn
+                        allowOutsideClick: false // Khóa không cho bấm ra ngoài để ép chuyển trang
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = 'index.php?action=myBookings';
+                        }
+                    });
                 }
             })
             .catch(error => console.log('Đang kết nối server...'));
@@ -254,7 +276,7 @@ $qr_url .= "&accountName=" . urlencode($account_name);
     // Thiết lập vòng lặp: Cứ mỗi 3 giây kiểm tra 1 lần
     const pollingInterval = setInterval(checkStatus, 3000);
 
-    // 4. HÀM ĐẾM NGƯỢC THÔNG MINH
+    // 4. HÀM ĐẾM NGƯỢC THÔNG MINH (Giữ nguyên)
     const STORAGE_KEY = `payment_expire_${currentPaymentId}`;
     let expireTime = localStorage.getItem(STORAGE_KEY);
 
@@ -273,8 +295,18 @@ $qr_url .= "&accountName=" . urlencode($account_name);
             clearInterval(countdown);
             clearInterval(pollingInterval);
             localStorage.removeItem(STORAGE_KEY);
-            alert('Đã hết thời gian thanh toán!');
-            window.location.href = 'index.php?action=myBookings';
+            
+            // Đổi luôn thông báo hết giờ cho đồng bộ
+            Swal.fire({
+                title: 'Hết thời gian thanh toán',
+                text: 'Phiên thanh toán này đã hết hạn. Vui lòng thử đặt lại nhé!',
+                icon: 'warning',
+                confirmButtonText: 'Quay lại',
+                confirmButtonColor: '#6c757d',
+                allowOutsideClick: false
+            }).then(() => {
+                window.location.href = 'index.php?action=myBookings';
+            });
             return;
         }
 
