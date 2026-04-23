@@ -14,7 +14,7 @@ $bank_id = "TPBank";
 $account_no = "00000419627";
 $account_name = "DOAN THI TRAM"; // Tên in trên thẻ
 $amount = $payment['amount'] ?? 0;
-$info = "PAY" . $payment_id;
+$info = "THANHTOAN" . $payment_id;
 
 // 3. Nối chuỗi tạo link ảnh QR của VietQR
 $qr_url = "https://img.vietqr.io/image/" . $bank_id . "-" . $account_no . "-compact2.png";
