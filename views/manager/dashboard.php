@@ -173,9 +173,16 @@
                     <p class="text-muted mb-0 fw-medium">Theo dõi các chỉ số quan trọng của hệ thống TravelVN.</p>
                 </div>
                 <div class="d-none d-md-block">
-                    <div class="date-pill">
-                        <i class="bi bi-calendar3 text-primary"></i> <?= date('d/m/Y') ?>
-                    </div>
+                    <form id="filterForm" method="GET" action="manager.php">
+                        <input type="hidden" name="action" value="dashboard">
+                        <div class="date-pill" style="padding: 4px 16px;">
+                            <i class="bi bi-calendar3 text-primary"></i>
+                            <input type="date" name="filter_date" id="filter_date" 
+                                   value="<?= isset($_GET['filter_date']) ? htmlspecialchars($_GET['filter_date']) : date('Y-m-d') ?>"
+                                   style="border: none; outline: none; background: transparent; color: var(--admin-text-muted); font-weight: 600; cursor: pointer; font-family: inherit;"
+                                   onchange="document.getElementById('filterForm').submit();">
+                        </div>
+                    </form>
                 </div>
             </div>
 

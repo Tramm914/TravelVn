@@ -25,16 +25,27 @@ class ManagerController
             exit();
         }
 
+        // ===== BỘ LỌC NGÀY =====
+        // Nhận ngày từ URL, nếu không có thì mặc định lấy ngày hôm nay
+        $filter_date = isset($_GET['filter_date']) ? $_GET['filter_date'] : date('Y-m-d');
+
         // ===== DATA =====
+        // 1. Tổng tour (Vẫn giữ nguyên, đếm tất cả tour trong hệ thống)
         $totalTours = $this->db->query("SELECT COUNT(*) FROM tours")->fetchColumn();
 
-        $totalBookings = $this->db->query("SELECT COUNT(*) FROM bookings")->fetchColumn();
+        // 2. Đơn đặt (Lọc theo ngày người dùng chọn)
+        $stmtBookings = $this->db->prepare("SELECT COUNT(*) FROM bookings WHERE DATE(booking_date) = :filter_date");
+        $stmtBookings->execute(['filter_date' => $filter_date]);
+        $totalBookings = $stmtBookings->fetchColumn();
 
-        $totalRevenue = $this->db->query("
+        // 3. Tổng doanh thu (Lọc theo ngày VÀ chỉ tính đơn đã xác nhận)
+        $stmtRevenue = $this->db->prepare("
             SELECT COALESCE(SUM(total_price),0) 
             FROM bookings 
-            WHERE status='confirmed'
-        ")->fetchColumn();
+            WHERE status='confirmed' AND DATE(booking_date) = :filter_date
+        ");
+        $stmtRevenue->execute(['filter_date' => $filter_date]);
+        $totalRevenue = $stmtRevenue->fetchColumn();
 
         $userName = $_SESSION['user']['full_name']
             ?? $_SESSION['user']['name']

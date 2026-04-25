@@ -121,6 +121,34 @@ $imgUrl = !empty($departure['image']) ? '/uploads/' . $departure['image'] : 'htt
     .btn-checkin { background: var(--app-success); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: 700; width: 100%; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;}
     .btn-checkin:hover { background: #047857; }
     .status-checked { background: var(--app-success-bg); color: var(--app-success); padding: 10px; border-radius: 10px; font-weight: 700; text-align: center; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;}
+    /* --- BẢNG ĐIỂM DANH CHUYÊN NGHIỆP --- */
+    .table-wrapper {
+        background: var(--app-card);
+        border-radius: 16px;
+        border: 1px solid var(--app-border);
+        overflow: hidden;
+    }
+    .table-custom { margin-bottom: 0; width: 100%; border-collapse: collapse; }
+    .table-custom thead th {
+        background-color: var(--app-muted-bg);
+        color: var(--app-muted);
+        font-weight: 700; font-size: 0.85rem; text-transform: uppercase;
+        padding: 16px; border-bottom: 2px solid var(--app-border); white-space: nowrap;
+    }
+    .table-custom tbody td {
+        padding: 16px; vertical-align: middle; border-bottom: 1px solid var(--app-border);
+        color: var(--app-text); font-size: 0.95rem;
+    }
+    .table-custom tbody tr:hover { background-color: #f8fafc; }
+    
+    .status-pill {
+        display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px;
+        border-radius: 50px; font-size: 0.85rem; font-weight: 600;
+    }
+    .pill-pending { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+    .pill-success { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+    
+    .btn-action-table { padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; transition: 0.2s; }
 </style>
 
 <div class="hero-banner" style="background-image: url('<?= $imgUrl ?>');">
@@ -236,35 +264,78 @@ $imgUrl = !empty($departure['image']) ? '/uploads/' . $departure['image'] : 'htt
 
         <div class="col-xl-8 col-lg-7">
             <div class="ui-box">
-                <div class="box-header"><i class="bi bi-people-fill text-success"></i><h5>Danh sách Điểm danh (<?= count($bookings) ?> khách)</h5></div>
+                <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-style: dashed !important; border-color: var(--app-border) !important;">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-people-fill text-success fs-4"></i>
+                        <h5 class="fw-bold m-0 text-dark">Danh sách (<?= count($bookings) ?> đơn)</h5>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button onclick="exportTableToExcel('attendanceTable', 'Danh_Sach_Khach_<?= $departure['departure_id'] ?>')" class="btn btn-outline-success btn-sm fw-bold" style="border-radius: 8px;">
+                            <i class="bi bi-file-earmark-excel"></i> Xuất Excel
+                        </button>
+                        <button onclick="window.print()" class="btn btn-outline-secondary btn-sm fw-bold d-none d-md-block" style="border-radius: 8px;">
+                            <i class="bi bi-printer"></i> In DS
+                        </button>
+                    </div>
+                </div>
+
                 <?php if (empty($bookings)): ?>
-                    <div class="text-center p-5 border rounded-4 bg-light border-dashed">
+                    <div class="text-center p-5 border rounded-4 bg-light" style="border-style: dashed !important;">
                         <i class="bi bi-person-x text-muted fs-1 mb-2 d-block"></i>
                         <span class="text-muted fw-medium">Chưa có hành khách nào đặt tour này.</span>
                     </div>
                 <?php else: ?>
-                    <div class="pax-grid">
-                        <?php foreach ($bookings as $b): ?>
-                            <div class="pax-card <?= ($b['status'] == 'checked_in') ? 'is-checked' : '' ?>">
-                                <div class="pax-header">
-                                    <div class="pax-info">
-                                        <h6><?= htmlspecialchars($b['customer_name']) ?></h6>
-                                        <p><i class="bi bi-telephone text-primary"></i> <?= htmlspecialchars($b['phone']) ?></p>
-                                    </div>
-                                    <div class="pax-qty"><?= $b['number_of_people'] ?> pax</div>
-                                </div>
-                                <div class="pax-action mt-3">
-                                    <?php if ($b['status'] != 'checked_in'): ?>
-                                        <form method="POST" action="guide.php?action=checkin" class="m-0">
-                                            <input type="hidden" name="booking_id" value="<?= $b['booking_id'] ?>">
-                                            <button type="submit" class="btn-checkin"><i class="bi bi-qr-code-scan"></i> Check-in khách</button>
-                                        </form>
-                                    <?php else: ?>
-                                        <div class="status-checked shadow-sm"><i class="bi bi-check-circle-fill"></i> Đã có mặt</div>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
+                    <div class="table-wrapper table-responsive">
+                        <table class="table table-custom" id="attendanceTable">
+                            <thead>
+                                <tr>
+                                    <th width="5%" class="text-center">STT</th>
+                                    <th width="30%">Khách hàng</th>
+                                    <th width="15%" class="text-center">SL (Pax)</th>
+                                    <th width="25%" class="text-center">Trạng thái</th>
+                                    <th width="25%" class="text-center">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php $stt = 1; foreach ($bookings as $b): ?>
+                                    <tr>
+                                        <td class="text-center fw-bold text-muted"><?= $stt++ ?></td>
+                                        <td>
+                                            <div class="fw-bold text-dark fs-6"><?= htmlspecialchars($b['customer_name']) ?></div>
+                                            <div class="text-muted mt-1" style="font-size: 0.85rem;">
+                                                <i class="bi bi-telephone-fill me-1"></i><?= htmlspecialchars($b['phone']) ?>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-light text-dark border px-3 py-2 fs-6"><?= $b['number_of_people'] ?></span>
+                                        </td>
+                                        <td class="text-center">
+                                            <?php if ($b['status'] == 'checked_in'): ?>
+                                                <span class="status-pill pill-success">
+                                                    <i class="bi bi-check-circle-fill"></i> Có mặt
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="status-pill pill-pending">
+                                                    <i class="bi bi-clock-history"></i> Chờ check-in
+                                                </span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="text-center">
+                                            <?php if ($b['status'] != 'checked_in'): ?>
+                                                <form method="POST" action="guide.php?action=checkin" class="m-0">
+                                                    <input type="hidden" name="booking_id" value="<?= $b['booking_id'] ?>">
+                                                    <button type="submit" class="btn btn-success btn-action-table w-100">
+                                                        <i class="bi bi-qr-code-scan me-1"></i> Check-in
+                                                    </button>
+                                                </form>
+                                            <?php else: ?>
+                                                <span class="text-muted fst-italic small"><i class="bi bi-check2-all text-success"></i> Đã hoàn tất</span>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
                     </div>
                 <?php endif; ?>
             </div>
@@ -285,5 +356,33 @@ $imgUrl = !empty($departure['image']) ? '/uploads/' . $departure['image'] : 'htt
     </script>
     <?php unset($_SESSION['show_complete_alert']); ?>
 <?php endif; ?>
+<script>
+function exportTableToExcel(tableID, filename = ''){
+    var downloadLink;
+    var dataType = 'application/vnd.ms-excel';
+    var tableSelect = document.getElementById(tableID);
+    
+    // Sao chép bảng để xóa cột "Thao tác" (cột số 5) khi xuất Excel
+    var tableClone = tableSelect.cloneNode(true);
+    for (var i = 0; i < tableClone.rows.length; i++) {
+        tableClone.rows[i].deleteCell(-1); 
+    }
 
+    var tableHTML = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"></head><body><table>' + tableClone.innerHTML + '</table></body></html>';
+    
+    filename = filename ? filename + '.xls' : 'Danh_Sach_Khach.xls';
+    
+    downloadLink = document.createElement("a");
+    document.body.appendChild(downloadLink);
+    
+    if(navigator.msSaveOrOpenBlob){
+        var blob = new Blob(['\ufeff', tableHTML], { type: dataType });
+        navigator.msSaveOrOpenBlob( blob, filename);
+    }else{
+        downloadLink.href = 'data:' + dataType + ', ' + encodeURIComponent(tableHTML);
+        downloadLink.download = filename;
+        downloadLink.click();
+    }
+}
+</script>
 <?php include __DIR__ . '/../layouts/footer.php'; ?>
