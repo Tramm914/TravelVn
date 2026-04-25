@@ -530,51 +530,141 @@ class ManagerController
     }
     public function report()
     {
-        // ===== Tổng quan =====
-        $totalRevenue = $this->db->query("
-        SELECT COALESCE(SUM(total_price),0) 
-        FROM bookings 
-        WHERE status='confirmed'
-    ")->fetchColumn();
+        // Khởi tạo các biến chứa điều kiện Lọc
+        $whereClauses = [];
+        $params = [];
 
-        $totalBookings = $this->db->query("
-        SELECT COUNT(*) FROM bookings
-    ")->fetchColumn();
+        // 1. Bắt ngày bắt đầu (start_date)
+        if (!empty($_GET['start_date'])) {
+            $whereClauses[] = "b.booking_date >= ?";
+            $params[] = $_GET['start_date'] . ' 00:00:00';
+        }
 
-        $totalTours = $this->db->query("
-        SELECT COUNT(*) FROM tours
-    ")->fetchColumn();
+        // 2. Bắt ngày kết thúc (end_date)
+        if (!empty($_GET['end_date'])) {
+            $whereClauses[] = "b.booking_date <= ?";
+            $params[] = $_GET['end_date'] . ' 23:59:59';
+        }
 
-       // ===== Doanh thu theo tháng =====
-        $revenueByMonth = $this->db->query("
-        SELECT 
-            DATE_FORMAT(booking_date, '%m/%Y') as month,
-            SUM(total_price) as revenue
-        FROM bookings
-        WHERE status='confirmed'
-        GROUP BY DATE_FORMAT(booking_date, '%m/%Y'), DATE_FORMAT(booking_date, '%Y-%m')
-        ORDER BY DATE_FORMAT(booking_date, '%Y-%m') ASC
-    ")->fetchAll(PDO::FETCH_ASSOC);
+        // 3. Bắt trạng thái đơn hàng (status)
+        // Nếu không chọn gì, mặc định phần TỔNG QUAN doanh thu chỉ đếm đơn 'confirmed'
+        // Nhưng phần TRẠNG THÁI sẽ đếm tất cả.
+        $statusFilter = "";
+        if (!empty($_GET['status'])) {
+            $statusFilter = " AND b.status = ?";
+            $whereClauses[] = "b.status = ?";
+            // Tham số cho các truy vấn chung
+            $params[] = $_GET['status'];
+            // Biến riêng để tiện xử lý mảng
+            $statusParam = $_GET['status'];
+        }
 
-        // ===== Top tour =====
-        $topTours = $this->db->query("
-        SELECT t.tour_name, COUNT(b.booking_id) as total
-        FROM bookings b
-        JOIN departures d ON b.departure_id = d.departure_id
-        JOIN tours t ON d.tour_id = t.tour_id
-        WHERE b.status='confirmed'
-        GROUP BY t.tour_id
-        ORDER BY total DESC
-        LIMIT 5
-    ")->fetchAll(PDO::FETCH_ASSOC);
+        // Nối chuỗi WHERE nếu có điều kiện
+        $whereSql = "";
+        if (count($whereClauses) > 0) {
+            $whereSql = " WHERE " . implode(" AND ", $whereClauses);
+        }
 
-        // ===== Trạng thái =====
-        $statusStats = $this->db->query("
-        SELECT status, COUNT(*) as total
-        FROM bookings
-        GROUP BY status
-    ")->fetchAll(PDO::FETCH_ASSOC);
+        // ============================================
+        // 1. THỐNG KÊ TỔNG QUAN (Áp dụng bộ lọc)
+        // ============================================
+        
+        // Tổng doanh thu (Chỉ tính đơn đã xác nhận VÀ nằm trong khoảng thời gian lọc)
+        $revSql = "SELECT COALESCE(SUM(b.total_price),0) FROM bookings b ";
+        if ($whereSql !== "") {
+            $revSql .= $whereSql . (empty($_GET['status']) ? " AND b.status = 'confirmed'" : "");
+        } else {
+            $revSql .= " WHERE b.status = 'confirmed'";
+        }
+        $stmt = $this->db->prepare($revSql);
+        $stmt->execute($params);
+        $totalRevenue = $stmt->fetchColumn();
 
+        // Số đơn đặt (Tính theo bộ lọc trạng thái và thời gian)
+        $bookSql = "SELECT COUNT(*) FROM bookings b" . $whereSql;
+        $stmt = $this->db->prepare($bookSql);
+        $stmt->execute($params);
+        $totalBookings = $stmt->fetchColumn();
+
+        // Tổng Tour (Không phụ thuộc bộ lọc ngày tháng của đơn hàng)
+        $totalTours = $this->db->query("SELECT COUNT(*) FROM tours")->fetchColumn();
+
+
+        // ============================================
+        // 2. DOANH THU THEO THÁNG (Chỉ đơn confirmed)
+        // ============================================
+        $monthSql = "
+            SELECT 
+                DATE_FORMAT(b.booking_date, '%m/%Y') as month,
+                SUM(b.total_price) as revenue
+            FROM bookings b
+        ";
+        
+        // Điều chỉnh điều kiện riêng cho biểu đồ Doanh thu (Luôn phải là confirmed)
+        $monthWhere = [];
+        $monthParams = [];
+        if (!empty($_GET['start_date'])) { $monthWhere[] = "b.booking_date >= ?"; $monthParams[] = $_GET['start_date'] . ' 00:00:00'; }
+        if (!empty($_GET['end_date'])) { $monthWhere[] = "b.booking_date <= ?"; $monthParams[] = $_GET['end_date'] . ' 23:59:59'; }
+        $monthWhere[] = "b.status = 'confirmed'"; // Ép buộc chỉ vẽ đơn thành công
+        
+        $monthSql .= " WHERE " . implode(" AND ", $monthWhere) . "
+            GROUP BY DATE_FORMAT(b.booking_date, '%m/%Y'), DATE_FORMAT(b.booking_date, '%Y-%m')
+            ORDER BY DATE_FORMAT(b.booking_date, '%Y-%m') ASC
+        ";
+        $stmt = $this->db->prepare($monthSql);
+        $stmt->execute($monthParams);
+        $revenueByMonth = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+        // ============================================
+        // 3. TOP TOUR (Áp dụng bộ lọc thời gian)
+        // ============================================
+        $topSql = "
+            SELECT t.tour_name, COUNT(b.booking_id) as total
+            FROM bookings b
+            JOIN departures d ON b.departure_id = d.departure_id
+            JOIN tours t ON d.tour_id = t.tour_id
+        ";
+        
+        // Điều chỉnh điều kiện riêng cho biểu đồ Top Tour
+        $topWhere = [];
+        $topParams = [];
+        if (!empty($_GET['start_date'])) { $topWhere[] = "b.booking_date >= ?"; $topParams[] = $_GET['start_date'] . ' 00:00:00'; }
+        if (!empty($_GET['end_date'])) { $topWhere[] = "b.booking_date <= ?"; $topParams[] = $_GET['end_date'] . ' 23:59:59'; }
+        if (!empty($_GET['status'])) { $topWhere[] = "b.status = ?"; $topParams[] = $_GET['status']; } 
+        else { $topWhere[] = "b.status = 'confirmed'"; } // Nếu ko lọc, mặc định đếm đơn thành công
+        
+        $topSql .= " WHERE " . implode(" AND ", $topWhere) . "
+            GROUP BY t.tour_id
+            ORDER BY total DESC
+            LIMIT 5
+        ";
+        $stmt = $this->db->prepare($topSql);
+        $stmt->execute($topParams);
+        $topTours = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+        // ============================================
+        // 4. TRẠNG THÁI ĐƠN HÀNG (Chỉ áp dụng bộ lọc thời gian)
+        // ============================================
+        $statusSql = "SELECT b.status, COUNT(*) as total FROM bookings b";
+        
+        $statusWhere = [];
+        $statusParams = [];
+        if (!empty($_GET['start_date'])) { $statusWhere[] = "b.booking_date >= ?"; $statusParams[] = $_GET['start_date'] . ' 00:00:00'; }
+        if (!empty($_GET['end_date'])) { $statusWhere[] = "b.booking_date <= ?"; $statusParams[] = $_GET['end_date'] . ' 23:59:59'; }
+        
+        if (count($statusWhere) > 0) {
+            $statusSql .= " WHERE " . implode(" AND ", $statusWhere);
+        }
+        $statusSql .= " GROUP BY b.status";
+
+        $stmt = $this->db->prepare($statusSql);
+        $stmt->execute($statusParams);
+        $statusStats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+        // Tải View
         require __DIR__ . '/../views/manager/report.php';
     }
     // ================= BOOKING DETAIL (XEM CHI TIẾT ĐƠN HÀNG) =================

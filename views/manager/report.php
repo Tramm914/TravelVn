@@ -349,16 +349,47 @@
         </div>
     </div>
 </div>
-<script>
-document.querySelector('form').addEventListener('submit', function(e) {
-    const start = document.querySelector('[name="start_date"]').value;
-    const end = document.querySelector('[name="end_date"]').value;
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    if (start && end && start > end) {
-        e.preventDefault();
-        alert("❌ Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc!");
+<script>
+    // Logic 1: Bắt lỗi ngay khi khách hàng đổi ngày (On Change)
+    const startDateInput = document.querySelector('[name="start_date"]');
+    const endDateInput = document.querySelector('[name="end_date"]');
+
+    function checkDates() {
+        const start = startDateInput.value;
+        const end = endDateInput.value;
+
+        if (start && end && start > end) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi chọn ngày!',
+                text: 'Ngày bắt đầu không thể lớn hơn ngày kết thúc.',
+                confirmButtonColor: '#0194f3'
+            });
+            // Tự động xóa cái ngày bị sai đi để khách chọn lại
+            endDateInput.value = ''; 
+        }
     }
-});
+
+    startDateInput.addEventListener('change', checkDates);
+    endDateInput.addEventListener('change', checkDates);
+
+    // Logic 2: Đảm bảo chặn không cho Submit Form nếu ngày sai
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const start = startDateInput.value;
+        const end = endDateInput.value;
+
+        if (start && end && start > end) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Lọc thất bại',
+                text: 'Vui lòng chọn lại khoảng thời gian hợp lệ trước khi xem báo cáo.',
+                confirmButtonColor: '#f59e0b'
+            });
+        }
+    });
 </script>
 <script>
     // ===== LẤY DATA TỪ PHP =====
