@@ -33,7 +33,7 @@ class AuthController
                 if (!$data) {
                     $error = "Email không tồn tại";
                 } else {
-                    // Hỗ trợ kiểm tra cả mật khẩu Bcrypt mới và MD5 cũ trong CSDL của bạn
+                    // Hỗ trợ kiểm tra cả mật khẩu Bcrypt mới và MD5 cũ
                     $isPasswordCorrect = false;
                     if (password_verify($password, $data['password'])) {
                         $isPasswordCorrect = true;
@@ -42,18 +42,25 @@ class AuthController
                     }
 
                     if ($isPasswordCorrect) {
-                        // Lưu session chuẩn khớp với các biến mà file booking.php đang gọi
-                        $_SESSION['user'] = [
-                            'user_id' => $data['user_id'],
-                            'full_name' => $data['full_name'],
-                            'email' => $data['email'],
-                            'phone' => $data['phone'],
-                            'role' => $data['role']
-                        ];
-                        
-                        // Đăng nhập xong -> Chuyển hướng qua index.php
-                        header("Location: index.php?action=tours");
-                        exit();
+                        // ==========================================
+                        // BƯỚC MỚI: KIỂM TRA TÀI KHOẢN CÓ BỊ KHÓA KHÔNG
+                        // ==========================================
+                        if (isset($data['status']) && $data['status'] === 'inactive') {
+                            $error = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.";
+                        } else {
+                            // Nếu trạng thái bình thường -> Cho phép tạo Session
+                            $_SESSION['user'] = [
+                                'user_id' => $data['user_id'],
+                                'full_name' => $data['full_name'],
+                                'email' => $data['email'],
+                                'phone' => $data['phone'],
+                                'role' => $data['role']
+                            ];
+                            
+                            // Đăng nhập xong -> Chuyển hướng qua trang Tours
+                            header("Location: index.php?action=tours");
+                            exit();
+                        }
                     } else {
                         $error = "Sai mật khẩu";
                     }

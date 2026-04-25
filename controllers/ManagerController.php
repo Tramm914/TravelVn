@@ -545,15 +545,15 @@ class ManagerController
         SELECT COUNT(*) FROM tours
     ")->fetchColumn();
 
-        // ===== Doanh thu theo tháng =====
+       // ===== Doanh thu theo tháng =====
         $revenueByMonth = $this->db->query("
         SELECT 
             DATE_FORMAT(booking_date, '%m/%Y') as month,
             SUM(total_price) as revenue
         FROM bookings
         WHERE status='confirmed'
-        GROUP BY month
-        ORDER BY booking_date ASC
+        GROUP BY DATE_FORMAT(booking_date, '%m/%Y'), DATE_FORMAT(booking_date, '%Y-%m')
+        ORDER BY DATE_FORMAT(booking_date, '%Y-%m') ASC
     ")->fetchAll(PDO::FETCH_ASSOC);
 
         // ===== Top tour =====
