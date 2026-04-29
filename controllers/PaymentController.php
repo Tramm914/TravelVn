@@ -32,10 +32,15 @@ class PaymentController
 
     public function payment()
     {
-        $payment_id = isset($_GET['payment_id']) ? (int) $_GET['payment_id'] : 0;
-        $booking_id = isset($_GET['booking_id']) ? (int) $_GET['booking_id'] : 0;
+        // --- SỬA TẠI ĐÂY: Dùng hàm decode_id() để giải mã chuỗi từ URL thay vì ép kiểu (int) ---
+        $hash_payment = $_GET['payment_id'] ?? '';
+        $hash_booking = $_GET['booking_id'] ?? '';
+        
+        $payment_id = decode_id($hash_payment);
+        $booking_id = decode_id($hash_booking);
+        // -------------------------------------------------------------------------------------
 
-        if ($payment_id === 0 && $booking_id > 0) {
+        if ($payment_id <= 0 && $booking_id > 0) {
             $stmtFind = $this->db->prepare("SELECT payment_id FROM payments WHERE booking_id = ? LIMIT 1");
             $stmtFind->execute([$booking_id]);
             $row = $stmtFind->fetch(PDO::FETCH_ASSOC);
@@ -44,8 +49,8 @@ class PaymentController
             }
         }
 
-        if ($payment_id === 0) {
-            die("<div class='text-center mt-5'><h3>Thiếu thông tin thanh toán!</h3></div>");
+        if ($payment_id <= 0) {
+            die("<div class='text-center mt-5'><h3>Thiếu thông tin thanh toán hoặc đường dẫn không hợp lệ!</h3></div>");
         }
 
         $stmt = $this->db->prepare("
@@ -60,12 +65,14 @@ class PaymentController
         $payment = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$payment) {
-            die("Không tìm thấy giao dịch");
+            die("<div class='text-center mt-5'><h3>Không tìm thấy giao dịch</h3></div>");
         }
 
         $amount = (int) $payment['amount'];
         $info = "THANHTOAN " . $payment_id;
-        $qr_url = $this->createQR($amount, $info);
+        
+        // Bạn có thể giữ hàm tạo QR mặc định của bạn ở đây
+        // $qr_url = $this->createQR($amount, $info);
 
         require __DIR__ . '/../views/payment.php';
     }
