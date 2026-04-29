@@ -270,7 +270,7 @@
                     <ul class="footer-links">
                         <li><a href="index.php?action=about">Giới thiệu</a></li>
                         <li><a href="index.php?action=careers">Tuyển dụng</a></li>
-                        <li><a href="index.php?action=blog">Tin tức du lịch</a></li>
+                        <li><a href="index.php?action=blogs">Tin tức du lịch</a></li>
                         <li><a href="index.php?action=affiliate">Chương trình đại lý</a></li>
                     </ul>
                 </div>
