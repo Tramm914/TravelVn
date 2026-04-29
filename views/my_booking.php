@@ -1,252 +1,587 @@
-<?php include __DIR__ . '/layouts/header.php'; ?>
+<?php include 'layouts/header.php'; ?>
 
 <style>
     :root {
         --primary-color: #0194f3;
-        --secondary-color: #f8fafc;
-        --text-main: #1e293b;
+        --primary-hover: #007bc2;
+        --accent-color: #f96d00;
+        --text-dark: #1a202c;
         --text-muted: #64748b;
+        --bg-light: #f8fafc;
         --border-color: #e2e8f0;
-        --warning-color: #f59e0b;
-        --success-color: #10b981;
     }
 
     body {
         background-color: #f1f5f9;
-        font-family: 'Inter', sans-serif;
     }
 
-    .detail-container {
-        max-width: 1100px;
-        margin: 40px auto;
-        padding: 0 15px;
-    }
-
-    /* BREADCRUMB */
-    .breadcrumb-custom {
-        font-size: 0.9rem;
-        font-weight: 500;
-        margin-bottom: 25px;
-    }
-    .breadcrumb-custom a { color: var(--text-muted); text-decoration: none; }
-    .breadcrumb-custom a:hover { color: var(--primary-color); }
-    .breadcrumb-custom span { color: var(--text-main); font-weight: 700; }
-
-    /* BOX TRẮNG CHUNG */
-    .content-box {
+    /* --- SIDEBAR MENU CÁ NHÂN --- */
+    .user-sidebar-info {
         background: white;
         border-radius: 20px;
-        border: 1px solid var(--border-color);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-        padding: 30px;
-        margin-bottom: 25px;
-    }
-
-    /* HEADER ĐƠN HÀNG */
-    .order-header { text-align: center; margin-bottom: 30px; border-bottom: 1px dashed var(--border-color); padding-bottom: 25px;}
-    .order-icon { font-size: 3.5rem; line-height: 1; margin-bottom: 15px; }
-    .order-icon.success { color: var(--success-color); }
-    .order-icon.warning { color: var(--warning-color); }
-    .order-title { font-weight: 800; font-size: 1.8rem; color: var(--text-main); margin-bottom: 10px; }
-    .order-id-badge { background: var(--secondary-color); border: 1px solid var(--border-color); padding: 8px 20px; border-radius: 50px; font-weight: 700; color: var(--text-muted); display: inline-block; font-size: 1rem;}
-
-    /* LƯỚI THÔNG TIN */
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-    .info-section-title { font-weight: 800; font-size: 1.1rem; color: var(--primary-color); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
-    .info-item { margin-bottom: 15px; }
-    .info-item label { display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; text-transform: uppercase; }
-    .info-item div { font-weight: 700; color: var(--text-main); font-size: 1.05rem; }
-
-    /* TỔNG TIỀN */
-    .payment-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 16px; padding: 25px; display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
-    .payment-box.paid { background: #ecfdf5; border-color: #a7f3d0; }
-    .pay-label { font-weight: 700; color: var(--text-main); font-size: 1.1rem; margin-bottom: 5px; }
-    .pay-status-badge { display: inline-block; padding: 5px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; }
-    .pay-status-badge.unpaid { background: #fef3c7; color: #d97706; }
-    .pay-status-badge.paid { background: #d1fae5; color: #059669; }
-    .pay-amount { font-size: 2rem; font-weight: 800; color: #ea580c; }
-    .payment-box.paid .pay-amount { color: #059669; }
-
-    /* VÉ ĐIỆN TỬ (QR CODE) - BÊN PHẢI */
-    .e-ticket-card {
-        background: white;
-        border-radius: 20px;
-        border: 2px dashed var(--primary-color);
         padding: 30px 20px;
         text-align: center;
-        box-shadow: 0 10px 25px rgba(1, 148, 243, 0.1);
-        position: relative;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+
+    .avatar-circle {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color), #00d2ff);
+        color: white;
+        font-size: 2rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        box-shadow: 0 4px 10px rgba(1, 148, 243, 0.3);
+    }
+
+    .user-sidebar-menu {
+        background: white;
+        border-radius: 20px;
+        padding: 15px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .menu-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 20px;
+        border-radius: 12px;
+        color: var(--text-dark);
+        font-weight: 600;
+        text-decoration: none;
+        transition: 0.2s;
+        margin-bottom: 5px;
+    }
+
+    .menu-link i {
+        font-size: 1.2rem;
+        color: var(--text-muted);
+        transition: 0.2s;
+    }
+
+    .menu-link:hover {
+        background-color: var(--bg-light);
+        color: var(--primary-color);
+    }
+
+    .menu-link:hover i {
+        color: var(--primary-color);
+    }
+
+    .menu-link.active {
+        background-color: #eef7ff;
+        color: var(--primary-color);
+    }
+
+    .menu-link.active i {
+        color: var(--primary-color);
+    }
+
+    .menu-link.text-danger:hover {
+        background-color: #fef2f2;
+        color: #dc2626;
+    }
+
+    .menu-link.text-danger:hover i {
+        color: #dc2626;
+    }
+
+    /* --- PREMIUM BOOKING CARD --- */
+    .premium-card {
+        background: #ffffff;
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        margin-bottom: 24px;
         overflow: hidden;
+        transition: all 0.3s ease;
     }
-    /* Hiệu ứng cắt viền vé */
-    .e-ticket-card::before, .e-ticket-card::after {
-        content: ""; position: absolute; width: 30px; height: 30px; background: #f1f5f9; border-radius: 50%; top: 50%; transform: translateY(-50%); border: 1px solid var(--border-color);
+
+    .premium-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        border-color: #cbd5e1;
     }
-    .e-ticket-card::before { left: -16px; border-left: none; }
-    .e-ticket-card::after { right: -16px; border-right: none; }
 
-    .qr-wrapper { background: white; padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); display: inline-block; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-    .qr-wrapper img { width: 180px; height: 180px; }
-    .ticket-title { font-weight: 800; color: var(--primary-color); font-size: 1.2rem; margin-bottom: 5px; }
-    .ticket-desc { color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; margin: 0; padding: 0 10px;}
+    .card-head {
+        background-color: var(--bg-light);
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-    /* TOUR THUMBNAIL */
-    .tour-preview { border-radius: 20px; overflow: hidden; position: relative; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-    .tour-preview img { width: 100%; height: 200px; object-fit: cover; }
-    .tour-location { position: absolute; bottom: 15px; left: 15px; background: rgba(0,0,0,0.7); color: white; padding: 6px 15px; border-radius: 50px; font-weight: 600; font-size: 0.9rem; backdrop-filter: blur(5px);}
+    .order-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
 
-    /* THÔNG TIN HỖ TRỢ */
-    .support-box { background: white; border-radius: 20px; padding: 25px; border: 1px solid var(--border-color); }
-    .support-title { font-weight: 800; margin-bottom: 20px; font-size: 1.1rem; }
-    .support-item { display: flex; gap: 15px; margin-bottom: 15px; align-items: center; }
-    .support-item i { font-size: 1.5rem; color: var(--primary-color); }
-    .support-item div p { margin: 0; font-size: 0.85rem; color: var(--text-muted); }
-    .support-item div strong { font-size: 1.05rem; color: var(--text-main); }
+    .order-id {
+        font-weight: 700;
+        color: var(--text-dark);
+    }
 
-    @media (max-width: 768px) {
-        .info-grid { grid-template-columns: 1fr; gap: 15px; }
-        .payment-box { flex-direction: column; text-align: center; gap: 15px; }
+    .order-date {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    .status-badge {
+        padding: 6px 14px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.85rem;
+    }
+
+    .badge-pending {
+        background-color: #fef3c7;
+        color: #d97706;
+    }
+
+    .badge-confirmed {
+        background-color: #d1fae5;
+        color: #059669;
+    }
+
+    .badge-cancelled {
+        background-color: #fee2e2;
+        color: #dc2626;
+    }
+
+    .badge-completed {
+        background-color: #e0f2fe;
+        color: #0284c7;
+    }
+
+    .card-body-custom {
+        padding: 24px;
+    }
+
+    .tour-thumbnail {
+        width: 100%;
+        height: 160px;
+        border-radius: 12px;
+        object-fit: cover;
+    }
+
+    .tour-title {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--text-dark);
+        margin-bottom: 12px;
+    }
+
+    .tour-detail-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .tour-detail-list li {
+        color: #475569;
+        font-size: 0.95rem;
+        margin-bottom: 8px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .tour-detail-list li i {
+        color: var(--primary-color);
+        font-size: 1.1rem;
+    }
+
+    .action-column {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-end;
+        height: 100%;
+        padding-left: 20px;
+        border-left: 1px dashed var(--border-color);
+    }
+
+    .pay-status {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .pay-paid {
+        color: #059669;
+    }
+
+    .pay-unpaid {
+        color: #ea580c;
+    }
+
+    .total-price {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--accent-color);
+        margin-bottom: 16px;
+        line-height: 1;
+    }
+
+    .btn-action {
+        padding: 10px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: 0.2s;
+        text-align: center;
+        width: 100%;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-detail {
+        background-color: #f1f5f9;
+        color: var(--text-dark);
+        border: 1px solid var(--border-color);
+    }
+
+    .btn-detail:hover {
+        background-color: #e2e8f0;
+        color: var(--text-dark);
+    }
+
+    .btn-payment {
+        background-color: var(--primary-color);
+        color: white;
+        box-shadow: 0 4px 10px rgba(1, 148, 243, 0.3);
+    }
+
+    .btn-payment:hover {
+        background-color: var(--primary-hover);
+        color: white;
+    }
+
+    /* CSS cho nút Hủy tour */
+    .btn-cancel {
+        background-color: white;
+        color: #dc2626;
+        border: 1px solid #fca5a5;
+    }
+
+    .btn-cancel:hover {
+        background-color: #fef2f2;
+        color: #b91c1c;
+        border-color: #fca5a5;
+    }
+
+    /* CSS cho nút Đánh giá tour */
+    .btn-review {
+        background-color: #ffc107;
+        color: #000;
+        border: 1px solid #ffb300;
+    }
+
+    .btn-review:hover {
+        background-color: #ffb300;
+        color: #000;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 991px) {
+        .action-column {
+            align-items: flex-start;
+            border-left: none;
+            border-top: 1px dashed var(--border-color);
+            padding-left: 0;
+            padding-top: 20px;
+            margin-top: 15px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            flex-direction: column;
+        }
+
+        .btn-action {
+            width: 100%;
+        }
+
+        .tour-thumbnail {
+            margin-bottom: 15px;
+            height: 200px;
+        }
+    }
+
+    /* --- CSS CHO DÃY SAO ĐÁNH GIÁ --- */
+    .rating-container {
+        display: flex;
+        flex-direction: row-reverse;
+        /* Xếp ngược để CSS hover hoạt động mượt */
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .rating-container input[type="radio"] {
+        display: none;
+        /* Ẩn nút radio mặc định */
+    }
+
+    .rating-container label {
+        font-size: 2.8rem;
+        color: #d1d5db;
+        /* Màu xám nhạt khi chưa chọn */
+        cursor: pointer;
+        transition: 0.2s ease-in-out;
+        line-height: 1;
+    }
+
+    /* Hiệu ứng khi hover rê chuột hoặc được chọn */
+    .rating-container label:hover,
+    .rating-container label:hover~label,
+    .rating-container input[type="radio"]:checked~label {
+        color: #ffc107;
+        /* Màu vàng kim */
+        text-shadow: 0 0 15px rgba(255, 193, 7, 0.4);
+        /* Tạo độ phát sáng nhẹ */
+    }
+
+    .rating-container label:active {
+        transform: scale(1.2);
+        /* Phóng to nhẹ khi click */
     }
 </style>
 
-<div class="detail-container">
-    
-    <div class="breadcrumb-custom">
-        <a href="index.php">Trang chủ</a> / 
-        <a href="index.php?action=myBookings">Chuyến đi của tôi</a> / 
-        <span>Chi tiết đơn hàng</span>
-    </div>
-
+<div class="container mt-5 mb-5">
     <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="content-box">
-                <div class="order-header">
-                    <?php if ($booking['status'] == 'confirmed' || $booking['status'] == 'completed'): ?>
-                        <div class="order-icon success"><i class="bi bi-check-circle-fill"></i></div>
-                        <h2 class="order-title">Đã xác nhận đơn đặt tour!</h2>
-                    <?php else: ?>
-                        <div class="order-icon warning"><i class="bi bi-exclamation-circle-fill"></i></div>
-                        <h2 class="order-title">Đã ghi nhận đơn đặt tour!</h2>
-                    <?php endif; ?>
-                    <div class="order-id-badge">Mã đơn hàng: #<?= str_pad($booking['booking_id'], 6, '0', STR_PAD_LEFT) ?></div>
+
+        <div class="col-lg-3">
+            <div class="sticky-top" style="top: 100px; z-index: 1;">
+
+                <div class="user-sidebar-info">
+                    <div class="avatar-circle">
+                        <?= mb_strtoupper(mb_substr($user_name, 0, 1, 'UTF-8')) ?>
+                    </div>
+                    <h5 class="fw-bold mb-1 text-dark"><?= htmlspecialchars($user_name) ?></h5>
+                    <p class="text-muted small mb-3"><?= htmlspecialchars($user_email) ?></p>
+                    <span class="badge bg-light text-dark border"><i
+                            class="bi bi-shield-check text-success me-1"></i>Tài khoản xác thực</span>
                 </div>
 
-                <div class="info-grid">
-                    <div>
-                        <h4 class="info-section-title"><i class="bi bi-person-vcard"></i> Thông tin liên hệ</h4>
-                        <div class="info-item">
-                            <label>Người đặt</label>
-                            <div><?= htmlspecialchars($booking['customer_name']) ?></div>
-                        </div>
-                        <div class="info-item">
-                            <label>Số điện thoại</label>
-                            <div><?= htmlspecialchars($booking['phone']) ?></div>
-                        </div>
-                        <div class="info-item">
-                            <label>Email</label>
-                            <div><?= htmlspecialchars($booking['email'] ?? $booking['account_email'] ?? 'Không cung cấp') ?></div>
-                        </div>
-                        <div class="info-item">
-                            <label>Số khách</label>
-                            <div><?= $booking['number_of_people'] ?> người</div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h4 class="info-section-title"><i class="bi bi-map"></i> Chi tiết dịch vụ</h4>
-                        <div class="info-item">
-                            <label>Tên Tour</label>
-                            <div class="text-primary"><?= htmlspecialchars($booking['tour_name']) ?></div>
-                        </div>
-                        <div class="info-item">
-                            <label>Ngày khởi hành</label>
-                            <div><?= date('d/m/Y', strtotime($booking['start_date'])) ?></div>
-                        </div>
-                        <div class="info-item">
-                            <label>Điểm đón / Tập trung</label>
-                            <div><i class="bi bi-geo-alt-fill text-danger me-1"></i> <?= htmlspecialchars($booking['pickup_address'] ?? 'Đang cập nhật') ?></div>
-                        </div>
-                        <div class="info-item">
-                            <label>Trạng thái đơn</label>
-                            <div>
-                                <?php 
-                                    $s = $booking['status'];
-                                    if($s == 'pending') echo '<span class="badge bg-warning text-dark">Chờ xử lý</span>';
-                                    elseif($s == 'confirmed') echo '<span class="badge bg-success">Đã xác nhận</span>';
-                                    elseif($s == 'checked_in') echo '<span class="badge bg-info text-dark">Đã Check-in</span>';
-                                    elseif($s == 'completed') echo '<span class="badge bg-primary">Hoàn tất</span>';
-                                    else echo '<span class="badge bg-danger">Đã hủy</span>';
-                                ?>
-                            </div>
-                        </div>
-                    </div>
+                <div class="user-sidebar-menu">
+                    <a href="index.php?action=profile" class="menu-link">
+                        <i class="bi bi-person-circle"></i> Tài khoản của tôi
+                    </a>
+                    <a href="index.php?action=myBookings" class="menu-link active">
+                        <i class="bi bi-briefcase"></i> Chuyến đi của tôi
+                        <span class="badge bg-primary rounded-pill ms-auto"><?= $totalBookings ?></span>
+                    </a>
+                    <hr class="my-2" style="border-color: var(--border-color);">
+                    <a href="index.php?action=logout" class="menu-link text-danger">
+                        <i class="bi bi-box-arrow-right"></i> Đăng xuất
+                    </a>
                 </div>
 
-                <?php 
-                    $isPaid = ($booking['payment_status'] === 'paid');
-                ?>
-                <div class="payment-box <?= $isPaid ? 'paid' : '' ?>">
-                    <div>
-                        <div class="pay-label">Tổng thanh toán</div>
-                        <?php if ($isPaid): ?>
-                            <span class="pay-status-badge paid"><i class="bi bi-shield-check me-1"></i> Đã thanh toán</span>
-                        <?php else: ?>
-                            <span class="pay-status-badge unpaid"><i class="bi bi-exclamation-circle me-1"></i> Chưa thanh toán</span>
-                        <?php endif; ?>
-                    </div>
-                    <div class="pay-amount">
-                        <?= number_format($booking['total_price']) ?> <span style="font-size: 1.2rem;">đ</span>
-                    </div>
-                </div>
-
-                <div class="d-flex justify-content-center gap-3 mt-4 pt-3 border-top">
-                    <a href="index.php?action=myBookings" class="btn btn-outline-secondary fw-bold px-4 py-2" style="border-radius: 12px;">Quản lý đơn</a>
-                    <?php if (!$isPaid && $booking['status'] !== 'cancelled'): ?>
-                        <a href="index.php?action=payment&booking_id=<?= encode_id($booking['booking_id']) ?>" class="btn btn-primary fw-bold px-4 py-2" style="border-radius: 12px;">Thanh toán ngay</a>
-                    <?php endif; ?>
-                </div>
             </div>
         </div>
 
-        <div class="col-lg-4">
-            <div class="tour-preview">
-                <img src="<?= !empty($booking['image']) ? '/uploads/' . $booking['image'] : 'https://images.unsplash.com/photo-1501785888041-af3ef285b470' ?>" alt="Tour">
-                <div class="tour-location"><i class="bi bi-geo-alt-fill text-danger"></i> <?= htmlspecialchars($booking['destination'] ?? 'Việt Nam') ?></div>
-            </div>
+        <div class="col-lg-9">
+            <h3 class="fw-bold text-dark mb-4">Danh sách chuyến đi</h3>
 
-            <?php if ($booking['status'] !== 'cancelled'): ?>
-            <div class="e-ticket-card mb-4">
-                <h4 class="ticket-title">MÃ CHECK-IN (E-TICKET)</h4>
-                
-                <div class="qr-wrapper">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=<?= $booking['booking_id'] ?>" alt="QR Code">
+            <?php if (empty($bookings)): ?>
+                <div class="text-center bg-white p-5 rounded-4 shadow-sm border" style="border-radius: 20px !important;">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3284/3284615.png" alt="Empty" width="120"
+                        class="mb-3 opacity-50">
+                    <h4 class="fw-bold text-dark">Bạn chưa có chuyến đi nào</h4>
+                    <p class="text-muted">Hãy lên kế hoạch cho kỳ nghỉ tuyệt vời tiếp theo của bạn ngay hôm nay!</p>
+                    <a href="index.php?action=tours" class="btn btn-primary btn-lg mt-3 px-5"
+                        style="border-radius: 50px;">Khám phá tour ngay</a>
                 </div>
-                
-                <p class="ticket-desc">
-                    Vui lòng xuất trình mã QR này cho Hướng dẫn viên vào ngày khởi hành để tiến hành Check-in tự động.
-                </p>
-            </div>
+            <?php else: ?>
+
+                <?php foreach ($bookings as $b): ?>
+                    <?php
+                    $statusClass = 'badge-pending';
+                    $statusText = 'Chờ xác nhận';
+                    if ($b['status'] == 'confirmed') {
+                        $statusClass = 'badge-confirmed';
+                        $statusText = 'Đã xác nhận';
+                    } elseif ($b['status'] == 'cancelled') {
+                        $statusClass = 'badge-cancelled';
+                        $statusText = 'Đã hủy';
+                    } elseif ($b['status'] == 'completed') {
+                        $statusClass = 'badge-completed';
+                        $statusText = 'Hoàn tất';
+                    }
+
+                    $payMethod = strtoupper($b['payment_method'] ?? '');
+                    $payMethodText = ($payMethod == 'QR') ? 'Chuyển khoản QR' : (($payMethod == 'COD') ? 'Thu tiền mặt' : 'Chưa chọn');
+
+                    $payStatus = $b['payment_status'] ?? 'pending';
+                    if ($payStatus == 'paid') {
+                        $payHTML = '<div class="pay-status pay-paid"><i class="bi bi-shield-check"></i> Đã thanh toán</div>';
+                    } else {
+                        $payHTML = '<div class="pay-status pay-unpaid"><i class="bi bi-exclamation-circle"></i> Chưa thanh toán</div>';
+                    }
+                    ?>
+
+                    <div class="premium-card">
+                        <div class="card-head">
+                            <div class="order-info">
+                                <span class="order-id"><i class="bi bi-receipt me-1 text-muted"></i> Mã đơn:
+                                    #<?= str_pad($b['booking_id'], 6, '0', STR_PAD_LEFT) ?></span>
+                                <span class="order-date d-none d-sm-inline-block"><i class="bi bi-clock"></i> Đặt lúc:
+                                    <?= !empty($b['booking_date']) ? date('H:i - d/m/Y', strtotime($b['booking_date'])) : '--' ?></span>
+                            </div>
+                            <span class="status-badge <?= $statusClass ?>"><?= $statusText ?></span>
+                        </div>
+
+                        <div class="card-body-custom">
+                            <div class="row">
+                                <div class="col-lg-3 col-md-4">
+                                    <img src="<?= !empty($b['image']) ? '/uploads/' . $b['image'] : 'https://images.unsplash.com/photo-1501785888041-af3ef285b470' ?>"
+                                        class="tour-thumbnail" alt="Tour">
+                                </div>
+
+                                <div class="col-lg-6 col-md-8">
+                                    <h4 class="tour-title"><?= htmlspecialchars($b['tour_name']) ?></h4>
+                                    <ul class="tour-detail-list">
+                                        <li><i class="bi bi-calendar2-check"></i><span>Khởi hành:
+                                                <strong><?= date('d/m/Y', strtotime($b['start_date'])) ?></strong> <i
+                                                    class="bi bi-arrow-right mx-1 text-muted"></i>
+                                                <?= date('d/m/Y', strtotime($b['end_date'])) ?></span></li>
+                                        <li><i class="bi bi-people"></i><span>Hành khách: <strong><?= $b['number_of_people'] ?>
+                                                    người</strong> <span
+                                                    class="text-muted">(<?= htmlspecialchars($b['customer_name']) ?>)</span></span>
+                                        </li>
+                                        <li><i class="bi bi-wallet2"></i><span>Phương thức:
+                                                <strong><?= $payMethodText ?></strong></span></li>
+                                    </ul>
+                                </div>
+
+                                <div class="col-lg-3 col-12">
+                                    <div class="action-column">
+                                        <div class="text-lg-end text-start w-100">
+                                            <?= $payHTML ?>
+                                            <div class="text-muted" style="font-size: 0.85rem;">Tổng tiền</div>
+                                            <div class="total-price"><?= number_format($b['total_price']) ?> <span
+                                                    style="font-size: 1rem;">đ</span></div>
+                                        </div>
+
+                                        <div class="action-buttons w-100 d-flex flex-column gap-2 mt-auto">
+                                            <?php if ($payMethod == 'QR' && $payStatus == 'pending' && $b['status'] != 'cancelled'): ?>
+                                                <a href="index.php?action=payment&payment_id=<?= encode_id($b['payment_id'] ?? 0) ?>&booking_id=<?= encode_id($b['booking_id']) ?>"
+                                                    class="btn-action btn-payment">Thanh toán ngay</a>
+                                            <?php endif; ?>
+
+                                            <a href="index.php?action=bookingDetail&booking_id=<?= encode_id($b['booking_id']) ?>"
+                                                class="btn-action btn-detail">Xem chi tiết</a>
+
+                                            <?php if ($b['status'] == 'completed'): ?>
+                                                <button type="button" class="btn-action btn-review" data-bs-toggle="modal"
+                                                    data-bs-target="#reviewModal<?= $b['booking_id'] ?>">
+                                                    <i class="bi bi-star-fill me-1"></i> Đánh giá tour
+                                                </button>
+                                            <?php endif; ?>
+
+                                            <?php
+                                            $daysRemaining = (strtotime($b['start_date']) - time()) / (60 * 60 * 24);
+                                            if ($b['status'] !== 'cancelled' && $b['status'] !== 'completed' && $daysRemaining >= 3):
+                                                ?>
+                                                <a href="index.php?action=cancelBooking&booking_id=<?= encode_id($b['booking_id']) ?>"
+                                                    class="btn-action btn-cancel"
+                                                    onclick="return confirm('Bạn có chắc chắn muốn hủy chuyến đi này? Thao tác này không thể hoàn tác!');">
+                                                    Hủy tour
+                                                </a>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <?php if ($b['status'] == 'completed'): ?>
+                        <div class="modal fade" id="reviewModal<?= $b['booking_id'] ?>" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <form action="index.php?action=submitReview" method="POST" class="modal-content border-0 shadow"
+                                    style="border-radius: 20px;">
+                                    <div class="modal-header border-0 p-4 pb-0">
+                                        <h5 class="modal-title fw-bold text-dark">Đánh giá trải nghiệm</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body p-4">
+                                        <div class="mb-3">
+                                            <p class="text-muted small mb-1">Tour đã đi:</p>
+                                            <h6 class="fw-bold text-primary"><?= htmlspecialchars($b['tour_name']) ?></h6>
+                                        </div>
+                                        <input type="hidden" name="tour_id" value="<?= $b['tour_id'] ?? $b['id_tour'] ?? 0 ?>">
+                                        <input type="hidden" name="booking_id" value="<?= $b['booking_id'] ?>">
+                                        <div class="mb-4 text-center">
+                                            <label class="form-label d-block fw-bold mb-2 fs-5 text-dark">Bạn chấm tour này mấy
+                                                sao?</label>
+
+                                            <div class="rating-container mb-2">
+                                                <input type="radio" id="star5_<?= $b['booking_id'] ?>" name="rating" value="5"
+                                                    required />
+                                                <label for="star5_<?= $b['booking_id'] ?>" title="5 sao - Tuyệt vời">★</label>
+
+                                                <input type="radio" id="star4_<?= $b['booking_id'] ?>" name="rating" value="4" />
+                                                <label for="star4_<?= $b['booking_id'] ?>" title="4 sao - Rất tốt">★</label>
+
+                                                <input type="radio" id="star3_<?= $b['booking_id'] ?>" name="rating" value="3" />
+                                                <label for="star3_<?= $b['booking_id'] ?>" title="3 sao - Bình thường">★</label>
+
+                                                <input type="radio" id="star2_<?= $b['booking_id'] ?>" name="rating" value="2" />
+                                                <label for="star2_<?= $b['booking_id'] ?>" title="2 sao - Kém">★</label>
+
+                                                <input type="radio" id="star1_<?= $b['booking_id'] ?>" name="rating" value="1" />
+                                                <label for="star1_<?= $b['booking_id'] ?>" title="1 sao - Rất tệ">★</label>
+                                            </div>
+
+                                            <div class="text-muted small fw-medium">(Vui lòng chạm để chọn số sao)</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Cảm nhận của bạn</label>
+                                            <textarea name="comment" class="form-control shadow-sm" rows="4"
+                                                placeholder="Hãy chia sẻ điều bạn hài lòng..." required
+                                                style="border-radius: 12px;"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer border-0 p-4 pt-0">
+                                        <button type="submit" class="btn btn-primary w-100 py-3 fw-bold shadow"
+                                            style="border-radius: 12px;">Gửi đánh giá ngay</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
+                <?php endforeach; ?>
             <?php endif; ?>
-
-            <div class="support-box">
-                <h5 class="support-title">Cần sự trợ giúp?</h5>
-                <div class="support-item">
-                    <i class="bi bi-headset"></i>
-                    <div>
-                        <p>Hotline 24/7</p>
-                        <strong>1900 1234</strong>
-                    </div>
-                </div>
-                <div class="support-item mb-0">
-                    <i class="bi bi-envelope-at"></i>
-                    <div>
-                        <p>Email hỗ trợ</p>
-                        <strong>support@travelvn.com</strong>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
 
-<?php include __DIR__ . '/layouts/footer.php'; ?>
+<?php if (isset($_SESSION['review_success'])): ?>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        Swal.fire({
+            title: 'Cảm ơn bạn!',
+            text: '<?= $_SESSION['review_success'] ?>',
+            icon: 'success',
+            confirmButtonText: 'Đóng',
+            confirmButtonColor: '#0194f3'
+        });
+    </script>
+    <?php unset($_SESSION['review_success']); ?>
+<?php endif; ?>
+
+<?php include 'layouts/footer.php'; ?>

@@ -176,6 +176,47 @@ $titleText = $isPaid ? "Đặt tour & Thanh toán thành công!" : "Đã ghi nh�
         background-color: #fef3c7;
         color: #d97706;
     }
+
+    /* --- VÉ ĐIỆN TỬ (QR CODE) --- */
+    .e-ticket-card {
+        background: white;
+        border-radius: 20px;
+        border: 2px dashed var(--primary-color);
+        padding: 30px 20px;
+        text-align: center;
+        box-shadow: 0 10px 25px rgba(1, 148, 243, 0.1);
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+    
+    /* Hiệu ứng cắt đục lỗ viền vé */
+    .e-ticket-card::before, .e-ticket-card::after {
+        content: ""; 
+        position: absolute; 
+        width: 30px; 
+        height: 30px; 
+        background: #f1f5f9; 
+        border-radius: 50%; 
+        top: 50%; 
+        transform: translateY(-50%); 
+        border: 1px solid var(--border-color);
+    }
+    .e-ticket-card::before { left: -16px; border-left: none; }
+    .e-ticket-card::after { right: -16px; border-right: none; }
+
+    .qr-wrapper { 
+        background: white; 
+        padding: 15px; 
+        border-radius: 16px; 
+        border: 1px solid var(--border-color); 
+        display: inline-block; 
+        margin-bottom: 15px; 
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+    }
+    .qr-wrapper img { width: 180px; height: 180px; }
+    .ticket-title { font-weight: 800; color: var(--primary-color); font-size: 1.2rem; margin-bottom: 5px; }
+    .ticket-desc { color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; margin: 0; padding: 0 10px;}
 </style>
 
 <div class="container mt-5 mb-5">
@@ -240,7 +281,6 @@ $titleText = $isPaid ? "Đặt tour & Thanh toán thành công!" : "Đã ghi nh�
                                 class="info-value"><?= !empty($data['start_date']) ? date('d/m/Y', strtotime($data['start_date'])) : '--' ?></span>
                         </div>
 
-                        <!-- BẮT ĐẦU: HIỂN THỊ ĐIỂM ĐÓN VỪA THÊM -->
                         <div class="info-row">
                             <span class="info-label">Điểm đón / Tập trung:</span>
                             <span class="info-value text-primary">
@@ -248,7 +288,6 @@ $titleText = $isPaid ? "Đặt tour & Thanh toán thành công!" : "Đã ghi nh�
                                 <?= htmlspecialchars($data['pickup_address'] ?? 'Đang cập nhật') ?>
                             </span>
                         </div>
-                        <!-- KẾT THÚC: HIỂN THỊ ĐIỂM ĐÓN -->
 
                         <div class="info-row"><span class="info-label">Trạng thái đơn:</span>
                             <div>
@@ -256,6 +295,10 @@ $titleText = $isPaid ? "Đặt tour & Thanh toán thành công!" : "Đã ghi nh�
                                     <span class="badge-status bg-success-soft">Đã xác nhận</span>
                                 <?php elseif ($data['status'] == 'cancelled'): ?>
                                     <span class="badge-status bg-danger text-white">Đã hủy</span>
+                                <?php elseif ($data['status'] == 'checked_in'): ?>
+                                    <span class="badge-status bg-info text-dark">Đã Check-in</span>
+                                <?php elseif ($data['status'] == 'completed'): ?>
+                                    <span class="badge-status bg-primary text-white">Hoàn tất</span>
                                 <?php else: ?>
                                     <span class="badge-status bg-warning-soft">Chờ xử lý</span>
                                 <?php endif; ?>
@@ -294,6 +337,21 @@ $titleText = $isPaid ? "Đặt tour & Thanh toán thành công!" : "Đã ghi nh�
                     </h5>
                 </div>
             </div>
+
+            <?php if ($data['status'] !== 'cancelled'): ?>
+            <div class="e-ticket-card">
+                <h4 class="ticket-title">MÃ CHECK-IN (E-TICKET)</h4>
+                
+                <div class="qr-wrapper">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=<?= $data['booking_id'] ?>" alt="QR Code">
+                </div>
+                
+                <p class="ticket-desc">
+                    Vui lòng xuất trình mã QR này cho Hướng dẫn viên vào ngày khởi hành để tiến hành Check-in tự động.
+                </p>
+            </div>
+            <?php endif; ?>
+
             <div class="support-card">
                 <h5 class="fw-bold mb-4">Cần sự trợ giúp?</h5>
                 <ul class="support-list">
