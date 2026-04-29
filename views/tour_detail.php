@@ -137,6 +137,22 @@ include 'layouts/header.php';
     select option:disabled { color: #a0aab2; }
     
     @media (max-width: 991px) { .info-grid { grid-template-columns: 1fr; } .service-grid { grid-template-columns: 1fr; } }
+    
+    /* --- REVIEWS (ĐÁNH GIÁ CỦA KHÁCH HÀNG) --- */
+    .review-section { margin-top: 40px; margin-bottom: 40px; }
+    .review-summary { background: white; padding: 25px; border-radius: var(--radius-md); border: 1px solid var(--tvlk-border); display: flex; align-items: center; gap: 25px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+    .review-avg-box { text-align: center; border-right: 1px solid var(--tvlk-border); padding-right: 25px; }
+    .review-avg { font-size: 3rem; font-weight: 800; color: var(--tvlk-orange); line-height: 1; margin-bottom: 5px; }
+    .review-stars i { color: #ffc107; font-size: 1.2rem; }
+    
+    .review-item { background: white; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--tvlk-border); margin-bottom: 15px; transition: 0.3s; }
+    .review-item:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+    .review-header { display: flex; align-items: center; gap: 15px; margin-bottom: 12px; }
+    .review-avatar { width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, var(--tvlk-blue), #00d2ff); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; }
+    .review-meta h6 { margin: 0 0 3px 0; font-weight: 700; color: var(--tvlk-text); }
+    .review-meta small { color: var(--tvlk-gray); font-size: 0.85rem; }
+    .review-meta .stars i { color: #ffc107; font-size: 0.9rem; }
+    .review-comment { color: #4a5568; line-height: 1.6; margin: 0; font-size: 0.95rem; }
 </style>
 
 <div class="container mt-3">
@@ -330,9 +346,78 @@ include 'layouts/header.php';
                 </div>
             </div>
         </div>
+    </div> <?php
+    // An toàn kiểm tra biến $reviews
+    if (!isset($reviews)) {
+        $reviews = []; 
+    }
 
+    $totalReviews = count($reviews);
+    $avgRating = 0;
+    if ($totalReviews > 0) {
+        $sum = 0;
+        foreach ($reviews as $r) {
+            $sum += (int)$r['rating'];
+        }
+        $avgRating = round($sum / $totalReviews, 1);
+    }
+    ?>
+
+    <div class="row review-section">
+        <div class="col-lg-8">
+            <h3 class="section-title"><i class="bi bi-chat-quote-fill text-warning"></i> Đánh giá từ khách hàng</h3>
+            
+            <?php if ($totalReviews > 0): ?>
+                <div class="review-summary">
+                    <div class="review-avg-box">
+                        <div class="review-avg"><?= $avgRating ?></div>
+                        <div class="review-stars">
+                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                <i class="bi <?= $i <= round($avgRating) ? 'bi-star-fill' : 'bi-star' ?>"></i>
+                            <?php endfor; ?>
+                        </div>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold text-dark mb-1">Tuyệt vời</h5>
+                        <p class="text-muted mb-0">Dựa trên trải nghiệm thực tế của <strong><?= $totalReviews ?></strong> hành khách đã tham gia tour này.</p>
+                    </div>
+                </div>
+
+                <div class="review-list">
+                    <?php foreach ($reviews as $rv): 
+                        $cusName = htmlspecialchars($rv['full_name'] ?? $rv['customer_name'] ?? 'Khách hàng');
+                        $initial = mb_strtoupper(mb_substr($cusName, 0, 1, 'UTF-8'));
+                        $date = isset($rv['created_at']) ? date('d/m/Y', strtotime($rv['created_at'])) : '--';
+                        $stars = (int)$rv['rating'];
+                    ?>
+                        <div class="review-item">
+                            <div class="review-header">
+                                <div class="review-avatar"><?= $initial ?></div>
+                                <div class="review-meta">
+                                    <h6><?= $cusName ?> <i class="bi bi-patch-check-fill text-success ms-1" title="Đã tham gia tour"></i></h6>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="stars">
+                                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                                <i class="bi <?= $i <= $stars ? 'bi-star-fill' : 'bi-star' ?>"></i>
+                                            <?php endfor; ?>
+                                        </div>
+                                        <small><i class="bi bi-dot"></i> Đã đi tour ngày <?= $date ?></small>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="review-comment">"<?= nl2br(htmlspecialchars($rv['comment'] ?? '')) ?>"</p>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <div class="text-center p-5 bg-white rounded-4 border">
+                    <img src="https://cdn-icons-png.flaticon.com/512/9662/9662283.png" width="80" class="mb-3 opacity-50" alt="No reviews">
+                    <h5 class="fw-bold text-dark">Chưa có đánh giá nào</h5>
+                    <p class="text-muted">Hãy là người đầu tiên trải nghiệm và để lại nhận xét cho hành trình này nhé!</p>
+                </div>
+            <?php endif; ?>
+        </div>
     </div>
-
     <script>
         window.onload = function () {
            const bookMode = "<?= $_GET['book'] ?? '0' ?>";

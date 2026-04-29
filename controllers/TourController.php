@@ -11,9 +11,18 @@ class TourController
         $this->db = (new Database())->connect();
         // --- THÊM DÒNG NÀY ---
         // Mỗi khi ai đó vào web xem tour, hệ thống sẽ tự động quét và dọn dẹp ghế bị treo
-        $this->autoCancelExpiredBookings();
+        //$this->autoCancelExpiredBookings();
     }
-
+// Thêm hàm này vào trong TourController.php
+    public function triggerCleanup()
+    {
+        // Chạy ngầm dọn dẹp
+        $this->autoCancelExpiredBookings();
+        // Trả về JSON cho JS biết là đã xong
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'success']);
+        exit;
+    }
     public function home()
     {
         // 1. Lấy danh sách tour hiển thị giá tốt
@@ -39,7 +48,7 @@ class TourController
         require __DIR__ . '/../views/home.php';
     }
 
-    public function detail()
+   public function detail()
     {
         // 1. Nhận SLUG từ URL thay vì ID
         $slug = $_GET['slug'] ?? '';
@@ -70,6 +79,17 @@ class TourController
         $stmtDepartures = $this->db->prepare("SELECT * FROM departures WHERE tour_id = ? AND start_date >= CURDATE() ORDER BY start_date ASC");
         $stmtDepartures->execute([$id]);
         $departures = $stmtDepartures->fetchAll(PDO::FETCH_ASSOC);
+
+        // 5. LẤY DANH SÁCH ĐÁNH GIÁ (REVIEWS) TỪ DATABASE
+        $stmtReviews = $this->db->prepare("
+            SELECT r.*, u.full_name, u.name as user_name 
+            FROM reviews r 
+            LEFT JOIN users u ON r.user_id = u.user_id 
+            WHERE r.tour_id = ? 
+            ORDER BY r.created_at DESC
+        ");
+        $stmtReviews->execute([$id]);
+        $reviews = $stmtReviews->fetchAll(PDO::FETCH_ASSOC);
 
         // Gọi view hiển thị
         require __DIR__ . '/../views/tour_detail.php';

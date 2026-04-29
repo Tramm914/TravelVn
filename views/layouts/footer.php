@@ -433,7 +433,14 @@
         }
     });
 </script>
-
+<script>
+    // Chạy ngầm quét đơn hàng quá hạn (Mỗi 15 giây)
+    setInterval(function() {
+        fetch('index.php?action=triggerCleanup')
+            .then(response => response.json())
+            .catch(error => console.log('Cleanup background task running...'));
+    }, 15000); 
+</script>
 </body>
 
 </html>
