@@ -501,5 +501,35 @@ class TourController
         // 2. Gọi View hiển thị (file views/blogs.php mà bạn đã tạo lúc nãy)
         require __DIR__ . '/../views/blogs.php';
     }
+// ================= CÁC TRANG TĨNH (TỪ FOOTER) =================
+    public function about()
+    {
+        require __DIR__ . '/../views/about.php';
+    }
 
+    public function careers()
+    {
+        require __DIR__ . '/../views/careers.php';
+    }
+
+    public function affiliate()
+    {
+        require __DIR__ . '/../views/affiliate.php';
+    }
+
+    // Đặt tên hàm là guidePage để không bị trùng với file guide.php ở gốc
+    public function guidePage() 
+    {
+        require __DIR__ . '/../views/guide_page.php';
+    }
+
+    public function faq()
+    {
+        require __DIR__ . '/../views/faq.php';
+    }
+
+    public function policy()
+    {
+        require __DIR__ . '/../views/policy.php';
+    }
 }
