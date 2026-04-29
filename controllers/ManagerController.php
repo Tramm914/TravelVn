@@ -1,21 +1,21 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
-
+require_once __DIR__ . '/../config/helpers.php';
 class ManagerController
 {
     private $db;
 
     public function __construct()
     {
+        // Khởi tạo session ở đây để dùng chung cho toàn bộ controller (hiển thị thông báo)
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         $this->db = (new Database())->connect();
     }
 
     public function dashboard()
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
         // check quyền
         if (
             !isset($_SESSION['user']) ||
@@ -25,28 +25,17 @@ class ManagerController
             exit();
         }
 
-        // ===== BỘ LỌC NGÀY =====
-        // Nhận ngày từ URL, nếu không có thì mặc định lấy ngày hôm nay
-        $filter_date = isset($_GET['filter_date']) ? $_GET['filter_date'] : date('Y-m-d');
-
         // ===== DATA =====
-        // 1. Tổng tour (Vẫn giữ nguyên, đếm tất cả tour trong hệ thống)
         $totalTours = $this->db->query("SELECT COUNT(*) FROM tours")->fetchColumn();
 
-        // 2. Đơn đặt (Lọc theo ngày người dùng chọn)
-        $stmtBookings = $this->db->prepare("SELECT COUNT(*) FROM bookings WHERE DATE(booking_date) = :filter_date");
-        $stmtBookings->execute(['filter_date' => $filter_date]);
-        $totalBookings = $stmtBookings->fetchColumn();
+        $totalBookings = $this->db->query("SELECT COUNT(*) FROM bookings")->fetchColumn();
 
-        // 3. Tổng doanh thu (Lọc theo ngày VÀ chỉ tính đơn đã xác nhận)
-        $stmtRevenue = $this->db->prepare("
+        $totalRevenue = $this->db->query("
             SELECT COALESCE(SUM(total_price),0) 
             FROM bookings 
-            WHERE status='confirmed' AND DATE(booking_date) = :filter_date
-        ");
-        $stmtRevenue->execute(['filter_date' => $filter_date]);
-        $totalRevenue = $stmtRevenue->fetchColumn();
-
+            WHERE status IN ('confirmed','completed','checked_in')
+            AND DATE(booking_date) BETWEEN DATE_FORMAT(NOW(), '%Y-%m-01') AND CURDATE()
+        ")->fetchColumn();
         $userName = $_SESSION['user']['full_name']
             ?? $_SESSION['user']['name']
             ?? 'Quản trị viên';
@@ -54,6 +43,7 @@ class ManagerController
         // ===== LOAD VIEW =====
         require __DIR__ . '/../views/manager/dashboard.php';
     }
+
     // ================= TOUR LIST =================
     public function tours()
     {
@@ -80,7 +70,6 @@ class ManagerController
     // ================= STORE =================
     public function storeTour()
     {
-
         // upload ảnh
         $imageName = null;
         if (!empty($_FILES['image']['name'])) {
@@ -88,15 +77,20 @@ class ManagerController
             move_uploaded_file($_FILES['image']['tmp_name'], "../public/uploads/" . $imageName);
         }
 
-        $stmt = $this->db->prepare("
-        INSERT INTO tours 
-        (partner_id, tour_name, destination, description, price, duration, status, created_by, hotel, include_service, exclude_service, itinerary, image)
-        VALUES (?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?)
-    ");
+        $slug = create_slug($_POST['tour_name']);
 
+        // SỬA SQL: Thêm cột `slug` và 1 dấu `?`
+        $stmt = $this->db->prepare("
+            INSERT INTO tours 
+            (partner_id, tour_name, slug, destination, description, price, duration, status, created_by, hotel, include_service, exclude_service, itinerary, image)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?)
+        ");
+
+        // SỬA MẢNG EXECUTE: Nhét biến $slug vào đúng vị trí thứ 3
         $stmt->execute([
             $_POST['partner_id'],
             $_POST['tour_name'],
+            $slug, // <--- THÊM BIẾN NÀY VÀO ĐÂY
             $_POST['destination'],
             $_POST['description'],
             $_POST['price'],
@@ -109,7 +103,9 @@ class ManagerController
             $imageName
         ]);
 
+        $_SESSION['success'] = "Đã thêm tour mới thành công!";
         header("Location: manager.php?action=tours");
+        exit;
     }
 
     // ================= EDIT =================
@@ -122,7 +118,6 @@ class ManagerController
         $tourModel = new Tour($this->db);
         $tour = $tourModel->getTourById($id);
 
-        // 🔥 THÊM DÒNG NÀY
         $partners = $this->db->query("SELECT * FROM partners")->fetchAll(PDO::FETCH_ASSOC);
 
         require __DIR__ . '/../views/manager/edit_tour.php';
@@ -160,26 +155,32 @@ class ManagerController
                 move_uploaded_file($_FILES['image']['tmp_name'], $targetDir . $imageName);
             }
 
-            $stmt = $this->db->prepare("
-    UPDATE tours 
-    SET 
-        partner_id=?,
-        tour_name=?,
-        destination=?,
-        description=?,
-        price=?,
-        duration=?,
-        hotel=?,
-        include_service=?,
-        exclude_service=?,
-        itinerary=?,
-        image=?
-    WHERE tour_id=?
-");
+            $slug = create_slug($_POST['tour_name']);
 
+            // SỬA SQL: Thêm dòng `slug=?,`
+            $stmt = $this->db->prepare("
+                UPDATE tours 
+                SET 
+                    partner_id=?,
+                    tour_name=?,
+                    slug=?, 
+                    destination=?,
+                    description=?,
+                    price=?,
+                    duration=?,
+                    hotel=?,
+                    include_service=?,
+                    exclude_service=?,
+                    itinerary=?,
+                    image=?
+                WHERE tour_id=?
+            ");
+
+            // SỬA MẢNG EXECUTE: Nhét biến $slug vào đúng vị trí thứ 3
             $stmt->execute([
                 $_POST['partner_id'],
                 $_POST['tour_name'],
+                $slug, // <--- THÊM BIẾN NÀY VÀO ĐÂY
                 $_POST['destination'],
                 $_POST['description'],
                 $_POST['price'],
@@ -192,10 +193,12 @@ class ManagerController
                 $id
             ]);
 
+            $_SESSION['success'] = "Đã cập nhật thông tin tour thành công!";
             header("Location: manager.php?action=tours");
             exit();
         }
     }
+
     // ================= DELETE =================
     public function deleteTour()
     {
@@ -216,18 +219,22 @@ class ManagerController
         $stmt = $this->db->prepare("DELETE FROM tours WHERE tour_id=?");
         $stmt->execute([$id]);
 
+        $_SESSION['success'] = "Đã xóa tour thành công!";
         header("Location: manager.php?action=tours");
+        exit;
     }
+
     public function partners()
     {
         $partners = $this->db->query("SELECT * FROM partners")->fetchAll(PDO::FETCH_ASSOC);
-
         require __DIR__ . '/../views/manager/partners.php';
     }
+
     public function createPartner()
     {
         require __DIR__ . '/../views/manager/create_partner.php';
     }
+
     public function storePartner()
     {
         $stmt = $this->db->prepare("
@@ -244,8 +251,11 @@ class ManagerController
             $_POST['address']
         ]);
 
+        $_SESSION['success'] = "Đã thêm đối tác thành công!";
         header("Location: manager.php?action=partners");
+        exit;
     }
+
     public function editPartner()
     {
         $id = $_GET['id'];
@@ -256,6 +266,7 @@ class ManagerController
 
         require __DIR__ . '/../views/manager/edit_partner.php';
     }
+
     public function updatePartner()
     {
         $stmt = $this->db->prepare("
@@ -278,8 +289,11 @@ class ManagerController
             $_POST['partner_id']
         ]);
 
+        $_SESSION['success'] = "Đã cập nhật thông tin đối tác!";
         header("Location: manager.php?action=partners");
+        exit;
     }
+
     public function deletePartner()
     {
         $id = $_GET['id'];
@@ -289,15 +303,19 @@ class ManagerController
         $check->execute([$id]);
 
         if ($check->fetchColumn() > 0) {
-            echo "<script>alert('Không thể xóa! Đối tác đang có tour'); window.location='manager.php?action=partners';</script>";
-            return;
+            $_SESSION['error'] = "Không thể xóa! Đối tác này hiện đang có tour liên kết.";
+            header("Location: manager.php?action=partners");
+            exit;
         }
 
         $stmt = $this->db->prepare("DELETE FROM partners WHERE partner_id=?");
         $stmt->execute([$id]);
 
+        $_SESSION['success'] = "Đã xóa đối tác thành công!";
         header("Location: manager.php?action=partners");
+        exit;
     }
+
     public function createDeparture()
     {
         $tours = $this->db->query("SELECT tour_id, tour_name FROM tours")
@@ -308,6 +326,7 @@ class ManagerController
 
         require __DIR__ . '/../views/manager/create_departure.php';
     }
+
     public function editDeparture()
     {
         $id = $_GET['id'];
@@ -332,11 +351,14 @@ class ManagerController
 
         require __DIR__ . '/../views/manager/edit_departure.php';
     }
+
     public function storeDeparture()
     {
         // validate ngày
         if ($_POST['end_date'] < $_POST['start_date']) {
-            die("Ngày không hợp lệ");
+            $_SESSION['error'] = "Ngày kết thúc không được nhỏ hơn ngày khởi hành!";
+            header("Location: manager.php?action=departures");
+            exit;
         }
 
         // insert departure
@@ -368,15 +390,20 @@ class ManagerController
             }
         }
 
+        $_SESSION['success'] = "Đã tạo chuyến khởi hành mới!";
         header("Location: manager.php?action=departures");
+        exit;
     }
+
     public function updateDeparture()
     {
         $id = $_POST['departure_id'];
 
         // check ngày
         if ($_POST['end_date'] < $_POST['start_date']) {
-            die("Ngày không hợp lệ");
+            $_SESSION['error'] = "Ngày kết thúc không được nhỏ hơn ngày khởi hành!";
+            header("Location: manager.php?action=departures");
+            exit;
         }
 
         // update departure
@@ -410,8 +437,11 @@ class ManagerController
             }
         }
 
+        $_SESSION['success'] = "Đã cập nhật thông tin chuyến khởi hành!";
         header("Location: manager.php?action=departures");
+        exit;
     }
+
     public function departures()
     {
         $stmt = $this->db->query("
@@ -423,7 +453,7 @@ class ManagerController
         JOIN tours t ON d.tour_id = t.tour_id
         LEFT JOIN departure_guides dg ON d.departure_id = dg.departure_id
         LEFT JOIN users u ON dg.guide_id = u.user_id
-        WHERE d.status != 'cancelled'   -- 👈 THÊM DÒNG NÀY
+        WHERE d.status != 'cancelled'
         GROUP BY d.departure_id
         ORDER BY d.start_date DESC
     ");
@@ -432,6 +462,7 @@ class ManagerController
 
         require __DIR__ . '/../views/manager/departures.php';
     }
+
     public function deleteDeparture()
     {
         $id = $_GET['id'];
@@ -447,11 +478,9 @@ class ManagerController
 
         // 2. nếu đã có khách đặt → không cho huỷ
         if ($count > 0) {
-            echo "<script>
-            alert('Không thể huỷ! Tour đã có khách đặt.');
-            window.location='manager.php?action=departures';
-        </script>";
-            return;
+            $_SESSION['error'] = "Không thể huỷ! Chuyến đi này đã có khách hàng đặt chỗ.";
+            header("Location: manager.php?action=departures");
+            exit;
         }
 
         // 3. nếu chưa có ai → cho huỷ (soft delete)
@@ -462,28 +491,34 @@ class ManagerController
     ");
         $stmt->execute([$id]);
 
+        $_SESSION['success'] = "Đã hủy bỏ chuyến đi thành công.";
         header("Location: manager.php?action=departures");
+        exit;
     }
+
     public function bookings()
     {
         $stmt = $this->db->query("
-        SELECT b.*, t.tour_name, d.start_date
+        SELECT b.*, t.tour_name, d.start_date, 
+               p.payment_method, p.payment_status 
         FROM bookings b
         JOIN departures d ON b.departure_id = d.departure_id
         JOIN tours t ON d.tour_id = t.tour_id
+        LEFT JOIN payments p ON b.booking_id = p.booking_id
         ORDER BY b.booking_date DESC
-    ");
+        ");
 
         $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         require __DIR__ . '/../views/manager/bookings.php';
     }
+
     public function confirmBooking()
     {
         $id = $_GET['id'];
 
-        // 1. Lấy thông tin đơn hàng (để biết số lượng người đặt và mã lịch trình)
-        $stmtBooking = $this->db->prepare("SELECT departure_id, number_of_people, status FROM bookings WHERE booking_id = ?");
+        // 1. Lấy thông tin đơn hàng và tên khách hàng
+        $stmtBooking = $this->db->prepare("SELECT departure_id, number_of_people, status, customer_name FROM bookings WHERE booking_id = ?");
         $stmtBooking->execute([$id]);
         $booking = $stmtBooking->fetch(PDO::FETCH_ASSOC);
 
@@ -497,7 +532,7 @@ class ManagerController
         $stmtUpdateStatus = $this->db->prepare("UPDATE bookings SET status='confirmed' WHERE booking_id=?");
         $stmtUpdateStatus->execute([$id]);
 
-        // 3. Cập nhật số chỗ: Cộng/Trừ theo đúng số lượng người trong đơn hàng (number_of_people)
+        // 3. Cập nhật số chỗ
         $stmtUpdateSeats = $this->db->prepare("
             UPDATE departures 
             SET 
@@ -511,24 +546,60 @@ class ManagerController
             $booking['departure_id']
         ]);
 
+        $customerName = htmlspecialchars($booking['customer_name'] ?? 'Khách hàng');
+        $_SESSION['success'] = "Đã duyệt thành công đơn hàng <strong>#{$id}</strong> của khách <strong>{$customerName}</strong>!";
         header("Location: manager.php?action=bookings");
+        exit;
     }
+
     public function cancelBooking()
     {
         $id = $_GET['id'];
 
-        $stmt = $this->db->prepare("
-        UPDATE bookings 
-        SET status='cancelled' 
-        WHERE booking_id=?
-    ");
-        $stmt->execute([$id]);
+        // 1. Lấy thông tin đơn hàng (trạng thái, số lượng người, mã chuyến đi)
+        $stmtBooking = $this->db->prepare("SELECT departure_id, number_of_people, status, customer_name FROM bookings WHERE booking_id = ?");
+        $stmtBooking->execute([$id]);
+        $booking = $stmtBooking->fetch(PDO::FETCH_ASSOC);
+
+        if ($booking) {
+            // 2. Nếu đơn này TRƯỚC ĐÓ ĐÃ DUYỆT (tức là đã trừ chỗ), thì bây giờ phải hoàn lại chỗ
+            if ($booking['status'] === 'confirmed') {
+                $stmtRestoreSeats = $this->db->prepare("
+                    UPDATE departures 
+                    SET 
+                        booked_seats = booked_seats - ?, 
+                        available_seats = available_seats + ?
+                    WHERE departure_id = ?
+                ");
+                $stmtRestoreSeats->execute([
+                    $booking['number_of_people'],
+                    $booking['number_of_people'],
+                    $booking['departure_id']
+                ]);
+            }
+
+            // 3. Cập nhật trạng thái thành Đã hủy
+            $stmt = $this->db->prepare("UPDATE bookings SET status='cancelled' WHERE booking_id=?");
+            $stmt->execute([$id]);
+
+            $customerName = htmlspecialchars($booking['customer_name'] ?? 'Khách hàng');
+            $_SESSION['success'] = "Đã hủy đơn <strong>#{$id}</strong> của khách <strong>{$customerName}</strong> (Đã cập nhật lại chỗ trống).";
+        } else {
+            $_SESSION['error'] = "Không tìm thấy thông tin đơn hàng cần hủy!";
+        }
 
         header("Location: manager.php?action=bookings");
+        exit;
     }
+
     public function refundBooking()
     {
         $id = $_GET['id'];
+
+        // Lấy tên khách hàng
+        $stmtName = $this->db->prepare("SELECT customer_name FROM bookings WHERE booking_id = ?");
+        $stmtName->execute([$id]);
+        $customerName = htmlspecialchars($stmtName->fetchColumn() ?: 'Khách hàng');
 
         $stmt = $this->db->prepare("
         UPDATE bookings 
@@ -537,160 +608,99 @@ class ManagerController
     ");
         $stmt->execute([$id]);
 
+        $_SESSION['success'] = "Đã đánh dấu hoàn tiền cho đơn <strong>#{$id}</strong> của khách <strong>{$customerName}</strong>!";
         header("Location: manager.php?action=bookings");
+        exit;
     }
+
     public function report()
     {
-        // Khởi tạo các biến chứa điều kiện Lọc
-        $whereClauses = [];
-        $params = [];
+        // 1. Lấy tham số từ bộ lọc (Nếu rỗng thì để mặc định)
+        $startDate = !empty($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01');
+        $endDate = !empty($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d');
+        $statusFilter = $_GET['status'] ?? '';
 
-        // 1. Bắt ngày bắt đầu (start_date)
-        if (!empty($_GET['start_date'])) {
-            $whereClauses[] = "b.booking_date >= ?";
-            $params[] = $_GET['start_date'] . ' 00:00:00';
+        // Tạo câu điều kiện WHERE chung cho các truy vấn
+        $where = "WHERE DATE(b.booking_date) BETWEEN ? AND ?";
+        $params = [$startDate, $endDate];
+
+        // Nếu có lọc theo trạng thái
+        $whereStatus = $where;
+        $paramsStatus = $params;
+        if ($statusFilter !== '') {
+            $whereStatus .= " AND b.status = ?";
+            $paramsStatus[] = $statusFilter;
         }
 
-        // 2. Bắt ngày kết thúc (end_date)
-        if (!empty($_GET['end_date'])) {
-            $whereClauses[] = "b.booking_date <= ?";
-            $params[] = $_GET['end_date'] . ' 23:59:59';
-        }
+        // ===== Tổng quan (Áp dụng bộ lọc) =====
+        // Doanh thu: Chỉ tính các đơn confirmed hoặc completed, không tính đơn cancelled
+        $stmtRev = $this->db->prepare("
+            SELECT COALESCE(SUM(total_price), 0) 
+            FROM bookings b 
+            $where AND b.status IN ('confirmed', 'completed', 'checked_in')
+        ");
+        $stmtRev->execute($params);
+        $totalRevenue = $stmtRev->fetchColumn();
 
-        // 3. Bắt trạng thái đơn hàng (status)
-        // Nếu không chọn gì, mặc định phần TỔNG QUAN doanh thu chỉ đếm đơn 'confirmed'
-        // Nhưng phần TRẠNG THÁI sẽ đếm tất cả.
-        $statusFilter = "";
-        if (!empty($_GET['status'])) {
-            $statusFilter = " AND b.status = ?";
-            $whereClauses[] = "b.status = ?";
-            // Tham số cho các truy vấn chung
-            $params[] = $_GET['status'];
-            // Biến riêng để tiện xử lý mảng
-            $statusParam = $_GET['status'];
-        }
+        // Tổng đơn đặt (Áp dụng lọc trạng thái nếu có)
+        $stmtCount = $this->db->prepare("SELECT COUNT(*) FROM bookings b $whereStatus");
+        $stmtCount->execute($paramsStatus);
+        $totalBookings = $stmtCount->fetchColumn();
 
-        // Nối chuỗi WHERE nếu có điều kiện
-        $whereSql = "";
-        if (count($whereClauses) > 0) {
-            $whereSql = " WHERE " . implode(" AND ", $whereClauses);
-        }
+        // Tổng tour đang hoạt động (Thống kê chung)
+        $totalTours = $this->db->query("SELECT COUNT(*) FROM tours WHERE status = 'active'")->fetchColumn();
 
-        // ============================================
-        // 1. THỐNG KÊ TỔNG QUAN (Áp dụng bộ lọc)
-        // ============================================
-        
-        // Tổng doanh thu (Chỉ tính đơn đã xác nhận VÀ nằm trong khoảng thời gian lọc)
-        $revSql = "SELECT COALESCE(SUM(b.total_price),0) FROM bookings b ";
-        if ($whereSql !== "") {
-            $revSql .= $whereSql . (empty($_GET['status']) ? " AND b.status = 'confirmed'" : "");
-        } else {
-            $revSql .= " WHERE b.status = 'confirmed'";
-        }
-        $stmt = $this->db->prepare($revSql);
-        $stmt->execute($params);
-        $totalRevenue = $stmt->fetchColumn();
-
-        // Số đơn đặt (Tính theo bộ lọc trạng thái và thời gian)
-        $bookSql = "SELECT COUNT(*) FROM bookings b" . $whereSql;
-        $stmt = $this->db->prepare($bookSql);
-        $stmt->execute($params);
-        $totalBookings = $stmt->fetchColumn();
-
-        // Tổng Tour (Không phụ thuộc bộ lọc ngày tháng của đơn hàng)
-        $totalTours = $this->db->query("SELECT COUNT(*) FROM tours")->fetchColumn();
-
-
-        // ============================================
-        // 2. DOANH THU THEO THÁNG (Chỉ đơn confirmed)
-        // ============================================
-        $monthSql = "
+        // ===== Doanh thu theo ngày/tháng (Dùng cho biểu đồ Line) =====
+        $stmtChart = $this->db->prepare("
             SELECT 
-                DATE_FORMAT(b.booking_date, '%m/%Y') as month,
-                SUM(b.total_price) as revenue
+                DATE_FORMAT(booking_date, '%d/%m') as month,
+                SUM(total_price) as revenue
             FROM bookings b
-        ";
-        
-        // Điều chỉnh điều kiện riêng cho biểu đồ Doanh thu (Luôn phải là confirmed)
-        $monthWhere = [];
-        $monthParams = [];
-        if (!empty($_GET['start_date'])) { $monthWhere[] = "b.booking_date >= ?"; $monthParams[] = $_GET['start_date'] . ' 00:00:00'; }
-        if (!empty($_GET['end_date'])) { $monthWhere[] = "b.booking_date <= ?"; $monthParams[] = $_GET['end_date'] . ' 23:59:59'; }
-        $monthWhere[] = "b.status = 'confirmed'"; // Ép buộc chỉ vẽ đơn thành công
-        
-        $monthSql .= " WHERE " . implode(" AND ", $monthWhere) . "
-            GROUP BY DATE_FORMAT(b.booking_date, '%m/%Y'), DATE_FORMAT(b.booking_date, '%Y-%m')
-            ORDER BY DATE_FORMAT(b.booking_date, '%Y-%m') ASC
-        ";
-        $stmt = $this->db->prepare($monthSql);
-        $stmt->execute($monthParams);
-        $revenueByMonth = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $where AND b.status IN ('confirmed', 'completed', 'checked_in')
+            GROUP BY month
+            ORDER BY booking_date ASC
+        ");
+        $stmtChart->execute($params);
+        $revenueByMonth = $stmtChart->fetchAll(PDO::FETCH_ASSOC);
 
-
-        // ============================================
-        // 3. TOP TOUR (Áp dụng bộ lọc thời gian)
-        // ============================================
-        $topSql = "
+        // ===== Top 5 tour bán chạy (Dùng cho biểu đồ Bar) =====
+        $stmtTop = $this->db->prepare("
             SELECT t.tour_name, COUNT(b.booking_id) as total
             FROM bookings b
             JOIN departures d ON b.departure_id = d.departure_id
             JOIN tours t ON d.tour_id = t.tour_id
-        ";
-        
-        // Điều chỉnh điều kiện riêng cho biểu đồ Top Tour
-        $topWhere = [];
-        $topParams = [];
-        if (!empty($_GET['start_date'])) { $topWhere[] = "b.booking_date >= ?"; $topParams[] = $_GET['start_date'] . ' 00:00:00'; }
-        if (!empty($_GET['end_date'])) { $topWhere[] = "b.booking_date <= ?"; $topParams[] = $_GET['end_date'] . ' 23:59:59'; }
-        if (!empty($_GET['status'])) { $topWhere[] = "b.status = ?"; $topParams[] = $_GET['status']; } 
-        else { $topWhere[] = "b.status = 'confirmed'"; } // Nếu ko lọc, mặc định đếm đơn thành công
-        
-        $topSql .= " WHERE " . implode(" AND ", $topWhere) . "
+            $whereStatus
             GROUP BY t.tour_id
             ORDER BY total DESC
             LIMIT 5
-        ";
-        $stmt = $this->db->prepare($topSql);
-        $stmt->execute($topParams);
-        $topTours = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        ");
+        $stmtTop->execute($paramsStatus);
+        $topTours = $stmtTop->fetchAll(PDO::FETCH_ASSOC);
 
+        // ===== Thống kê trạng thái (Dùng cho biểu đồ Pie/Doughnut) =====
+        $stmtStatus = $this->db->prepare("
+            SELECT status, COUNT(*) as total
+            FROM bookings b
+            $where
+            GROUP BY status
+        ");
+        $stmtStatus->execute($params);
+        $statusStats = $stmtStatus->fetchAll(PDO::FETCH_ASSOC);
 
-        // ============================================
-        // 4. TRẠNG THÁI ĐƠN HÀNG (Chỉ áp dụng bộ lọc thời gian)
-        // ============================================
-        $statusSql = "SELECT b.status, COUNT(*) as total FROM bookings b";
-        
-        $statusWhere = [];
-        $statusParams = [];
-        if (!empty($_GET['start_date'])) { $statusWhere[] = "b.booking_date >= ?"; $statusParams[] = $_GET['start_date'] . ' 00:00:00'; }
-        if (!empty($_GET['end_date'])) { $statusWhere[] = "b.booking_date <= ?"; $statusParams[] = $_GET['end_date'] . ' 23:59:59'; }
-        
-        if (count($statusWhere) > 0) {
-            $statusSql .= " WHERE " . implode(" AND ", $statusWhere);
-        }
-        $statusSql .= " GROUP BY b.status";
-
-        $stmt = $this->db->prepare($statusSql);
-        $stmt->execute($statusParams);
-        $statusStats = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-
-        // Tải View
         require __DIR__ . '/../views/manager/report.php';
     }
+
     // ================= BOOKING DETAIL (XEM CHI TIẾT ĐƠN HÀNG) =================
     public function bookingDetail()
     {
-        // 1. Nhận ID đơn hàng từ URL
         $booking_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 
         if ($booking_id <= 0) {
-            echo "<script>alert('Mã đơn hàng không hợp lệ!'); window.location.href='manager.php?action=bookings';</script>";
+            $_SESSION['error'] = "Mã đơn hàng không hợp lệ!";
+            header("Location: manager.php?action=bookings");
             exit;
         }
 
-        // 2. Truy vấn chi tiết đơn hàng (Kết nối các bảng liên quan)
-        // Chúng ta lấy: Thông tin đơn, Email tài khoản, Tên Tour, Ảnh Tour, Ngày đi, Trạng thái thanh toán
         $stmt = $this->db->prepare("
             SELECT b.*, 
                    u.email as account_email, 
@@ -707,15 +717,157 @@ class ManagerController
         $stmt->execute([$booking_id]);
         $detail = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // 3. Nếu không tìm thấy đơn hàng
         if (!$detail) {
-            echo "<script>alert('Không tìm thấy thông tin đơn hàng này!'); window.location.href='manager.php?action=bookings';</script>";
+            $_SESSION['error'] = "Không tìm thấy thông tin của đơn hàng này!";
+            header("Location: manager.php?action=bookings");
             exit;
         }
 
-        // 4. Gọi View hiển thị (Nhớ kiểm tra đường dẫn file view của bạn)
         require __DIR__ . '/../views/manager/booking_detail.php';
     }
 
+    // ================= XÁC NHẬN ĐÃ THU TIỀN MẶT =================
+    public function confirmCash()
+    {
+        $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+
+        if ($id > 0) {
+            // 1. Cập nhật trạng thái thanh toán trong bảng payments thành 'paid'
+            $stmtPayment = $this->db->prepare("UPDATE payments SET payment_status = 'paid' WHERE booking_id = ?");
+            $stmtPayment->execute([$id]);
+
+            // 2. Lấy thông tin booking và tên khách hàng để cập nhật trạng thái đơn và trừ số chỗ
+            $stmtBooking = $this->db->prepare("SELECT departure_id, number_of_people, status, customer_name FROM bookings WHERE booking_id = ?");
+            $stmtBooking->execute([$id]);
+            $booking = $stmtBooking->fetch(PDO::FETCH_ASSOC);
+
+            // 3. Nếu đơn chưa được duyệt thì tiến hành duyệt và trừ chỗ luôn
+            if ($booking && $booking['status'] !== 'confirmed') {
+                $this->db->prepare("UPDATE bookings SET status='confirmed' WHERE booking_id=?")->execute([$id]);
+
+                $stmtUpdateSeats = $this->db->prepare("
+                    UPDATE departures 
+                    SET booked_seats = booked_seats + ?, 
+                        available_seats = available_seats - ?
+                    WHERE departure_id = ?
+                ");
+                $stmtUpdateSeats->execute([
+                    $booking['number_of_people'],
+                    $booking['number_of_people'],
+                    $booking['departure_id']
+                ]);
+            }
+
+            $customerName = htmlspecialchars($booking['customer_name'] ?? 'Khách hàng');
+            $_SESSION['success'] = "Đã thu tiền mặt thành công đơn <strong>#{$id}</strong> của khách <strong>{$customerName}</strong>!";
+        } else {
+            $_SESSION['error'] = "Mã đơn hàng không hợp lệ để thu tiền!";
+        }
+
+        header("Location: manager.php?action=bookings");
+        exit;
+    }
+    // ================= QUẢN LÝ BÀI VIẾT (CẨM NANG) =================
+
+    public function blogs()
+    {
+        $stmt = $this->db->query("SELECT * FROM blogs ORDER BY created_at DESC");
+        $blogsList = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Bạn cần khai báo biến activeMenu để sidebar sáng màu
+        $activeMenu = 'blogs';
+        require __DIR__ . '/../views/manager/manager_blogs.php';
+    }
+
+    public function blogForm()
+    {
+        $id = $_GET['id'] ?? 0;
+        $blog = null;
+
+        if ($id > 0) {
+            $stmt = $this->db->prepare("SELECT * FROM blogs WHERE blog_id = ?");
+            $stmt->execute([$id]);
+            $blog = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+
+        $activeMenu = 'blogs';
+        require __DIR__ . '/../views/manager/blog_form.php';
+    }
+
+    public function saveBlog()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = $_POST['blog_id'] ?? 0;
+            $title = $_POST['title'] ?? '';
+            $category = $_POST['category'] ?? 'Cẩm nang';
+            $short_desc = $_POST['short_desc'] ?? '';
+            $content = $_POST['content'] ?? '';
+
+            // Xử lý upload ảnh (Giống phong cách storeTour của bạn)
+            $imageName = $_POST['old_image'] ?? '';
+
+            if (!empty($_FILES['image']['name'])) {
+                $targetDir = __DIR__ . '/../public/uploads/';
+                $newImageName = time() . '_' . $_FILES['image']['name'];
+
+                // XÓA ẢNH CŨ nếu có update ảnh mới
+                if (!empty($imageName) && strpos($imageName, 'http') === false && file_exists($targetDir . $imageName)) {
+                    unlink($targetDir . $imageName);
+                }
+
+                if (move_uploaded_file($_FILES['image']['tmp_name'], $targetDir . $newImageName)) {
+                    $imageName = $newImageName;
+                }
+            }
+            $slug = create_slug($title);
+            if ($id > 0) {
+                // SỬA BÀI
+                $stmt = $this->db->prepare("UPDATE blogs SET title=?, slug=?, category=?, short_desc=?, content=?, image=? WHERE blog_id=?");
+                $stmt->execute([$title, $slug, $category, $short_desc, $content, $imageName, $id]);
+                $_SESSION['success'] = "Đã cập nhật bài viết thành công!";
+            } else {
+                // THÊM BÀI MỚI
+                $stmt = $this->db->prepare("INSERT INTO blogs (title, slug, category, short_desc, content, image) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$title, $slug, $category, $short_desc, $content, $imageName]);
+                $_SESSION['success'] = "Đã thêm bài viết mới thành công!";
+            }
+
+            header("Location: manager.php?action=blogs");
+            exit;
+        }
+    }
+
+    public function deleteBlog()
+    {
+        $id = $_GET['id'] ?? 0;
+
+        if ($id > 0) {
+            // Lấy ảnh để xóa file vật lý
+            $stmt = $this->db->prepare("SELECT image FROM blogs WHERE blog_id=?");
+            $stmt->execute([$id]);
+            $blog = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            $path = __DIR__ . '/../public/uploads/';
+            if (!empty($blog['image']) && strpos($blog['image'], 'http') === false && file_exists($path . $blog['image'])) {
+                unlink($path . $blog['image']);
+            }
+
+            // Xóa khỏi DB
+            $stmtDel = $this->db->prepare("DELETE FROM blogs WHERE blog_id = ?");
+            $stmtDel->execute([$id]);
+
+            $_SESSION['success'] = "Đã xóa bài viết thành công!";
+        } else {
+            $_SESSION['error'] = "Không tìm thấy bài viết để xóa!";
+        }
+
+        header("Location: manager.php?action=blogs");
+        exit;
+    }
+    public function chat()
+    {
+        $activeMenu = 'chat'; // Để sidebar của Manager sáng mục Chat
+        require_once __DIR__ . '/../views/admin/chat_manage.php'; // Dùng chung giao diện với Admin luôn cho nhàn
+    }
 
 }

@@ -33,7 +33,7 @@ class AuthController
                 if (!$data) {
                     $error = "Email không tồn tại";
                 } else {
-                    // Hỗ trợ kiểm tra cả mật khẩu Bcrypt mới và MD5 cũ
+                    // Hỗ trợ kiểm tra cả mật khẩu Bcrypt mới và MD5 cũ trong CSDL của bạn
                     $isPasswordCorrect = false;
                     if (password_verify($password, $data['password'])) {
                         $isPasswordCorrect = true;
@@ -41,7 +41,7 @@ class AuthController
                         $isPasswordCorrect = true;
                     }
 
-                    if ($isPasswordCorrect) {
+                   if ($isPasswordCorrect) {
                         // ==========================================
                         // BƯỚC MỚI: KIỂM TRA TÀI KHOẢN CÓ BỊ KHÓA KHÔNG
                         // ==========================================
@@ -61,7 +61,7 @@ class AuthController
                             header("Location: index.php?action=tours");
                             exit();
                         }
-                    } else {
+                        } else {
                         $error = "Sai mật khẩu";
                     }
                 }

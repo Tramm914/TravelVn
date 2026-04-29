@@ -1,242 +1,167 @@
 <?php 
-    // Giả sử $detail là mảng chứa dữ liệu đơn hàng được query từ database
     $activeMenu = 'bookings';
     include __DIR__ . '/../layouts/header.php'; 
 ?>
 
 <style>
     :root {
-        --brand-primary: #0194f3;
-        --brand-success: #12b76a;
-        --bg-body: #f8fafc;
-        --card-bg: #ffffff;
-        --border-color: #e2e8f0;
-        --text-dark: #0f172a;
-        --text-gray: #64748b;
+        --admin-primary: #0194f3;
+        --admin-bg: #f1f5f9; 
+        --admin-surface: #ffffff;
+        --admin-border: #e2e8f0;
+        --admin-text-main: #0f172a; 
+        --admin-text-muted: #475569; 
     }
 
-    body { background-color: var(--bg-body); font-family: 'Inter', sans-serif; }
-    .client-container { max-width: 1100px; margin: 40px auto; padding: 0 15px; }
-    
-    .status-header {
-        text-align: center;
-        padding: 40px 20px;
-        background: var(--card-bg);
+    body { background-color: var(--admin-bg); font-family: 'Inter', sans-serif; }
+    .admin-container { max-width: 1300px; margin: 40px auto; padding: 0 15px; }
+    .admin-card { background: var(--admin-surface); border-radius: 20px; padding: 24px; border: 1px solid var(--admin-border); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+    .info-group { margin-bottom: 20px; }
+    .info-label { font-size: 0.85rem; color: var(--admin-text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 5px; }
+    .info-value { font-size: 1.1rem; color: var(--admin-text-main); font-weight: 600; }
+    .tour-img { width: 100%; height: 80px; object-fit: cover; border-radius: 12px; }
+
+    /* Style cho thanh hành động dưới cùng */
+    .action-bar {
+        background: white;
+        padding: 20px;
         border-radius: 20px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-        margin-bottom: 30px;
-    }
-    .check-icon-wrapper {
-        width: 80px;
-        height: 80px;
-        background: rgba(18, 183, 106, 0.1);
-        color: var(--brand-success);
-        border-radius: 50%;
+        margin-top: 25px;
+        border: 1px solid var(--admin-border);
         display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 40px;
-        margin: 0 auto 20px;
+        justify-content: flex-end;
+        gap: 12px;
+        box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.02);
     }
-    
-    .detail-card {
-        background: var(--card-bg);
-        border-radius: 16px;
-        border: 1px solid var(--border-color);
-        padding: 24px;
-        margin-bottom: 24px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-    }
-    .detail-card-title {
-        font-size: 1.1rem;
+    .btn-lg-custom {
+        padding: 12px 25px;
+        border-radius: 12px;
         font-weight: 700;
-        color: var(--text-dark);
-        margin-bottom: 20px;
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        gap: 10px;
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: 15px;
-    }
-
-    /* Bảng chi tiết */
-    .data-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
-    .data-label { color: var(--text-gray); font-size: 0.95rem; }
-    .data-value { color: var(--text-dark); font-weight: 600; text-align: right; }
-    
-    /* Box QR Code */
-    .qr-box {
-        background: #f8fafc;
-        border: 1px dashed #cbd5e1;
-        border-radius: 12px;
-        padding: 20px;
-        text-align: center;
-    }
-    
-    /* Stepper/Timeline */
-    .stepper { display: flex; justify-content: space-between; margin-top: 30px; position: relative; }
-    .stepper::before {
-        content: ''; position: absolute; top: 15px; left: 0; right: 0; height: 2px;
-        background: var(--border-color); z-index: 1;
-    }
-    .step { position: relative; z-index: 2; text-align: center; background: var(--card-bg); padding: 0 10px; }
-    .step-icon {
-        width: 32px; height: 32px; border-radius: 50%; background: var(--border-color); color: white;
-        display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: bold;
-    }
-    .step.active .step-icon { background: var(--brand-success); }
-    .step-text { font-size: 0.85rem; color: var(--text-gray); font-weight: 500; }
-    .step.active .step-text { color: var(--brand-success); font-weight: 700; }
-
-    /* Total Price Box */
-    .total-box {
-        background: rgba(1, 148, 243, 0.05);
-        border-radius: 12px;
-        padding: 20px;
-        margin-top: 20px;
+        gap: 8px;
+        transition: 0.2s;
     }
 </style>
 
-<div class="client-container">
-    <div class="status-header">
-        <div class="check-icon-wrapper">
-            <i class="bi bi-check-lg"></i>
-        </div>
-        <h2 class="fw-bold text-dark mb-2">Đặt tour & Thanh toán thành công!</h2>
-        <p class="text-muted mb-0">Mã đơn hàng: <span class="fw-bold text-primary">#<?= str_pad($detail['booking_id'], 6, '0', STR_PAD_LEFT) ?></span> • Đặt lúc: <?= date('H:i - d/m/Y') ?></p>
-        
-        <div class="stepper col-md-8 mx-auto d-none d-md-flex">
-            <div class="step active">
-                <div class="step-icon"><i class="bi bi-check"></i></div>
-                <div class="step-text">Đã đặt</div>
-            </div>
-            <div class="step active">
-                <div class="step-icon"><i class="bi bi-check"></i></div>
-                <div class="step-text">Thanh toán</div>
-            </div>
-            <div class="step <?= ($detail['status'] == 'confirmed') ? 'active' : '' ?>">
-                <div class="step-icon"><?= ($detail['status'] == 'confirmed') ? '<i class="bi bi-check"></i>' : '3' ?></div>
-                <div class="step-text"><?= ($detail['status'] == 'confirmed') ? 'Đã chốt tour' : 'Chờ xác nhận' ?></div>
-            </div>
-            <div class="step">
-                <div class="step-icon">4</div>
-                <div class="step-text">Khởi hành</div>
-            </div>
-        </div>
-    </div>
-
+<div class="admin-container">
     <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="detail-card">
-                <div class="detail-card-title">
-                    <i class="bi bi-geo-alt-fill text-primary"></i> Thông tin chuyến đi
-                </div>
-                <h5 class="fw-bold mb-3 text-primary"><?= htmlspecialchars($detail['tour_name']) ?></h5>
-                
-                <div class="row mb-4">
-                    <div class="col-sm-6 mb-3 mb-sm-0">
-                        <div class="d-flex gap-3">
-                            <i class="bi bi-calendar-event fs-4 text-muted"></i>
-                            <div>
-                                <small class="text-muted d-block">Ngày khởi hành</small>
-                                <span class="fw-bold"><?= date('d/m/Y', strtotime($detail['start_date'])) ?></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-6">
-                        <div class="d-flex gap-3">
-                            <i class="bi bi-people fs-4 text-muted"></i>
-                            <div>
-                                <small class="text-muted d-block">Số lượng khách</small>
-                                <span class="fw-bold"><?= $detail['number_of_people'] ?> người</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        
+        <?php include __DIR__ . '/../layouts/sidebar_manager.php'; ?>
 
-                <div class="alert alert-info border-0 d-flex gap-3 align-items-center mb-0">
-                    <i class="bi bi-info-circle-fill fs-4"></i>
-                    <div>
-                        <strong>Lưu ý:</strong> Hướng dẫn viên sẽ liên hệ với bạn trước 1 ngày khởi hành. Vui lòng giữ điện thoại.
-                    </div>
-                </div>
-            </div>
-
-            <div class="detail-card">
-                <div class="detail-card-title">
-                    <i class="bi bi-receipt text-primary"></i> Chi tiết thanh toán
-                </div>
-                
-                <div class="data-row">
-                    <div class="data-label">Phương thức thanh toán</div>
-                    <div class="data-value"><?= strtoupper($detail['payment_method'] ?? 'Chuyển khoản / Cổng thanh toán') ?></div>
-                </div>
-                <div class="data-row">
-                    <div class="data-label">Tình trạng</div>
-                    <div class="data-value text-success"><i class="bi bi-patch-check-fill"></i> Đã thanh toán</div>
-                </div>
-                
-                <hr class="text-muted">
-                
-                <div class="data-row">
-                    <div class="data-label">Giá tour cơ bản (x<?= $detail['number_of_people'] ?>)</div>
-                    <div class="data-value"><?= number_format($detail['total_price']) ?> đ</div>
-                </div>
-                <div class="data-row">
-                    <div class="data-label">Phí hệ thống / Thuế</div>
-                    <div class="data-value">0 đ</div>
-                </div>
-
-                <div class="total-box data-row mb-0 align-items-center">
-                    <div class="data-label fw-bold text-dark fs-5">Tổng cộng</div>
-                    <div class="data-value text-primary fs-3 fw-bold"><?= number_format($detail['total_price']) ?> đ</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
-            
-            <div class="detail-card qr-box text-center">
-                <h6 class="fw-bold mb-3">Vé Điện Tử (E-Ticket)</h6>
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=<?= 'TOUR-'.$detail['booking_id'] ?>" alt="QR Code" class="img-fluid rounded mb-3" width="150">
-                <p class="small text-muted mb-3">Đưa mã QR này cho hướng dẫn viên khi tập trung để check-in nhanh chóng.</p>
-                <button class="btn btn-outline-primary w-100 fw-bold"><i class="bi bi-download"></i> Tải vé PDF</button>
-            </div>
-
-            <div class="detail-card">
-                <div class="detail-card-title">
-                    <i class="bi bi-person-badge text-primary"></i> Thông tin liên hệ
-                </div>
-                <div class="mb-3">
-                    <small class="text-muted d-block">Họ và tên</small>
-                    <span class="fw-bold text-dark"><?= htmlspecialchars($detail['customer_name']) ?></span>
-                </div>
-                <div class="mb-3">
-                    <small class="text-muted d-block">Số điện thoại</small>
-                    <span class="fw-bold text-dark"><?= htmlspecialchars($detail['phone'] ?? '---') ?></span>
-                </div>
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <small class="text-muted d-block">Email</small>
-                    <span class="fw-bold text-dark"><?= htmlspecialchars($detail['email'] ?? '---') ?></span>
+                    <h2 class="fw-bold mb-1">Đơn hàng #<?= str_pad($detail['booking_id'], 6, '0', STR_PAD_LEFT) ?></h2>
+                    <p class="text-muted mb-0">Trạng thái: 
+                        <?php if($detail['status'] == 'pending'): ?>
+                            <span class="badge bg-warning text-dark">Chờ duyệt</span>
+                        <?php elseif($detail['status'] == 'confirmed'): ?>
+                            <span class="badge bg-success text-white">Đã duyệt</span>
+                        <?php elseif($detail['status'] == 'cancelled'): ?>
+                            <span class="badge bg-danger text-white">Đã hủy</span>
+                        <?php else: ?>
+                            <span class="badge bg-secondary"><?= $detail['status'] ?></span>
+                        <?php endif; ?>
+                    </p>
+                </div>
+                <a href="manager.php?action=bookings" class="btn btn-light border shadow-sm fw-bold"><i class="bi bi-arrow-left"></i> Quay lại</a>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="admin-card h-100">
+                        <h5 class="fw-bold text-primary mb-4"><i class="bi bi-person-lines-fill me-2"></i>Thông tin người đặt</h5>
+                        
+                        <div class="info-group">
+                            <div class="info-label">Họ và tên</div>
+                            <div class="info-value"><?= htmlspecialchars($detail['customer_name']) ?></div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Số điện thoại</div>
+                            <div class="info-value text-primary"><?= htmlspecialchars($detail['phone'] ?? 'Chưa cung cấp') ?></div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Email</div>
+                            <div class="info-value"><?= htmlspecialchars($detail['email'] ?? 'Chưa cung cấp') ?></div>
+                        </div>
+                        <div class="info-group mb-0">
+                            <div class="info-label">Ghi chú của khách</div>
+                            <div class="info-value text-danger" style="font-style: italic; font-size: 0.95rem;">
+                                <?= !empty($detail['note']) ? nl2br(htmlspecialchars($detail['note'])) : 'Không có ghi chú' ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="admin-card h-100">
+                        <h5 class="fw-bold text-primary mb-4"><i class="bi bi-wallet2 me-2"></i>Dịch vụ & Thanh toán</h5>
+                        
+                        <div class="d-flex gap-3 mb-4 bg-light p-2 rounded-3">
+                            <img src="<?= !empty($detail['image']) ? '/uploads/'.$detail['image'] : 'https://images.unsplash.com/photo-1501785888041-af3ef285b470' ?>" class="tour-img" alt="Tour">
+                            <div class="overflow-hidden">
+                                <h6 class="fw-bold text-truncate mb-1"><?= htmlspecialchars($detail['tour_name']) ?></h6>
+                                <p class="mb-0 text-muted small"><i class="bi bi-calendar-check"></i> Đi: <?= date('d/m/Y', strtotime($detail['start_date'])) ?></p>
+                                <p class="mb-0 text-muted small"><i class="bi bi-people"></i> Số khách: <?= $detail['number_of_people'] ?></p>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6 info-group">
+                                <div class="info-label">Phương thức</div>
+                                <div class="info-value small"><?= strtoupper($detail['payment_method'] ?? 'CASH') ?></div>
+                            </div>
+                            <div class="col-6 info-group">
+                                <div class="info-label">Thanh toán</div>
+                                <div>
+                                    <?php if (($detail['payment_status'] ?? '') === 'paid'): ?>
+                                        <span class="text-success fw-bold small"><i class="bi bi-patch-check-fill"></i> Đã trả tiền</span>
+                                    <?php else: ?>
+                                        <span class="text-warning fw-bold small"><i class="bi bi-hourglass-split"></i> Chờ tiền</span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="info-group mb-0 bg-dark text-white p-3 rounded-3 mt-2">
+                            <div class="info-label text-white-50">Tổng cộng đơn hàng</div>
+                            <div class="info-value text-warning fs-3 fw-bold"><?= number_format($detail['total_price']) ?> đ</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="detail-card bg-primary text-white border-0">
-                <h6 class="fw-bold mb-3"><i class="bi bi-headset"></i> Cần hỗ trợ?</h6>
-                <p class="small mb-3">Nếu bạn có thắc mắc hoặc cần thay đổi lịch trình, hãy liên hệ ngay với chúng tôi.</p>
-                <div class="d-flex flex-column gap-2">
-                    <a href="tel:19001234" class="btn btn-light w-100 fw-bold text-primary"><i class="bi bi-telephone-fill"></i> 1900 1234</a>
-                </div>
-            </div>
+            <div class="action-bar shadow-sm">
+                
+                <?php if ($detail['status'] != 'cancelled' && $detail['status'] != 'refunded'): ?>
+                    <a href="manager.php?action=cancelBooking&id=<?= $detail['booking_id'] ?>" 
+                       class="btn btn-outline-danger btn-lg-custom" 
+                       onclick="return confirm('Bạn có chắc muốn hủy đơn đặt này?')">
+                        <i class="bi bi-x-circle"></i> Hủy đơn hàng
+                    </a>
+                <?php endif; ?>
 
+                <?php if ($detail['status'] == 'confirmed'): ?>
+                    <a href="manager.php?action=refundBooking&id=<?= $detail['booking_id'] ?>" 
+                       class="btn btn-warning btn-lg-custom" 
+                       onclick="return confirm('Xác nhận hoàn tiền cho đơn này?')">
+                        <i class="bi bi-arrow-counterclockwise"></i> Hoàn tiền khách
+                    </a>
+                <?php endif; ?>
+
+                <?php if ($detail['status'] == 'pending'): ?>
+                    <a href="manager.php?action=confirmBooking&id=<?= $detail['booking_id'] ?>" 
+                       class="btn btn-success btn-lg-custom shadow" 
+                       onclick="return confirm('Xác nhận duyệt đơn hàng này?')">
+                        <i class="bi bi-check2-circle"></i> Duyệt đơn ngay
+                    </a>
+                <?php endif; ?>
+
+            </div>
+            
         </div>
     </div>
-    
-    <div class="text-center mt-4">
-        <a href="index.php" class="btn btn-primary btn-lg fw-bold px-5 rounded-pill shadow"><i class="bi bi-house-door"></i> Về trang chủ</a>
-        <a href="index.php?action=tours" class="btn btn-link text-muted fw-bold text-decoration-none ms-3">Xem tour khác</a>
-    </div>
-
 </div>
 
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

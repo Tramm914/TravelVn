@@ -1,5 +1,6 @@
 {
     "require": {
-        "ratchet/pawl": "^0.4.3"
+        "ratchet/pawl": "^0.4.3",
+        "hashids/hashids": "^5.0"
     }
 }

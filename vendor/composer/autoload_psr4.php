@@ -16,6 +16,7 @@ return array(
     'Ratchet\\RFC6455\\' => array($vendorDir . '/ratchet/rfc6455/src'),
     'Ratchet\\Client\\' => array($vendorDir . '/ratchet/pawl/src'),
     'Psr\\Http\\Message\\' => array($vendorDir . '/psr/http-factory/src', $vendorDir . '/psr/http-message/src'),
+    'Hashids\\' => array($vendorDir . '/hashids/hashids/src'),
     'GuzzleHttp\\Psr7\\' => array($vendorDir . '/guzzlehttp/psr7/src'),
     'Evenement\\' => array($vendorDir . '/evenement/evenement/src'),
 );
