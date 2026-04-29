@@ -269,7 +269,10 @@ $imgUrl = !empty($departure['image']) ? '/uploads/' . $departure['image'] : 'htt
                         <i class="bi bi-people-fill text-success fs-4"></i>
                         <h5 class="fw-bold m-0 text-dark">Danh sách (<?= count($bookings) ?> đơn)</h5>
                     </div>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 flex-wrap justify-content-end">
+                        <button id="btn-scan-qr" class="btn btn-primary btn-sm fw-bold" style="border-radius: 8px;">
+                            <i class="bi bi-qr-code-scan"></i> Quét QR
+                        </button>
                         <button onclick="exportTableToExcel('attendanceTable', 'Danh_Sach_Khach_<?= $departure['departure_id'] ?>')" class="btn btn-outline-success btn-sm fw-bold" style="border-radius: 8px;">
                             <i class="bi bi-file-earmark-excel"></i> Xuất Excel
                         </button>
@@ -277,6 +280,18 @@ $imgUrl = !empty($departure['image']) ? '/uploads/' . $departure['image'] : 'htt
                             <i class="bi bi-printer"></i> In DS
                         </button>
                     </div>
+                </div>
+
+                <div id="qr-reader-container" class="mb-4 d-none">
+                    <div class="p-3 bg-light border rounded-3 text-center">
+                        <h6 class="fw-bold text-primary mb-2"><i class="bi bi-camera-video me-1"></i> Camera Check-in</h6>
+                        <p class="text-muted small mb-3">Đưa mã QR trên vé của khách hàng vào khung hình</p>
+                        <div id="qr-reader" style="width: 100%; max-width: 500px; margin: 0 auto; border-radius: 12px; overflow: hidden;"></div>
+                        <button id="btn-close-qr" class="btn btn-sm btn-outline-danger mt-3 px-4 rounded-pill">Đóng Camera</button>
+                    </div>
+                    <form id="qr-submit-form" method="POST" action="guide.php?action=checkin" class="d-none">
+                        <input type="hidden" name="booking_id" id="scanned_booking_id" value="">
+                    </form>
                 </div>
 
                 <?php if (empty($bookings)): ?>
@@ -321,16 +336,32 @@ $imgUrl = !empty($departure['image']) ? '/uploads/' . $departure['image'] : 'htt
                                             <?php endif; ?>
                                         </td>
                                         <td class="text-center">
-                                            <?php if ($b['status'] != 'checked_in'): ?>
-                                                <form method="POST" action="guide.php?action=checkin" class="m-0">
-                                                    <input type="hidden" name="booking_id" value="<?= $b['booking_id'] ?>">
-                                                    <button type="submit" class="btn btn-success btn-action-table w-100">
-                                                        <i class="bi bi-qr-code-scan me-1"></i> Check-in
-                                                    </button>
-                                                </form>
-                                            <?php else: ?>
-                                                <span class="text-muted fst-italic small"><i class="bi bi-check2-all text-success"></i> Đã hoàn tất</span>
-                                            <?php endif; ?>
+                                            <div class="d-flex justify-content-center gap-2">
+                                                <button type="button" class="btn btn-outline-info btn-action-table px-2"
+                                                        title="Xem chi tiết"
+                                                        onclick="showCustomerDetails(this)"
+                                                        data-name="<?= htmlspecialchars($b['customer_name'] ?? 'Không rõ') ?>"
+                                                        data-phone="<?= htmlspecialchars($b['phone'] ?? 'Không có') ?>"
+                                                        data-email="<?= htmlspecialchars($b['email'] ?? 'Không có') ?>"
+                                                        data-pax="<?= $b['number_of_people'] ?? 0 ?>"
+                                                        data-note="<?= htmlspecialchars($b['note'] ?? 'Không có ghi chú') ?>"
+                                                        data-totalprice="<?= isset($b['total_price']) ? number_format($b['total_price']) : 0 ?> VNĐ">
+                                                    <i class="bi bi-info-circle"></i>
+                                                </button>
+
+                                                <?php if ($b['status'] != 'checked_in'): ?>
+                                                    <form method="POST" action="guide.php?action=checkin" class="m-0">
+                                                        <input type="hidden" name="booking_id" value="<?= $b['booking_id'] ?>">
+                                                        <button type="submit" class="btn btn-success btn-action-table px-2" title="Check-in">
+                                                            <i class="bi bi-qr-code-scan"></i> <span class="d-none d-md-inline ms-1">Check-in</span>
+                                                        </button>
+                                                    </form>
+                                                <?php else: ?>
+                                                    <span class="text-muted fst-italic small d-flex align-items-center">
+                                                        <i class="bi bi-check2-all text-success fs-5"></i>
+                                                    </span>
+                                                <?php endif; ?>
+                                            </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -340,6 +371,41 @@ $imgUrl = !empty($departure['image']) ? '/uploads/' . $departure['image'] : 'htt
                 <?php endif; ?>
             </div>
         </div>
+
+<div class="modal fade" id="customerDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-person-vcard text-primary me-2"></i>Thông tin hành khách</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="p-3 bg-light rounded-3 mb-3 border">
+                    <h6 class="fw-bold text-primary mb-1 fs-5" id="detail-name">...</h6>
+                    <p class="text-muted small mb-0"><i class="bi bi-telephone-fill me-1"></i> <span id="detail-phone">...</span></p>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Email liên hệ:</span>
+                        <strong id="detail-email">...</strong>
+                    </li>
+                    <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Số lượng tham gia:</span>
+                        <strong id="detail-pax" class="text-dark">...</strong>
+                    </li>
+                    <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Tổng thanh toán:</span>
+                        <strong id="detail-total" class="text-danger fs-5">...</strong>
+                    </li>
+                    <li class="list-group-item px-0 d-flex flex-column align-items-start border-bottom-0">
+                        <span class="text-muted d-block mb-2">Ghi chú đặc biệt:</span>
+                        <p class="mb-0 bg-light p-2 rounded-2 w-100" style="font-size: 0.9rem; border: 1px dashed #e2e8f0;" id="detail-note">...</p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
     </div>
 </div>
 
@@ -384,5 +450,96 @@ function exportTableToExcel(tableID, filename = ''){
         downloadLink.click();
     }
 }
+</script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+    // --- 1. LOGIC XEM CHI TIẾT (NÚT INFO) ---
+    function showCustomerDetails(button) {
+        document.getElementById('detail-name').innerText = button.getAttribute('data-name');
+        document.getElementById('detail-phone').innerText = button.getAttribute('data-phone');
+        document.getElementById('detail-email').innerText = button.getAttribute('data-email');
+        document.getElementById('detail-pax').innerText = button.getAttribute('data-pax') + " pax";
+        document.getElementById('detail-total').innerText = button.getAttribute('data-totalprice');
+        document.getElementById('detail-note').innerText = button.getAttribute('data-note');
+
+        var myModal = new bootstrap.Modal(document.getElementById('customerDetailModal'));
+        myModal.show();
+    }
+
+    // --- 2. LOGIC QUÉT MÃ QR BẰNG CAMERA ---
+    document.addEventListener("DOMContentLoaded", function() {
+        const btnScanQR = document.getElementById('btn-scan-qr');
+        const btnCloseQR = document.getElementById('btn-close-qr');
+        const qrContainer = document.getElementById('qr-reader-container');
+        const formSubmitQR = document.getElementById('qr-submit-form');
+        const inputBookingId = document.getElementById('scanned_booking_id');
+        
+        let html5QrcodeScanner = null;
+
+        // Bật Camera
+        btnScanQR.addEventListener('click', function() {
+            qrContainer.classList.remove('d-none'); // Hiện khung camera
+            btnScanQR.classList.add('d-none'); // Ẩn nút quét đi
+
+            // Cấu hình máy quét
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "qr-reader", 
+                { fps: 10, qrbox: {width: 250, height: 250} },
+                false
+            );
+            
+            // Xử lý khi quét thành công
+            html5QrcodeScanner.render(function(decodedText, decodedResult) {
+                // Tắt máy quét ngay lập tức để tránh quét 2 lần
+                html5QrcodeScanner.clear();
+                
+                // Điền mã QR (Thường là booking_id) vào form và Submit
+                inputBookingId.value = decodedText;
+                
+                Swal.fire({
+                    title: 'Đang xử lý...',
+                    text: 'Mã vé: ' + decodedText,
+                    icon: 'info',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+
+                setTimeout(() => {
+                    formSubmitQR.submit(); // Gửi thẳng lên Server
+                }, 1000);
+
+            }, function(errorMessage) {
+                // Bỏ qua lỗi quét (khi chưa lọt đúng khung)
+            });
+        });
+
+        // Tắt Camera
+        btnCloseQR.addEventListener('click', function() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear();
+            }
+            qrContainer.classList.add('d-none');
+            btnScanQR.classList.remove('d-none');
+        });
+    });
+
+    // --- 3. XUẤT EXCEL (Giữ nguyên của bạn) ---
+    function exportTableToExcel(tableID, filename = ''){
+        var dataType = 'application/vnd.ms-excel';
+        var tableSelect = document.getElementById(tableID);
+        var tableClone = tableSelect.cloneNode(true);
+        for (var i = 0; i < tableClone.rows.length; i++) { tableClone.rows[i].deleteCell(-1); }
+        var tableHTML = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"></head><body><table>' + tableClone.innerHTML + '</table></body></html>';
+        filename = filename ? filename + '.xls' : 'Danh_Sach_Khach.xls';
+        var downloadLink = document.createElement("a");
+        document.body.appendChild(downloadLink);
+        if(navigator.msSaveOrOpenBlob){
+            navigator.msSaveOrOpenBlob( new Blob(['\ufeff', tableHTML], { type: dataType }), filename);
+        }else{
+            downloadLink.href = 'data:' + dataType + ', ' + encodeURIComponent(tableHTML);
+            downloadLink.download = filename; downloadLink.click();
+        }
+    }
 </script>
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

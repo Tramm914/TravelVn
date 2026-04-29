@@ -21,28 +21,42 @@ class GuideController
     }
 
     // ================= LỊCH CÔNG TÁC =================
-    public function schedule()
-    {
-        $guide_id = $_SESSION['user']['user_id'] ?? $_SESSION['user']['id'] ?? 0;
+    public function schedule() {
+    $guide_id = $_SESSION['user']['user_id'];
+    
+    // 1. Tạo biến mảng để hứng điều kiện
+    $where = ["dg.guide_id = ?"];
+    $params = [$guide_id];
 
-        if ($guide_id == 0) {
-            die("Lỗi: Không tìm thấy ID Hướng dẫn viên trong Session.");
-        }
+    // 2. Bắt các tham số từ URL do form GET gửi lên
+    if (!empty($_GET['status'])) {
+        $where[] = "d.status = ?";
+        $params[] = $_GET['status'];
+    }
+    if (!empty($_GET['start_date'])) {
+        $where[] = "d.start_date >= ?";
+        $params[] = $_GET['start_date'];
+    }
+    if (!empty($_GET['end_date'])) {
+        $where[] = "d.start_date <= ?";
+        $params[] = $_GET['end_date'];
+    }
 
-        $stmt = $this->db->prepare("
-            SELECT d.*, t.tour_name
+    // 3. Gắn chuỗi WHERE vào SQL
+    $whereSql = implode(" AND ", $where);
+
+    $sql = "SELECT d.*, t.tour_name 
             FROM departures d
             JOIN tours t ON d.tour_id = t.tour_id
             JOIN departure_guides dg ON d.departure_id = dg.departure_id
-            WHERE dg.guide_id = ?
-            ORDER BY d.start_date ASC
-        ");
-        $stmt->execute([$guide_id]);
-        $departures = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            WHERE $whereSql";
 
-        require __DIR__ . '/../views/guide/schedule.php';
-    }
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($params);
+    $departures = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    require __DIR__ . '/../views/guide/schedule.php';
+}
     // ================= XEM CHI TIẾT ĐOÀN =================
     public function viewDeparture()
     {
