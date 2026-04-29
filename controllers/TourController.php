@@ -82,7 +82,7 @@ class TourController
 
         // 5. LẤY DANH SÁCH ĐÁNH GIÁ (REVIEWS) TỪ DATABASE
         $stmtReviews = $this->db->prepare("
-            SELECT r.*, u.full_name, u.name as user_name 
+            SELECT r.*, u.full_name
             FROM reviews r 
             LEFT JOIN users u ON r.user_id = u.user_id 
             WHERE r.tour_id = ? 
