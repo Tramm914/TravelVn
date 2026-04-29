@@ -8,6 +8,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TravelVN</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
@@ -106,12 +107,33 @@ if (session_status() === PHP_SESSION_NONE) {
                             <i class="bi bi-map me-1"></i> Khám phá Tours
                         </a>
                     </li>
-
-                    <li class="nav-item me-3">
-                        <a class="nav-link nav-link-custom" href="#">
-                            <i class="bi bi-map me-1"></i> Hỗ trợ
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom" href="index.php?action=blogs">
+                            <i class="bi bi-map me-1"></i> Bài viết
                         </a>
                     </li>
+                    <li class="nav-item me-3">
+                        <?php
+                        $role = $_SESSION['user']['role'] ?? 'customer';
+                        $supportLink = 'javascript:void(0);'; // Mặc định không chuyển trang
+                        $onClick = 'toggleChat()'; // Mặc định là bật bong bóng chat
+                        
+                        if ($role == 'admin') {
+                            $supportLink = 'admin.php?action=chat';
+                            $onClick = '';
+                        } elseif ($role == 'tour_manager') {
+                            $supportLink = 'manager.php?action=chat';
+                            $onClick = '';
+                        } elseif ($role == 'guide') {
+                            $supportLink = 'guide.php?action=chat';
+                            $onClick = '';
+                        }
+                        ?>
+                        <a class="nav-link nav-link-custom" href="<?= $supportLink ?>" onclick="<?= $onClick ?>">
+                            <i class="bi bi-headset me-1"></i> Hỗ trợ
+                        </a>
+                    </li>
+                    
                     <?php if (isset($_SESSION['user'])): ?>
 
                         <?php if ($_SESSION['user']['role'] == 'tour_manager'): ?>
@@ -124,13 +146,13 @@ if (session_status() === PHP_SESSION_NONE) {
 
                         <?php elseif ($_SESSION['user']['role'] == 'guide'): ?>
                             <li class="nav-item">
-                                <a class="nav-link nav-link-custom fw-semibold text-success"
-                                    href="guide.php?action=schedule"> <i class="bi bi-briefcase-fill me-1"></i> Công
+                                <a class="nav-link nav-link-custom fw-semibold text-success" href="guide.php?action=schedule">
+                                    <i class="bi bi-briefcase-fill me-1"></i> Công
                                     việc
                                 </a>
                             </li>
                         <?php endif; ?>
-                        
+
                         <?php if (isset($_SESSION['user']) && $_SESSION['user']['role'] == 'admin'): ?>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-danger fw-bold" href="#" role="button"
@@ -153,12 +175,13 @@ if (session_status() === PHP_SESSION_NONE) {
                         <?php endif; ?>
 
                     <?php endif; ?>
-                    
+
                     <?php if (isset($_SESSION['user'])): ?>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle user-dropdown-toggle" href="#" role="button"
                                 data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-person-circle me-1"></i> <?= htmlspecialchars($_SESSION['user']['full_name'] ?? 'Người dùng') ?>
+                                <i class="bi bi-person-circle me-1"></i>
+                                <?= htmlspecialchars($_SESSION['user']['full_name'] ?? 'Người dùng') ?>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
                                 <li><a class="dropdown-item py-2" href="index.php?action=profile"><i
