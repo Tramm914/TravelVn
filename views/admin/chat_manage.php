@@ -169,18 +169,31 @@
                     const senderName = s.sender_name || 'Khách ẩn danh';
                     const avatarLetter = senderName.charAt(0).toUpperCase();
                     
+                    // XỬ LÝ BADGE CHƯA ĐỌC: 
+                    // Kiểm tra xem backend có trả về unread_count > 0 không (và ẩn đi nếu đang mở đúng đoạn chat đó)
+                    let unreadBadge = '';
+                    if (s.unread_count > 0 && s.session_id !== currentSessionId) {
+                        unreadBadge = `<span class="badge bg-danger rounded-pill ms-2" style="font-size: 0.65rem; padding: 3px 6px;">${s.unread_count}</span>`;
+                    }
+                    
+                    // Đoạn text tin nhắn in đậm nếu chưa đọc
+                    const msgStyle = (s.unread_count > 0 && s.session_id !== currentSessionId) ? 'fw-bold text-dark' : 'text-muted';
+
                     list.innerHTML += `
-                        <div class="session-item d-flex gap-3 align-items-center ${isActive}" onclick="openChat('${s.session_id}', '${senderName}')">
+                        <div class="session-item d-flex gap-3 align-items-center ${isActive}" onclick="openChat('${s.session_id}', '${senderName}')" id="session-box-${s.session_id}">
                             <div class="rounded-circle bg-light text-primary d-flex align-items-center justify-content-center fw-bold flex-shrink-0" style="width: 40px; height: 40px;">
                                 ${avatarLetter}
                             </div>
                             <div class="flex-grow-1 overflow-hidden">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <span class="fw-bold text-dark small text-truncate" style="max-width: 70%;">${senderName}</span>
-                                    <span style="font-size: 10px;" class="text-muted">${new Date(s.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                    <span class="fw-bold text-dark small text-truncate" style="max-width: 60%;">${senderName}</span>
+                                    <div class="d-flex align-items-center">
+                                        <span style="font-size: 10px;" class="text-muted">${new Date(s.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                        ${unreadBadge}
+                                    </div>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <span class="text-muted small text-truncate" style="max-width: 80%;">${s.message}</span>
+                                    <span class="small text-truncate ${msgStyle}" style="max-width: 80%;">${s.message}</span>
                                     <button class="btn btn-sm text-danger p-0 border-0" onclick="deleteChatSession('${s.session_id}', event)" title="Kết thúc hỗ trợ">
                                         <i class="bi bi-x-circle-fill" style="font-size: 14px;"></i>
                                     </button>
@@ -192,12 +205,26 @@
             });
     }
 
-
     // 2. Mở khung chat
     function openChat(sessionId, senderName) {
         currentSessionId = sessionId;
         document.getElementById('adminChatForm').classList.remove('d-none');
         
+        // Cập nhật giao diện: Ẩn ngay lập tức badge chưa đọc khi click vào
+        const sessionBox = document.getElementById(`session-box-${sessionId}`);
+        if (sessionBox) {
+            const badge = sessionBox.querySelector('.bg-danger');
+            if (badge) badge.remove();
+            const msgText = sessionBox.querySelector('.small.text-truncate');
+            if (msgText) {
+                msgText.classList.remove('fw-bold', 'text-dark');
+                msgText.classList.add('text-muted');
+            }
+        }
+        
+        // GỌI API ĐỂ CẬP NHẬT TRẠNG THÁI "ĐÃ ĐỌC" LÊN DATABASE (BẠN CẦN THÊM API NÀY Ở CONTROLLER)
+        fetch(apiUrl + '?action=markAsRead&session_id=' + sessionId, { method: 'POST' });
+
         // Update Header
         document.getElementById('chatHeader').innerHTML = `
             <div class="d-flex align-items-center gap-3">
@@ -211,7 +238,6 @@
             </div>
         `;
 
-        // SỬA TẠI ĐÂY: Xác định phân loại khách hàng dựa vào sessionId
         let userBadge = sessionId.startsWith('user_') 
             ? '<span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">Thành viên TravelVN</span>' 
             : '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill">Khách chưa đăng nhập</span>';
@@ -223,7 +249,6 @@
             <div class="info-avatar">${senderName.charAt(0).toUpperCase()}</div>
             <h6 class="fw-bold text-dark mb-2">${senderName}</h6>
             ${userBadge}
-            
             <hr class="text-muted mt-4">
             <div class="text-start mt-4">
                 <p class="small text-muted mb-2"><i class="bi bi-circle-fill text-success me-2" style="font-size: 8px;"></i>Trạng thái: Trực tuyến</p>
@@ -232,7 +257,6 @@
             </div>
         `;
 
-        // ... (Phần fetch gọi API getHistory giữ nguyên như cũ) ...
         fetch(apiUrl + '?action=getHistory&session_id=' + sessionId)
             .then(res => res.json())
             .then(data => {
@@ -278,12 +302,15 @@
         formData.append('session_id', currentSessionId);
 
         fetch(apiUrl + '?action=sendMessage', { method: 'POST', body: formData });
+        
+        // Vẽ tin nhắn lên luôn cho mượt
+        appendMessageUI('admin', msg);
         input.value = '';
     }
 
     // 5. Xóa Session
-    function deleteChatSession(sessionId, event) {
-        if(event) event.stopPropagation();
+    function deleteChatSession(sessionId, e) {
+        if(e) e.stopPropagation();
         if (!confirm('Xóa toàn bộ cuộc trò chuyện này?')) return;
 
         const formData = new FormData();
@@ -309,14 +336,18 @@
     var chatPusher = new Pusher('dfb02b6665ceae1b4add', { cluster: 'ap1' });
     var chatChannel = chatPusher.subscribe('live-chat');
     chatChannel.bind('new-message', function (data) {
-        if (data.session_id === currentSessionId) { appendMessageUI(data.sender_type, data.message); }
-        loadSessions();
+        if (data.session_id === currentSessionId) { 
+            appendMessageUI(data.sender_type, data.message); 
+            // Đánh dấu đã đọc ngay lập tức nếu đang mở chat này
+            fetch(apiUrl + '?action=markAsRead&session_id=' + data.session_id, { method: 'POST' });
+        }
+        loadSessions(); // Load lại danh sách bên trái để cập nhật badge hoặc nội dung mới
     });
 
     loadSessions();
     if (typeof updateChatBell === 'function') {
-            updateChatBell();
-        }
+        updateChatBell();
+    }
 </script>
 
 <?php include __DIR__ . "/../layouts/footer.php"; ?>

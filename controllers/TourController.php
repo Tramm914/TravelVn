@@ -130,22 +130,13 @@ class TourController
 
         $search_term = !empty($location) ? $location : $keyword;
 
-        // Bắt đầu câu truy vấn căn bản (Chưa có GROUP BY, ORDER BY, LIMIT)
-        // Chú ý: Cần nối thêm bảng departures (LEFT JOIN) vì bên dưới có tìm kiếm theo d.start_date
-        // Bắt đầu câu truy vấn căn bản (Gom nhóm reviews lại thành 1 bảng ảo trước khi JOIN)
-        // Bắt đầu câu truy vấn căn bản (Dùng MAX() để qua mặt lỗi only_full_group_by của MySQL)
+        // Bỏ bảng ảo (subquery) đi. Dùng trực tiếp AVG và COUNT(DISTINCT ...) để tránh lỗi
         $query = "
             SELECT t.*, 
-                   IFNULL(MAX(r.avg_rating), 0) AS avg_rating, 
-                   IFNULL(MAX(r.review_count), 0) AS review_count
+                   IFNULL(AVG(r.rating), 0) AS avg_rating, 
+                   COUNT(DISTINCT r.review_id) AS review_count
             FROM tours t
-            LEFT JOIN (
-                SELECT tour_id, 
-                       AVG(rating) AS avg_rating, 
-                       COUNT(review_id) AS review_count
-                FROM reviews
-                GROUP BY tour_id
-            ) r ON t.tour_id = r.tour_id
+            LEFT JOIN reviews r ON t.tour_id = r.tour_id
             LEFT JOIN departures d ON t.tour_id = d.tour_id
             WHERE t.status = 'active'
         ";
@@ -175,7 +166,7 @@ class TourController
             $query .= " AND (t.tour_name LIKE '%núi%' OR t.destination IN ('Sapa','Đà Lạt'))";
         }
 
-        // Sau khi đã chèn hết các điều kiện WHERE (AND), mới thêm GROUP BY và ORDER BY
+        // Nhóm lại theo ID của tour
         $query .= " GROUP BY t.tour_id ORDER BY t.tour_id DESC";
 
         // Chuẩn bị và thực thi
