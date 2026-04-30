@@ -130,18 +130,21 @@ class TourController
 
         $search_term = !empty($location) ? $location : $keyword;
 
-        // Đổi DISTINCT thành GROUP BY t.tour_id để tương thích 100% với các cột kiểu TEXT trong MariaDB
-        $query = "SELECT t.*, 
+        // Bắt đầu câu truy vấn căn bản (Chưa có GROUP BY, ORDER BY, LIMIT)
+        // Chú ý: Cần nối thêm bảng departures (LEFT JOIN) vì bên dưới có tìm kiếm theo d.start_date
+        $query = "
+            SELECT t.*, 
                    IFNULL(AVG(r.rating), 0) AS avg_rating, 
                    COUNT(r.review_id) AS review_count
             FROM tours t
             LEFT JOIN reviews r ON t.tour_id = r.tour_id
+            LEFT JOIN departures d ON t.tour_id = d.tour_id
             WHERE t.status = 'active'
-            GROUP BY t.tour_id
-            ORDER BY review_count DESC, t.tour_id ASC
-            LIMIT 8";
+        ";
+        
         $params = [];
 
+        // Nối các điều kiện tìm kiếm động
         if (!empty($search_term)) {
             $query .= " AND (t.destination LIKE ? OR t.tour_name LIKE ?)";
             $params[] = "%$search_term%";
@@ -164,10 +167,10 @@ class TourController
             $query .= " AND (t.tour_name LIKE '%núi%' OR t.destination IN ('Sapa','Đà Lạt'))";
         }
 
-        // Nhóm theo ID thay vì dùng DISTINCT
+        // Sau khi đã chèn hết các điều kiện WHERE (AND), mới thêm GROUP BY và ORDER BY
         $query .= " GROUP BY t.tour_id ORDER BY t.tour_id DESC";
 
-        // Thêm bắt lỗi SQL để không bị lỗi ngầm
+        // Chuẩn bị và thực thi
         $stmt = $this->db->prepare($query);
         $isSuccess = $stmt->execute($params);
 
@@ -184,7 +187,6 @@ class TourController
 
         require __DIR__ . '/../views/tours.php';
     }
-
     // THÊM HÀM MỚI Ở ĐÂY ĐỂ TRẢ VỀ JSON CHO JAVASCRIPT
     public function getDepartures()
     {
