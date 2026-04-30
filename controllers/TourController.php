@@ -132,12 +132,19 @@ class TourController
 
         // Bắt đầu câu truy vấn căn bản (Chưa có GROUP BY, ORDER BY, LIMIT)
         // Chú ý: Cần nối thêm bảng departures (LEFT JOIN) vì bên dưới có tìm kiếm theo d.start_date
+        // Bắt đầu câu truy vấn căn bản (Gom nhóm reviews lại thành 1 bảng ảo trước khi JOIN)
         $query = "
             SELECT t.*, 
-                   IFNULL(AVG(r.rating), 0) AS avg_rating, 
-                   COUNT(r.review_id) AS review_count
+                   IFNULL(r.avg_rating, 0) AS avg_rating, 
+                   IFNULL(r.review_count, 0) AS review_count
             FROM tours t
-            LEFT JOIN reviews r ON t.tour_id = r.tour_id
+            LEFT JOIN (
+                SELECT tour_id, 
+                       AVG(rating) AS avg_rating, 
+                       COUNT(review_id) AS review_count
+                FROM reviews
+                GROUP BY tour_id
+            ) r ON t.tour_id = r.tour_id
             LEFT JOIN departures d ON t.tour_id = d.tour_id
             WHERE t.status = 'active'
         ";
