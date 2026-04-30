@@ -70,6 +70,35 @@
         border: 1px solid var(--tvlk-border);
     }
 
+    .widget-tabs {
+        display: flex;
+        gap: 20px;
+        border-bottom: 2px solid var(--tvlk-bg);
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+    }
+
+    .widget-tab {
+        font-weight: 700;
+        color: var(--tvlk-gray);
+        cursor: pointer;
+        padding-bottom: 10px;
+        margin-bottom: -12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: 0.2s;
+    }
+
+    .widget-tab:hover {
+        color: var(--tvlk-text);
+    }
+
+    .widget-tab.active {
+        color: var(--tvlk-blue);
+        border-bottom: 3px solid var(--tvlk-blue);
+    }
+
     .search-input-group {
         background: white;
         border: 1px solid var(--tvlk-border);
@@ -129,83 +158,448 @@
         color: white;
     }
 
-    .service-menu { margin-bottom: 40px; }
+    /* --- SERVICE ICONS MENU --- */
+    .service-menu {
+        margin-bottom: 40px;
+    }
+
     .service-item {
-        display: flex; flex-direction: column; align-items: center; text-align: center;
-        text-decoration: none; color: var(--tvlk-text); cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        text-decoration: none;
+        color: var(--tvlk-text);
+        cursor: pointer;
     }
+
     .service-icon {
-        width: 60px; height: 60px; border-radius: 18px; display: flex; align-items: center;
-        justify-content: center; font-size: 26px; color: white; margin-bottom: 10px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); transition: 0.3s;
+        width: 60px;
+        height: 60px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+        color: white;
+        margin-bottom: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        transition: 0.3s;
     }
-    .service-item:hover .service-icon { transform: translateY(-4px); box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15); }
-    .service-text { font-size: 0.85rem; font-weight: 600; }
 
-    .bg-sea { background: linear-gradient(135deg, #0194f3, #00d2ff); }
-    .bg-mountain { background: linear-gradient(135deg, #1bbc9b, #34d399); }
-    .bg-culture { background: linear-gradient(135deg, #f9ba05, #fbbf24); }
-    .bg-resort { background: linear-gradient(135deg, #ff5e1f, #fca5a5); }
-    .bg-eco { background: linear-gradient(135deg, #84cc16, #bef264); }
+    .service-item:hover .service-icon {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+    }
 
-    .section-title { font-size: 1.5rem; font-weight: 800; color: var(--tvlk-text); margin-bottom: 20px; }
+    .service-text {
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
 
-    .dest-card { display: block; position: relative; border-radius: var(--radius-lg); overflow: hidden; height: 200px; text-decoration: none; }
-    .dest-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 60%); pointer-events: none; }
-    .dest-card img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s ease; }
-    .dest-card:hover img { transform: scale(1.1); }
-    .dest-info { position: absolute; bottom: 15px; left: 15px; z-index: 2; }
-    .dest-title { color: white; font-weight: 800; font-size: 1.25rem; margin-bottom: 2px; }
-    .dest-count { color: #e1e8ee; font-size: 0.8rem; font-weight: 500; }
+    .bg-sea {
+        background: linear-gradient(135deg, #0194f3, #00d2ff);
+    }
 
-    .slider-wrapper { position: relative; }
-    .tour-scroll { display: flex; gap: 24px; overflow-x: auto; padding-bottom: 30px; scroll-snap-type: x mandatory; scroll-behavior: smooth; }
-    .tour-scroll::-webkit-scrollbar { display: none; }
-    .tour-item { flex: 0 0 calc((100% - 72px) / 4); scroll-snap-align: start; }
-    @media (max-width: 991px) { .tour-item { flex: 0 0 calc((100% - 24px) / 2); } }
-    @media (max-width: 575px) { .tour-item { flex: 0 0 100%; } }
+    .bg-mountain {
+        background: linear-gradient(135deg, #1bbc9b, #34d399);
+    }
+
+    .bg-culture {
+        background: linear-gradient(135deg, #f9ba05, #fbbf24);
+    }
+
+    .bg-resort {
+        background: linear-gradient(135deg, #ff5e1f, #fca5a5);
+    }
+
+    .bg-eco {
+        background: linear-gradient(135deg, #84cc16, #bef264);
+    }
+
+    /* --- COMMON TITLE --- */
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--tvlk-text);
+        margin-bottom: 20px;
+    }
+
+    /* --- ĐỊA ĐIỂM ĐƯỢC YÊU THÍCH --- */
+    .dest-card {
+        display: block;
+        position: relative;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        height: 200px;
+        text-decoration: none;
+    }
+
+    .dest-card::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 60%);
+        pointer-events: none;
+    }
+
+    .dest-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: 0.5s ease;
+    }
+
+    .dest-card:hover img {
+        transform: scale(1.1);
+    }
+
+    .dest-info {
+        position: absolute;
+        bottom: 15px;
+        left: 15px;
+        z-index: 2;
+    }
+
+    .dest-title {
+        color: white;
+        font-weight: 800;
+        font-size: 1.25rem;
+        margin-bottom: 2px;
+    }
+
+    .dest-count {
+        color: #e1e8ee;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    /* --- TOUR SLIDER --- */
+    .slider-wrapper {
+        position: relative;
+    }
+
+    .tour-scroll {
+        display: flex;
+        gap: 24px;
+        overflow-x: auto;
+        padding-bottom: 30px;
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
+    }
+
+    .tour-scroll::-webkit-scrollbar {
+        display: none;
+    }
+
+    .tour-item {
+        flex: 0 0 calc((100% - 72px) / 4);
+        scroll-snap-align: start;
+    }
+
+    @media (max-width: 991px) {
+        .tour-item {
+            flex: 0 0 calc((100% - 24px) / 2);
+        }
+    }
+
+    @media (max-width: 575px) {
+        .tour-item {
+            flex: 0 0 100%;
+        }
+    }
 
     .slider-btn {
-        position: absolute; top: 40%; transform: translateY(-50%); border: 1px solid var(--tvlk-border);
-        width: 45px; height: 45px; border-radius: 50%; background: white; color: var(--tvlk-text);
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); cursor: pointer; font-size: 18px; z-index: 10; transition: 0.3s;
-        display: flex; align-items: center; justify-content: center;
+        position: absolute;
+        top: 40%;
+        transform: translateY(-50%);
+        border: 1px solid var(--tvlk-border);
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: white;
+        color: var(--tvlk-text);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        font-size: 18px;
+        z-index: 10;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
-    .slider-btn:hover { background: var(--tvlk-blue); color: white; border-color: var(--tvlk-blue); }
-    .slider-btn.left { left: -20px; }
-    .slider-btn.right { right: -20px; }
 
-    .tvlk-card { background: white; border-radius: var(--radius-md); box-shadow: 0 2px 8px rgba(3, 18, 26, 0.08); border: 1px solid var(--tvlk-border); overflow: hidden; transition: 0.2s; height: 100%; display: flex; flex-direction: column; position: relative; }
-    .tvlk-card:hover { box-shadow: 0 8px 24px rgba(3, 18, 26, 0.12); transform: translateY(-4px); }
-    .discount-badge { position: absolute; top: 10px; right: 10px; background: #e11d48; color: white; padding: 4px 10px; border-radius: 4px; font-weight: 800; font-size: 0.8rem; z-index: 2; box-shadow: 0 2px 8px rgba(225, 29, 72, 0.4); }
-    .hot-badge { position: absolute; top: 10px; right: 10px; background: #f59e0b; color: white; padding: 4px 10px; border-radius: 4px; font-weight: 800; font-size: 0.8rem; z-index: 2; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4); }
-    .card-img-box { position: relative; height: 180px; }
-    .card-img-box img { width: 100%; height: 100%; object-fit: cover; }
-    .rating-badge { position: absolute; bottom: 10px; left: 10px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(4px); padding: 4px 8px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; color: var(--tvlk-text); display: flex; align-items: center; gap: 4px; }
-    .tvlk-card-body { padding: 16px; display: flex; flex-direction: column; flex-grow: 1; }
-    .tour-location { font-size: 0.8rem; color: var(--tvlk-gray); font-weight: 700; margin-bottom: 6px; text-transform: uppercase; }
-    .tour-title { font-size: 1rem; font-weight: 700; color: var(--tvlk-text); line-height: 1.4; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .price-box { margin-top: auto; text-align: right; }
-    .price-old { font-size: 0.85rem; color: var(--tvlk-gray); text-decoration: line-through; margin-bottom: 2px; }
-    .price-current { font-size: 1.25rem; font-weight: 800; color: var(--tvlk-orange); }
+    .slider-btn:hover {
+        background: var(--tvlk-blue);
+        color: white;
+        border-color: var(--tvlk-blue);
+    }
 
-    .blog-section { padding: 60px 0; background-color: white; border-top: 1px solid var(--tvlk-border); }
-    .blog-card { background: white; border-radius: var(--radius-md); border: 1px solid var(--tvlk-border); overflow: hidden; transition: 0.3s; height: 100%; display: flex; flex-direction: column; cursor: pointer; text-decoration: none; color: var(--tvlk-text); }
-    .blog-card:hover { box-shadow: 0 8px 24px rgba(3, 18, 26, 0.08); transform: translateY(-4px); border-color: transparent; }
-    .blog-img { height: 160px; position: relative; }
-    .blog-img img { width: 100%; height: 100%; object-fit: cover; }
-    .blog-badge { position: absolute; top: 10px; left: 10px; background: var(--tvlk-blue); color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
-    .blog-body { padding: 16px; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between; }
-    .blog-date { font-size: 0.8rem; color: var(--tvlk-gray); margin-bottom: 6px; font-weight: 500; }
-    .blog-title { font-size: 1.05rem; font-weight: 700; color: var(--tvlk-text); line-height: 1.4; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .blog-readmore { font-size: 0.9rem; font-weight: 700; color: var(--tvlk-orange); display: flex; align-items: center; gap: 4px; }
+    .slider-btn.left {
+        left: -20px;
+    }
 
-    .why-tvlk { background: var(--tvlk-bg); padding: 80px 0; border-top: 1px solid var(--tvlk-border); }
-    .why-item { display: flex; flex-direction: column; align-items: center; text-align: center; background: white; padding: 40px 25px; border-radius: var(--radius-lg); border: 1px solid var(--tvlk-border); height: 100%; transition: 0.3s; }
-    .why-item:hover { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06); transform: translateY(-5px); border-color: white; }
-    .why-icon { width: 70px; height: 70px; border-radius: 50%; background: #e6f5fe; color: var(--tvlk-blue); display: flex; align-items: center; justify-content: center; font-size: 30px; margin-bottom: 20px; }
-    .why-text h5 { font-size: 1.15rem; font-weight: 800; margin-bottom: 12px; color: var(--tvlk-text); }
-    .why-text p { font-size: 0.95rem; color: var(--tvlk-gray); line-height: 1.6; margin: 0; }
+    .slider-btn.right {
+        right: -20px;
+    }
+
+    /* --- TOUR CARDS --- */
+    .tvlk-card {
+        background: white;
+        border-radius: var(--radius-md);
+        box-shadow: 0 2px 8px rgba(3, 18, 26, 0.08);
+        border: 1px solid var(--tvlk-border);
+        overflow: hidden;
+        transition: 0.2s;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+    .tvlk-card:hover {
+        box-shadow: 0 8px 24px rgba(3, 18, 26, 0.12);
+        transform: translateY(-4px);
+    }
+
+    .discount-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #e11d48;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-weight: 800;
+        font-size: 0.8rem;
+        z-index: 2;
+        box-shadow: 0 2px 8px rgba(225, 29, 72, 0.4);
+    }
+    
+    .hot-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #f59e0b;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-weight: 800;
+        font-size: 0.8rem;
+        z-index: 2;
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+    }
+
+    .card-img-box {
+        position: relative;
+        height: 180px;
+    }
+
+    .card-img-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .rating-badge {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(4px);
+        padding: 4px 8px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--tvlk-text);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .tvlk-card-body {
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+    }
+
+    .tour-location {
+        font-size: 0.8rem;
+        color: var(--tvlk-gray);
+        font-weight: 700;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+    }
+
+    .tour-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--tvlk-text);
+        line-height: 1.4;
+        margin-bottom: 12px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .price-box {
+        margin-top: auto;
+        text-align: right;
+    }
+
+    .price-old {
+        font-size: 0.85rem;
+        color: var(--tvlk-gray);
+        text-decoration: line-through;
+        margin-bottom: 2px;
+    }
+
+    .price-current {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--tvlk-orange);
+    }
+
+    /* --- CẨM NANG DU LỊCH --- */
+    .blog-section {
+        padding: 60px 0;
+        background-color: white;
+        border-top: 1px solid var(--tvlk-border);
+    }
+
+    .blog-card {
+        background: white;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--tvlk-border);
+        overflow: hidden;
+        transition: 0.3s;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        cursor: pointer;
+        text-decoration: none;
+        color: var(--tvlk-text);
+    }
+
+    .blog-card:hover {
+        box-shadow: 0 8px 24px rgba(3, 18, 26, 0.08);
+        transform: translateY(-4px);
+        border-color: transparent;
+    }
+
+    .blog-img {
+        height: 160px;
+        position: relative;
+    }
+
+    .blog-img img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .blog-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: var(--tvlk-blue);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .blog-body {
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        justify-content: space-between;
+    }
+
+    .blog-date {
+        font-size: 0.8rem;
+        color: var(--tvlk-gray);
+        margin-bottom: 6px;
+        font-weight: 500;
+    }
+
+    .blog-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--tvlk-text);
+        line-height: 1.4;
+        margin-bottom: 12px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .blog-readmore {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--tvlk-orange);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* --- LÝ DO CHỌN VIETTRAVEL --- */
+    .why-tvlk {
+        background: var(--tvlk-bg);
+        padding: 80px 0;
+        border-top: 1px solid var(--tvlk-border);
+    }
+
+    .why-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        background: white;
+        padding: 40px 25px;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--tvlk-border);
+        height: 100%;
+        transition: 0.3s;
+    }
+
+    .why-item:hover {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+        transform: translateY(-5px);
+        border-color: white;
+    }
+
+    .why-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: #e6f5fe;
+        color: var(--tvlk-blue);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        margin-bottom: 20px;
+    }
+
+    .why-text h5 {
+        font-size: 1.15rem;
+        font-weight: 800;
+        margin-bottom: 12px;
+        color: var(--tvlk-text);
+    }
+
+    .why-text p {
+        font-size: 0.95rem;
+        color: var(--tvlk-gray);
+        line-height: 1.6;
+        margin: 0;
+    }
 </style>
 
 <div class="hero-banner">
@@ -359,13 +753,7 @@
                             <div class="card-img-box">
                                 <img src="<?= !empty($tour['image']) ? '/uploads/' . $tour['image'] : 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800' ?>"
                                     alt="<?= htmlspecialchars($tour['tour_name']) ?>">
-                                
-                                <!-- DỮ LIỆU ĐÁNH GIÁ ĐỘNG TỪ DATABASE -->
-                                <div class="rating-badge">
-                                    <i class="bi bi-star-fill text-warning"></i> 
-                                    <?= !empty($tour['review_count']) && $tour['review_count'] > 0 ? number_format($tour['avg_rating'], 1) : '5.0' ?> 
-                                    <span class="text-muted fw-normal">(<?= $tour['review_count'] ?? 0 ?>)</span>
-                                </div>
+                                <div class="rating-badge"><i class="bi bi-star-fill text-warning"></i> <?= !empty($tour['review_count']) ? number_format($tour['avg_rating'], 1) : '5.0' ?> <span class="text-muted fw-normal">(<?= $tour['review_count'] ?? 0 ?>)</span></div>
                             </div>
 
                             <div class="tvlk-card-body">
@@ -404,6 +792,7 @@
         <button class="slider-btn left d-none d-md-flex" onclick="scrollLeftSlider('tourBestSellerScroll')"><i class="bi bi-chevron-left"></i></button>
 
         <div class="tour-scroll" id="tourBestSellerScroll">
+            <!-- Lưu ý: Bạn cần khai báo biến $bestSellerTours hoặc $stmtBestSeller ở Controller trước khi sử dụng vòng lặp này -->
             <?php if (!empty($bestSellerTours)): ?>
                 <?php foreach ($bestSellerTours as $hotTour): ?>
                     <div class="tour-item">
@@ -414,13 +803,7 @@
                                 <div class="card-img-box">
                                     <img src="<?= !empty($hotTour['image']) ? '/uploads/' . $hotTour['image'] : 'https://images.unsplash.com/photo-1506929562872-bb421503ef21' ?>"
                                         alt="<?= htmlspecialchars($hotTour['tour_name']) ?>">
-                                    
-                                    <!-- DỮ LIỆU ĐÁNH GIÁ ĐỘNG TỪ DATABASE -->
-                                    <div class="rating-badge">
-                                        <i class="bi bi-star-fill text-warning"></i> 
-                                        <?= !empty($hotTour['review_count']) && $hotTour['review_count'] > 0 ? number_format($hotTour['avg_rating'], 1) : '5.0' ?> 
-                                        <span class="text-muted fw-normal">(<?= $hotTour['review_count'] ?? 0 ?>)</span>
-                                    </div>
+                                    <div class="rating-badge"><i class="bi bi-star-fill text-warning"></i> <?= !empty($hotTour['review_count']) ? number_format($hotTour['avg_rating'], 1) : '5.0' ?> <span class="text-muted fw-normal">(<?= $hotTour['review_count'] ?? 0 ?>)</span></div>
                                 </div>
 
                                 <div class="tvlk-card-body">
@@ -438,6 +821,7 @@
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>
+                 <!-- Dữ liệu mẫu hiển thị khi chưa truyền biến $bestSellerTours -->
                  <div class="w-100 text-center text-muted p-4">Hệ thống đang cập nhật danh sách tour bán chạy.</div>
             <?php endif; ?>
         </div>
@@ -447,6 +831,7 @@
 </div>
 
 <script>
+    // JS đã được cấu trúc lại để dùng chung cho nhiều slider
     function scrollLeftSlider(sliderId) {
         const slider = document.getElementById(sliderId);
         if(slider) slider.scrollBy({ left: -(slider.clientWidth), behavior: 'smooth' });
@@ -457,6 +842,7 @@
         if(slider) slider.scrollBy({ left: slider.clientWidth, behavior: 'smooth' });
     }
 
+    // Áp dụng kéo/thả chuột cho tất cả các slider có class "tour-scroll"
     document.querySelectorAll('.tour-scroll').forEach(slider => {
         let isDown = false; 
         let startX; 

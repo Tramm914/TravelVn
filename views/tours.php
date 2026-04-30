@@ -461,8 +461,7 @@
                                     $imgSrc = !empty($row['image']) ? (strpos($row['image'], 'http') === 0 ? $row['image'] : '/uploads/' . $row['image']) : 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=500&q=80';
                                     ?>
                                     <img src="<?= $imgSrc ?>" alt="<?= htmlspecialchars($row['tour_name']); ?>">
-                                    <div class="rating-badge"><i class="bi bi-star-fill text-warning"></i> 4.8 <span
-                                            class="text-muted fw-normal">(120)</span></div>
+                                    <div class="rating-badge"><i class="bi bi-star-fill text-warning"></i> <?= !empty($tour['review_count']) ? number_format($tour['avg_rating'], 1) : '5.0' ?> <span class="text-muted fw-normal">(<?= $tour['review_count'] ?? 0 ?>)</span></div>
                                 </div>
 
                                 <div class="tvlk-card-body">
