@@ -274,7 +274,7 @@
         font-weight: 500;
     }
 
-    /* --- TOUR SLIDER HIỂN THỊ ĐÚNG 4 THẺ --- */
+    /* --- TOUR SLIDER --- */
     .slider-wrapper {
         position: relative;
     }
@@ -375,6 +375,20 @@
         z-index: 2;
         box-shadow: 0 2px 8px rgba(225, 29, 72, 0.4);
     }
+    
+    .hot-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #f59e0b;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-weight: 800;
+        font-size: 0.8rem;
+        z-index: 2;
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+    }
 
     .card-img-box {
         position: relative;
@@ -448,7 +462,7 @@
         color: var(--tvlk-orange);
     }
 
-    /* --- CẨM NANG DU LỊCH ĐÃ LÀM GỌN --- */
+    /* --- CẨM NANG DU LỊCH --- */
     .blog-section {
         padding: 60px 0;
         background-color: white;
@@ -534,7 +548,7 @@
         gap: 4px;
     }
 
-    /* --- LÝ DO CHỌN VIETTRAVEL (NÂNG CẤP GIAO DIỆN) --- */
+    /* --- LÝ DO CHỌN VIETTRAVEL --- */
     .why-tvlk {
         background: var(--tvlk-bg);
         padding: 80px 0;
@@ -597,12 +611,6 @@
 
 <div class="search-widget-container">
     <div class="search-widget">
-        <!-- <div class="widget-tabs">
-            <div class="widget-tab active"><i class="bi bi-star-fill text-warning"></i> Tour Nổi Bật</div>
-            <div class="widget-tab" onclick="window.location.href='index.php?action=tours&cat=domestic'"><i class="bi bi-geo-alt-fill"></i> Ngắn ngày</div>
-            <div class="widget-tab" onclick="window.location.href='index.php?action=tours&cat=crossvietnam'"><i class="bi bi-map"></i> Xuyên Việt</div>
-        </div> -->
-
         <form method="GET" action="index.php">
             <input type="hidden" name="action" value="tours">
             <div class="row g-3 align-items-stretch">
@@ -679,8 +687,7 @@
 <div class="container mb-5">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="section-title mb-0">Địa điểm được yêu thích nhất</h2>
-        <a href="index.php?action=tours" class="text-decoration-none fw-bold" style="color: var(--tvlk-blue);">Xem tất
-            cả <i class="bi bi-arrow-right"></i></a>
+        <a href="index.php?action=tours" class="text-decoration-none fw-bold" style="color: var(--tvlk-blue);">Xem tất cả <i class="bi bi-arrow-right"></i></a>
     </div>
 
     <div class="row g-3">
@@ -723,21 +730,20 @@
     </div>
 </div>
 
+<!-- SECTION 1: Tour giá tốt -->
 <div class="container mb-5 pb-2">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <h2 class="section-title mb-0">🔥 Tour có giá tốt nhất hôm nay</h2>
             <p class="text-muted mt-1 mb-0">Đừng bỏ lỡ các ưu đãi chớp nhoáng với số lượng có hạn</p>
         </div>
-        <a href="index.php?action=tours" class="text-decoration-none fw-bold" style="color: var(--tvlk-blue);">Xem tất
-            cả</a>
+        <a href="index.php?action=tours" class="text-decoration-none fw-bold" style="color: var(--tvlk-blue);">Xem tất cả</a>
     </div>
 
     <div class="slider-wrapper">
-        <button class="slider-btn left d-none d-md-flex" onclick="scrollLeftTour()"><i
-                class="bi bi-chevron-left"></i></button>
+        <button class="slider-btn left d-none d-md-flex" onclick="scrollLeftSlider('tourDiscountScroll')"><i class="bi bi-chevron-left"></i></button>
 
-        <div class="tour-scroll" id="tourScroll">
+        <div class="tour-scroll" id="tourDiscountScroll">
             <?php while ($tour = $stmt->fetch(PDO::FETCH_ASSOC)): ?>
                 <div class="tour-item">
                     <a href="index.php?action=detail&slug=<?= $tour['slug'] ?>" class="text-decoration-none">
@@ -769,27 +775,98 @@
             <?php endwhile; ?>
         </div>
 
-        <button class="slider-btn right d-none d-md-flex" onclick="scrollRightTour()"><i
-                class="bi bi-chevron-right"></i></button>
+        <button class="slider-btn right d-none d-md-flex" onclick="scrollRightSlider('tourDiscountScroll')"><i class="bi bi-chevron-right"></i></button>
+    </div>
+</div>
+
+<!-- SECTION 2: Tour bán chạy nhất -->
+<div class="container mb-5 pb-2">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="section-title mb-0">🏆 Tour được bán nhiều nhất</h2>
+            <p class="text-muted mt-1 mb-0">Những hành trình được khách hàng lựa chọn nhiều nhất trong tháng</p>
+        </div>
+        <a href="index.php?action=tours&sort=bestseller" class="text-decoration-none fw-bold" style="color: var(--tvlk-blue);">Xem tất cả</a>
+    </div>
+
+    <div class="slider-wrapper">
+        <button class="slider-btn left d-none d-md-flex" onclick="scrollLeftSlider('tourBestSellerScroll')"><i class="bi bi-chevron-left"></i></button>
+
+        <div class="tour-scroll" id="tourBestSellerScroll">
+            <!-- Lưu ý: Bạn cần khai báo biến $bestSellerTours hoặc $stmtBestSeller ở Controller trước khi sử dụng vòng lặp này -->
+            <?php if (!empty($bestSellerTours)): ?>
+                <?php foreach ($bestSellerTours as $hotTour): ?>
+                    <div class="tour-item">
+                        <a href="index.php?action=detail&slug=<?= $hotTour['slug'] ?>" class="text-decoration-none">
+                            <div class="tvlk-card">
+                                <div class="hot-badge">BÁN CHẠY</div>
+
+                                <div class="card-img-box">
+                                    <img src="<?= !empty($hotTour['image']) ? '/uploads/' . $hotTour['image'] : 'https://images.unsplash.com/photo-1506929562872-bb421503ef21' ?>"
+                                        alt="<?= htmlspecialchars($hotTour['tour_name']) ?>">
+                                    <div class="rating-badge"><i class="bi bi-star-fill text-warning"></i> 4.9 <span
+                                            class="text-muted fw-normal">(345)</span></div>
+                                </div>
+
+                                <div class="tvlk-card-body">
+                                    <div class="tour-location"><i class="bi bi-geo-alt-fill me-1"
+                                            style="color: var(--tvlk-blue);"></i> <?= htmlspecialchars($hotTour['destination']) ?>
+                                    </div>
+                                    <h5 class="tour-title"><?= htmlspecialchars($hotTour['tour_name']) ?></h5>
+
+                                    <div class="price-box">
+                                        <div class="price-current"><?= number_format($hotTour['price']) ?> VND</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                 <!-- Dữ liệu mẫu hiển thị khi chưa truyền biến $bestSellerTours -->
+                 <div class="w-100 text-center text-muted p-4">Hệ thống đang cập nhật danh sách tour bán chạy.</div>
+            <?php endif; ?>
+        </div>
+
+        <button class="slider-btn right d-none d-md-flex" onclick="scrollRightSlider('tourBestSellerScroll')"><i class="bi bi-chevron-right"></i></button>
     </div>
 </div>
 
 <script>
-    function scrollLeftTour() {
-        const slider = document.getElementById('tourScroll');
-        slider.scrollBy({ left: -(slider.clientWidth), behavior: 'smooth' });
+    // JS đã được cấu trúc lại để dùng chung cho nhiều slider
+    function scrollLeftSlider(sliderId) {
+        const slider = document.getElementById(sliderId);
+        if(slider) slider.scrollBy({ left: -(slider.clientWidth), behavior: 'smooth' });
     }
-    function scrollRightTour() {
-        const slider = document.getElementById('tourScroll');
-        slider.scrollBy({ left: slider.clientWidth, behavior: 'smooth' });
+    
+    function scrollRightSlider(sliderId) {
+        const slider = document.getElementById(sliderId);
+        if(slider) slider.scrollBy({ left: slider.clientWidth, behavior: 'smooth' });
     }
 
-    const slider = document.getElementById('tourScroll');
-    let isDown = false; let startX; let scrollLeft;
-    slider.addEventListener('mousedown', (e) => { isDown = true; startX = e.pageX - slider.offsetLeft; scrollLeft = slider.scrollLeft; });
-    slider.addEventListener('mouseleave', () => { isDown = false; });
-    slider.addEventListener('mouseup', () => { isDown = false; });
-    slider.addEventListener('mousemove', (e) => { if (!isDown) return; e.preventDefault(); const x = e.pageX - slider.offsetLeft; const walk = (x - startX) * 2; slider.scrollLeft = scrollLeft - walk; });
+    // Áp dụng kéo/thả chuột cho tất cả các slider có class "tour-scroll"
+    document.querySelectorAll('.tour-scroll').forEach(slider => {
+        let isDown = false; 
+        let startX; 
+        let scrollLeft;
+
+        slider.addEventListener('mousedown', (e) => { 
+            isDown = true; 
+            startX = e.pageX - slider.offsetLeft; 
+            scrollLeft = slider.scrollLeft; 
+        });
+        
+        slider.addEventListener('mouseleave', () => { isDown = false; });
+        slider.addEventListener('mouseup', () => { isDown = false; });
+        
+        slider.addEventListener('mousemove', (e) => { 
+            if (!isDown) return; 
+            e.preventDefault(); 
+            const x = e.pageX - slider.offsetLeft; 
+            const walk = (x - startX) * 2; 
+            slider.scrollLeft = scrollLeft - walk; 
+        });
+    });
 </script>
 
 <div class="blog-section">
@@ -799,8 +876,7 @@
                 <h2 class="section-title mb-0">Cẩm nang du lịch</h2>
                 <p class="text-muted mt-1 mb-0">Kinh nghiệm và mẹo hay cho chuyến đi hoàn hảo</p>
             </div>
-            <a href="index.php?action=blogs" class="text-decoration-none fw-bold" style="color: var(--tvlk-blue);">Xem
-                tất cả bài viết</a>
+            <a href="index.php?action=blogs" class="text-decoration-none fw-bold" style="color: var(--tvlk-blue);">Xem tất cả bài viết</a>
         </div>
 
         <div class="row g-4">
@@ -828,8 +904,7 @@
                 <?php endforeach; ?>
             <?php else: ?>
                 <div class="col-12 text-center text-muted">
-                    <p class="py-4 border rounded bg-light border-dashed">Hệ thống đang cập nhật các bài viết cẩm nang mới
-                        nhất.</p>
+                    <p class="py-4 border rounded bg-light border-dashed">Hệ thống đang cập nhật các bài viết cẩm nang mới nhất.</p>
                 </div>
             <?php endif; ?>
         </div>
@@ -840,8 +915,7 @@
     <div class="container">
         <div class="text-center mb-5">
             <h2 class="section-title mb-2" style="font-size: 2rem;">Lý do tại sao nên đặt tour với VIETTRAVEL</h2>
-            <p class="text-muted fs-5">Tự hào là thương hiệu du lịch hàng đầu Việt Nam, mang đến trải nghiệm đẳng cấp.
-            </p>
+            <p class="text-muted fs-5">Tự hào là thương hiệu du lịch hàng đầu Việt Nam, mang đến trải nghiệm đẳng cấp.</p>
         </div>
         <div class="row g-4">
             <div class="col-lg-4 col-md-6">
@@ -849,9 +923,7 @@
                     <div class="why-icon"><i class="bi bi-award-fill"></i></div>
                     <div class="why-text">
                         <h5>Thương hiệu Uy tín</h5>
-                        <p>Dù mới vào nghề, nhưng TravelVN tự hào là một trong những nhà tổ chức tour du lịch hàng đầu
-                            và chuyên nghiệp
-                            tại Việt Nam.</p>
+                        <p>Dù mới vào nghề, nhưng TravelVN tự hào là một trong những nhà tổ chức tour du lịch hàng đầu và chuyên nghiệp tại Việt Nam.</p>
                     </div>
                 </div>
             </div>
@@ -860,8 +932,7 @@
                     <div class="why-icon"><i class="bi bi-gem"></i></div>
                     <div class="why-text">
                         <h5>Chất lượng Tiên phong</h5>
-                        <p>Dịch vụ trọn gói đạt chuẩn quốc tế, mạng lưới đối tác rộng khắp đảm bảo mang lại mức giá và
-                            chất lượng tốt nhất.</p>
+                        <p>Dịch vụ trọn gói đạt chuẩn quốc tế, mạng lưới đối tác rộng khắp đảm bảo mang lại mức giá và chất lượng tốt nhất.</p>
                     </div>
                 </div>
             </div>
@@ -870,8 +941,7 @@
                     <div class="why-icon"><i class="bi bi-headset"></i></div>
                     <div class="why-text">
                         <h5>Chăm sóc Tận tâm 24/7</h5>
-                        <p>Đội ngũ nhân viên và hướng dẫn viên nhiệt huyết, hỗ trợ khách hàng chu đáo trên mọi nẻo đường
-                            hành trình.</p>
+                        <p>Đội ngũ nhân viên và hướng dẫn viên nhiệt huyết, hỗ trợ khách hàng chu đáo trên mọi nẻo đường hành trình.</p>
                     </div>
                 </div>
             </div>
