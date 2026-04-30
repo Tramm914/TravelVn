@@ -105,9 +105,24 @@ class TourController
         $search_term = !empty($location) ? $location : $keyword;
 
         // Đổi DISTINCT thành GROUP BY t.tour_id để tương thích 100% với các cột kiểu TEXT trong MariaDB
-        $query = "SELECT t.* FROM tours t 
-                  LEFT JOIN departures d ON t.tour_id = d.tour_id 
-                  WHERE t.status = 'active'";
+        $query = "SELECT 
+    t.*, 
+    -- Tính điểm trung bình (Mặc định 5 nếu chưa có ai đánh giá)
+    COALESCE(AVG(r.rating), 5.0) as avg_rating, 
+    
+    -- Đếm số lượng người đã đánh giá
+    COUNT(DISTINCT r.review_id) as review_count, 
+    
+    -- Đếm số lượng đơn đã đặt thành công của Tour này
+    (SELECT COUNT(*) 
+     FROM bookings b 
+     JOIN departures d ON b.departure_id = d.departure_id 
+     WHERE d.tour_id = t.tour_id AND b.status = 'confirmed') as total_bookings
+
+FROM tours t
+LEFT JOIN reviews r ON t.tour_id = r.tour_id
+WHERE t.status = 'active'
+GROUP BY t.tour_id";
         $params = [];
 
         if (!empty($search_term)) {
