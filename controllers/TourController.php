@@ -133,10 +133,11 @@ class TourController
         // Bắt đầu câu truy vấn căn bản (Chưa có GROUP BY, ORDER BY, LIMIT)
         // Chú ý: Cần nối thêm bảng departures (LEFT JOIN) vì bên dưới có tìm kiếm theo d.start_date
         // Bắt đầu câu truy vấn căn bản (Gom nhóm reviews lại thành 1 bảng ảo trước khi JOIN)
+        // Bắt đầu câu truy vấn căn bản (Dùng MAX() để qua mặt lỗi only_full_group_by của MySQL)
         $query = "
             SELECT t.*, 
-                   IFNULL(r.avg_rating, 0) AS avg_rating, 
-                   IFNULL(r.review_count, 0) AS review_count
+                   IFNULL(MAX(r.avg_rating), 0) AS avg_rating, 
+                   IFNULL(MAX(r.review_count), 0) AS review_count
             FROM tours t
             LEFT JOIN (
                 SELECT tour_id, 

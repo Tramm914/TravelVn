@@ -190,7 +190,7 @@
                 </div>
 
                 <?php 
-                    $coverImg = !empty($blog['image']) ? (strpos($blog['image'], 'http') === 0 ? $blog['image'] : '../public/uploads/' . $blog['image']) : 'https://images.unsplash.com/photo-1542640244-7e672d6cb466?auto=format&fit=crop&w=1200&q=80';
+                    $coverImg = !empty($blog['image']) ? (strpos($blog['image'], 'http') === 0 ? $blog['image'] : '/uploads/' . $blog['image']) : 'https://images.unsplash.com/photo-1542640244-7e672d6cb466?auto=format&fit=crop&w=1200&q=80';
                 ?>
                 <img src="<?= $coverImg ?>" alt="Cover" class="blog-cover-img">
 
@@ -228,7 +228,7 @@
                     <?php foreach ($relatedBlogs as $rb): ?>
                         <a href="index.php?action=blogDetail&id=<?= $rb['blog_id'] ?>" class="related-post-item">
                             <?php 
-                                $thumbImg = !empty($rb['image']) ? (strpos($rb['image'], 'http') === 0 ? $rb['image'] : '../public/uploads/' . $rb['image']) : 'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&w=300&q=80';
+                                $thumbImg = !empty($rb['image']) ? (strpos($rb['image'], 'http') === 0 ? $rb['image'] : '/uploads/' . $rb['image']) : 'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&w=300&q=80';
                             ?>
                             <img src="<?= $thumbImg ?>" class="related-post-img" alt="Thumb">
                             <div class="related-post-info">
