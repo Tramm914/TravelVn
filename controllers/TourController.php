@@ -25,14 +25,41 @@ class TourController
     }
     public function home()
     {
-        // 1. Lấy danh sách tour hiển thị giá tốt
-        $stmt = $this->db->query("SELECT * FROM tours LIMIT 8");
+        // 1. Lấy danh sách tour hiển thị giá tốt (Kèm điểm đánh giá trung bình)
+        $queryDiscount = "
+            SELECT t.*, 
+                   IFNULL(AVG(r.rating), 0) AS avg_rating, 
+                   COUNT(r.review_id) AS review_count
+            FROM tours t
+            LEFT JOIN reviews r ON t.tour_id = r.tour_id
+            WHERE t.status = 'active'
+            GROUP BY t.tour_id
+            ORDER BY t.tour_id DESC
+            LIMIT 8
+        ";
+        $stmt = $this->db->query($queryDiscount);
 
-        // 2. Lấy 4 bài viết Cẩm nang
+        // 2. Lấy danh sách tour bán chạy nhất (Kèm điểm đánh giá trung bình)
+        // Ở đây tạm lấy các tour có nhiều lượt đánh giá nhất làm tour bán chạy
+        $queryBestSeller = "
+            SELECT t.*, 
+                   IFNULL(AVG(r.rating), 0) AS avg_rating, 
+                   COUNT(r.review_id) AS review_count
+            FROM tours t
+            LEFT JOIN reviews r ON t.tour_id = r.tour_id
+            WHERE t.status = 'active'
+            GROUP BY t.tour_id
+            ORDER BY review_count DESC, t.tour_id ASC
+            LIMIT 8
+        ";
+        $stmtBest = $this->db->query($queryBestSeller);
+        $bestSellerTours = $stmtBest->fetchAll(PDO::FETCH_ASSOC);
+
+        // 3. Lấy 4 bài viết Cẩm nang
         $stmtBlogs = $this->db->query("SELECT * FROM blogs ORDER BY created_at DESC LIMIT 4");
         $blogs = $stmtBlogs->fetchAll(PDO::FETCH_ASSOC);
 
-        // 3. ĐẾM SỐ LƯỢNG TOUR THỰC TẾ CỦA 4 ĐỊA ĐIỂM
+        // 4. ĐẾM SỐ LƯỢNG TOUR THỰC TẾ CỦA 4 ĐỊA ĐIỂM
         $stmtCounts = $this->db->query("
             SELECT 
                 SUM(CASE WHEN destination LIKE '%Đà Nẵng%' THEN 1 ELSE 0 END) as danang,
@@ -47,7 +74,6 @@ class TourController
         // Gọi view hiển thị
         require __DIR__ . '/../views/home.php';
     }
-
    public function detail()
     {
         // 1. Nhận SLUG từ URL thay vì ID
