@@ -217,14 +217,22 @@ if (session_status() === PHP_SESSION_NONE) {
         fetch('index.php?action=getCustomerUnreadCount')
             .then(res => res.json())
             .then(data => {
-                const badge = document.getElementById('customer-chat-badge');
-                if (badge) {
-                    if (data.total > 0) {
-                        badge.innerText = data.total;
-                        badge.classList.remove('d-none');
-                    } else {
-                        badge.classList.add('d-none');
+                const navBadge = document.getElementById('customer-chat-badge');
+                // Lấy thêm badge của bong bóng chat
+                const bubbleBadge = document.getElementById('bubble-chat-badge'); 
+                
+                if (data.total > 0) {
+                    if (navBadge) {
+                        navBadge.innerText = data.total;
+                        navBadge.classList.remove('d-none');
                     }
+                    if (bubbleBadge) {
+                        bubbleBadge.innerText = data.total;
+                        bubbleBadge.classList.remove('d-none');
+                    }
+                } else {
+                    if (navBadge) navBadge.classList.add('d-none');
+                    if (bubbleBadge) bubbleBadge.classList.add('d-none');
                 }
             })
             .catch(err => console.error("Lỗi lấy badge chat:", err));
@@ -232,8 +240,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
     // 2. Hàm xử lý khi khách hàng bấm vào nút "Hỗ trợ"
     function toggleChat() {
-        // GIẢ SỬ: Bạn đang dùng một the div có id="chat-container" làm khung chat
-        // và muốn ẩn/hiện nó khi bấm nút. Hãy sửa id này cho đúng với code HTML của bạn nhé!
+        // ... (Logic mở giao diện chat của bạn) ...
         const chatBox = document.getElementById('chat-container'); 
         if (chatBox) {
             chatBox.classList.toggle('d-none');
@@ -243,12 +250,18 @@ if (session_status() === PHP_SESSION_NONE) {
         fetch('index.php?action=markAsRead', { method: 'POST' })
             .then(response => response.json())
             .then(data => {
-                // Nếu update thành công, lập tức ẩn cái badge đỏ đi
                 if (data.status === 'success') {
-                    const badge = document.getElementById('customer-chat-badge');
-                    if (badge) {
-                        badge.classList.add('d-none');
-                        badge.innerText = '0';
+                    const navBadge = document.getElementById('customer-chat-badge');
+                    // Lấy thêm badge của bong bóng chat
+                    const bubbleBadge = document.getElementById('bubble-chat-badge');
+                    
+                    if (navBadge) {
+                        navBadge.classList.add('d-none');
+                        navBadge.innerText = '0';
+                    }
+                    if (bubbleBadge) {
+                        bubbleBadge.classList.add('d-none');
+                        bubbleBadge.innerText = '0';
                     }
                 }
             })
@@ -257,15 +270,12 @@ if (session_status() === PHP_SESSION_NONE) {
 
     // 3. Khởi tạo khi trang tải xong
     document.addEventListener("DOMContentLoaded", function() {
-        // Load số lượng ban đầu
         updateCustomerChatBadge();
         
-        // Cài đặt Pusher để nghe tin nhắn realtime
         var pusher = new Pusher('dfb02b6665ceae1b4add', { cluster: 'ap1' });
         var chatChannel = pusher.subscribe('live-chat');
         
         chatChannel.bind('new-message', function (data) {
-            // Nếu có tin nhắn mới từ Admin, kiểm tra và cập nhật lại số trên badge
             if (data.sender_type !== 'customer') {
                 updateCustomerChatBadge();
             }

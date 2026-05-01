@@ -357,8 +357,11 @@
         ?>
 
         <div class="chat-widget" id="chatWidget">
-            <button class="chat-button" onclick="toggleChat()">
+            <!-- 🔥 BỔ SUNG: Class position-relative để gắn số đếm góc trên -->
+            <button class="chat-button position-relative" onclick="toggleChat()">
                 <i class="bi bi-chat-dots-fill"></i>
+                <!-- 🔥 BỔ SUNG: Chấm đỏ trên nút bong bóng -->
+                <span id="bubble-chat-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size: 0.7rem; border: 2px solid white;">0</span>
             </button>
         </div>
 
@@ -374,11 +377,53 @@
     const chatInput = document.getElementById('chatInput');
     let isChatOpen = false;
 
+    // 🔥 HÀM MỚI: Lấy số đếm cập nhật cho Navbar và Bong Bóng Chat
+    function updateCustomerChatBadge() {
+        fetch('index.php?action=getCustomerUnreadCount')
+            .then(res => res.json())
+            .then(data => {
+                const navBadge = document.getElementById('customer-chat-badge');
+                const bubbleBadge = document.getElementById('bubble-chat-badge'); 
+                
+                if (data.total > 0) {
+                    if (navBadge) {
+                        navBadge.innerText = data.total;
+                        navBadge.classList.remove('d-none');
+                    }
+                    if (bubbleBadge) {
+                        bubbleBadge.innerText = data.total;
+                        bubbleBadge.classList.remove('d-none');
+                    }
+                } else {
+                    if (navBadge) navBadge.classList.add('d-none');
+                    if (bubbleBadge) bubbleBadge.classList.add('d-none');
+                }
+            })
+            .catch(err => console.error("Lỗi lấy badge chat:", err));
+    }
+
+    // 🔥 CẬP NHẬT: Gọi API đánh dấu đã đọc khi khách bấm mở khung Chat
     function toggleChat() {
         isChatOpen = !isChatOpen;
         chatPanel.style.display = isChatOpen ? 'flex' : 'none';
+        
         if (isChatOpen) {
             loadChatHistory();
+
+            // Báo cho Server biết khách đã mở xem tin nhắn -> Đánh dấu "đã đọc"
+            fetch('index.php?action=markAsRead', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Ẩn lập tức cả 2 badge (navbar và bong bóng)
+                        const navBadge = document.getElementById('customer-chat-badge');
+                        const bubbleBadge = document.getElementById('bubble-chat-badge');
+                        
+                        if (navBadge) { navBadge.classList.add('d-none'); navBadge.innerText = '0'; }
+                        if (bubbleBadge) { bubbleBadge.classList.add('d-none'); bubbleBadge.innerText = '0'; }
+                    }
+                })
+                .catch(error => console.error('Lỗi khi đánh dấu đã đọc:', error));
         }
     }
 
@@ -419,20 +464,36 @@
         });
     }
 
-    // 🔥 NHỚ THAY KEY PUSHER CỦA BẠN VÀO ĐÂY 🔥
-    var chatPusher = new Pusher('NHẬP_KEY_CỦA_BẠN', {
-        cluster: 'ap1'
-    });
+    // ==========================================
+    // KHỞI TẠO PUSHER & TỰ ĐỘNG CHẠY BADGE
+    // ==========================================
+    document.addEventListener("DOMContentLoaded", function() {
+        // Tự động load số đỏ khi vừa vào web
+        updateCustomerChatBadge();
 
-    var chatChannel = chatPusher.subscribe('live-chat');
+        var chatPusher = new Pusher('dfb02b6665ceae1b4add', { // Đã sửa đúng API KEY của bạn
+            cluster: 'ap1'
+        });
 
-    chatChannel.bind('new-message', function (data) {
-        if (data.sender_type === 'admin') {
-            appendMessage('admin', data.message);
-            if (!isChatOpen) toggleChat();
-        }
+        var chatChannel = chatPusher.subscribe('live-chat');
+
+        chatChannel.bind('new-message', function (data) {
+            // Nếu có tin nhắn mới từ Admin
+            if (data.sender_type !== 'customer') {
+                appendMessage('admin', data.message);
+                
+                if (!isChatOpen) {
+                    // Nếu khách ĐANG ĐÓNG khung chat -> Hiện cục thông báo màu đỏ
+                    updateCustomerChatBadge();
+                } else {
+                    // Nếu khách ĐANG MỞ khung chat -> Đánh dấu đã đọc luôn
+                    fetch('index.php?action=markAsRead', { method: 'POST' });
+                }
+            }
+        });
     });
 </script>
+
 <script>
     // Chạy ngầm quét đơn hàng quá hạn (Mỗi 15 giây)
     setInterval(function() {
