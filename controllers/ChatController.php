@@ -73,6 +73,7 @@ class ChatController
 
     // 2. Lấy danh sách phiên chat (PHÂN QUYỀN TẠI ĐÂY)
     // 2. Lấy danh sách phiên chat (PHÂN QUYỀN VÀ SỬA LỖI TÊN HIỂN THỊ)
+// 2. Lấy danh sách phiên chat (PHÂN QUYỀN VÀ KÈM SỐ TIN NHẮN CHƯA ĐỌC)
     public function getSessions()
     {
         header('Content-Type: application/json');
@@ -80,12 +81,13 @@ class ChatController
         $userId = $_SESSION['user']['user_id'] ?? $_SESSION['user']['id'] ?? 0;
 
         if ($role === 'admin' || $role === 'tour_manager') {
-            // SỬA SQL: Lấy sender_name của tin nhắn ĐẦU TIÊN trong session đó
+            // SỬA SQL: Subquery để đếm số tin nhắn chưa đọc của customer
             $sql = "SELECT 
                         m1.session_id, 
                         (SELECT sender_name FROM chat_messages WHERE session_id = m1.session_id ORDER BY message_id ASC LIMIT 1) AS sender_name, 
                         m1.message, 
-                        m1.created_at 
+                        m1.created_at,
+                        (SELECT COUNT(*) FROM chat_messages WHERE session_id = m1.session_id AND is_read = 0 AND sender_type = 'customer') AS unread_count
                     FROM chat_messages m1
                     JOIN (SELECT MAX(message_id) as last_id FROM chat_messages GROUP BY session_id) m2 
                     ON m1.message_id = m2.last_id
@@ -93,12 +95,12 @@ class ChatController
             $stmt = $this->db->query($sql);
 
         } else if ($role === 'guide') {
-            // SỬA SQL TƯƠNG TỰ CHO HDV
             $sql = "SELECT 
                         m1.session_id, 
                         (SELECT sender_name FROM chat_messages WHERE session_id = m1.session_id ORDER BY message_id ASC LIMIT 1) AS sender_name, 
                         m1.message, 
-                        m1.created_at 
+                        m1.created_at,
+                        (SELECT COUNT(*) FROM chat_messages WHERE session_id = m1.session_id AND is_read = 0 AND sender_type = 'customer') AS unread_count
                     FROM chat_messages m1
                     JOIN (SELECT MAX(message_id) as last_id FROM chat_messages GROUP BY session_id) m2 ON m1.message_id = m2.last_id
                     JOIN departure_guides dg ON m1.departure_id = dg.departure_id
@@ -115,6 +117,23 @@ class ChatController
         exit;
     }
 
+    // BỔ SUNG: Hàm đánh dấu đã đọc
+    public function markAsRead()
+    {
+        header('Content-Type: application/json');
+        $sessionId = $_GET['session_id'] ?? $_POST['session_id'] ?? '';
+        
+        if (!empty($sessionId)) {
+            // Chỉ cập nhật tin nhắn của khách thành đã đọc
+            $stmt = $this->db->prepare("UPDATE chat_messages SET is_read = 1 WHERE session_id = ? AND sender_type = 'customer'");
+            if($stmt->execute([$sessionId])) {
+                echo json_encode(['status' => 'success']);
+                exit;
+            }
+        }
+        echo json_encode(['status' => 'error']);
+        exit;
+    }
     // 3. Lấy lịch sử tin nhắn
     public function getHistory()
     {

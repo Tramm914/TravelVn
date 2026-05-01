@@ -33,33 +33,34 @@ switch ($action) {
         break;
 
     // =======================================================
-   // =======================================================
+    // =======================================================
     // 🔥 CÁC CASE DÀNH CHO CHAT (SỬA Ở ĐÂY)
     // =======================================================
     case 'chat':
-        $controller->chat(); 
+        $controller->chat(); // Gọi hàm chat() trong AdminController để hiện giao diện
         break;
 
-    // Đổi hết $chatController thành $controller
     case 'getSessions':
-        $controller->getSessions();
+        $chatController->getSessions();
         break;
 
     case 'getHistory':
-        $controller->getHistory();
+        $chatController->getHistory();
         break;
 
     case 'sendMessage':
-        $controller->sendMessage();
+        $chatController->sendMessage();
         break;
 
-    case 'markAsRead':
-        $controller->markAsRead();
+    case 'deleteSession':
+        $chatController->deleteSession();
         break;
         
-    case 'deleteSession':
-        $controller->deleteSession();
+    // 🔥 BẠN BỔ SUNG THÊM CASE NÀY NHÉ:
+    case 'markAsRead':
+        $chatController->markAsRead();
         break;
+    // =======================================================
     
     default:
         $controller->index();
