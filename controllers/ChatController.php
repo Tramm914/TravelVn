@@ -118,20 +118,34 @@ class ChatController
     }
 
     // BỔ SUNG: Hàm đánh dấu đã đọc
+    // Hàm đánh dấu đã đọc (Dùng chung cho cả Admin và Khách hàng)
     public function markAsRead()
     {
         header('Content-Type: application/json');
-        $sessionId = $_GET['session_id'] ?? $_POST['session_id'] ?? '';
+        $role = $_SESSION['user']['role'] ?? 'customer';
         
-        if (!empty($sessionId)) {
-            // Chỉ cập nhật tin nhắn của khách thành đã đọc
-            $stmt = $this->db->prepare("UPDATE chat_messages SET is_read = 1 WHERE session_id = ? AND sender_type = 'customer'");
-            if($stmt->execute([$sessionId])) {
-                echo json_encode(['status' => 'success']);
-                exit;
+        if ($role === 'customer') {
+            // NẾU LÀ KHÁCH HÀNG: Đánh dấu đã đọc các tin nhắn do Admin/Guide gửi
+            if (isset($_SESSION['user']['user_id'])) {
+                $sessionId = 'user_' . $_SESSION['user']['user_id'];
+            } else {
+                $sessionId = $_SESSION['chat_session_id'] ?? '';
+            }
+            
+            if (!empty($sessionId)) {
+                $stmt = $this->db->prepare("UPDATE chat_messages SET is_read = 1 WHERE session_id = ? AND sender_type != 'customer'");
+                $stmt->execute([$sessionId]);
+            }
+        } else {
+            // NẾU LÀ ADMIN/MANAGER/GUIDE: Đánh dấu đã đọc các tin nhắn do Khách gửi
+            $sessionId = $_GET['session_id'] ?? $_POST['session_id'] ?? '';
+            if (!empty($sessionId)) {
+                $stmt = $this->db->prepare("UPDATE chat_messages SET is_read = 1 WHERE session_id = ? AND sender_type = 'customer'");
+                $stmt->execute([$sessionId]);
             }
         }
-        echo json_encode(['status' => 'error']);
+        
+        echo json_encode(['status' => 'success']);
         exit;
     }
     // 3. Lấy lịch sử tin nhắn
@@ -186,6 +200,32 @@ class ChatController
         
         // Đếm toàn bộ tin nhắn chưa đọc có sender_type là 'customer'
         $stmt = $this->db->query("SELECT COUNT(*) as total FROM chat_messages WHERE is_read = 0 AND sender_type = 'customer'");
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        echo json_encode(['total' => $result['total'] ?? 0]);
+        exit;
+    }
+    // Đếm số tin nhắn Admin gửi mà Khách chưa đọc
+    public function getCustomerUnreadCount()
+    {
+        header('Content-Type: application/json');
+        
+        // 1. Xác định session của khách hiện tại
+        if (isset($_SESSION['user']['user_id'])) {
+            $sessionId = 'user_' . $_SESSION['user']['user_id'];
+        } else {
+            $sessionId = $_SESSION['chat_session_id'] ?? '';
+        }
+
+        // Nếu chưa có phiên chat nào thì chắc chắn là 0
+        if (empty($sessionId)) {
+            echo json_encode(['total' => 0]);
+            exit;
+        }
+
+        // 2. Đếm tin nhắn chưa đọc (is_read = 0) và người gửi KHÔNG PHẢI là customer
+        $stmt = $this->db->prepare("SELECT COUNT(*) as total FROM chat_messages WHERE session_id = ? AND is_read = 0 AND sender_type != 'customer'");
+        $stmt->execute([$sessionId]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         
         echo json_encode(['total' => $result['total'] ?? 0]);

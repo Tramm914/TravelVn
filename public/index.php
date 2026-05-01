@@ -23,9 +23,12 @@ if ($action === 'payment' || $action === 'confirmPayment' || $action === 'webhoo
     $c = new AuthController();
 } elseif ($action === 'submitReview') {
     $c = new ReviewController();
-} elseif ($action === 'sendMessage' || $action === 'getHistory') {
-    // 🔥 BỔ SUNG: Định tuyến các hành động liên quan đến Chat về đúng ChatController
+    
+// 🔥 BỔ SUNG THÊM 'getCustomerUnreadCount' và 'markAsRead' VÀO ĐÂY:
+} elseif ($action === 'sendMessage' || $action === 'getHistory' || $action === 'getCustomerUnreadCount' || $action === 'markAsRead') {
+    // Định tuyến các hành động liên quan đến Chat về đúng ChatController
     $c = new ChatController();
+    
 } else {
     // Các action: home, tours, detail, booking, confirmBooking, myBookings, bookingDetail
     $c = new TourController();

@@ -115,8 +115,8 @@ if (session_status() === PHP_SESSION_NONE) {
                     <li class="nav-item me-3">
                         <?php
                         $role = $_SESSION['user']['role'] ?? 'customer';
-                        $supportLink = 'javascript:void(0);'; // Mặc định không chuyển trang
-                        $onClick = 'toggleChat()'; // Mặc định là bật bong bóng chat
+                        $supportLink = 'javascript:void(0);'; 
+                        $onClick = 'toggleChat()'; 
                         
                         if ($role == 'admin') {
                             $supportLink = 'admin.php?action=chat';
@@ -131,6 +131,8 @@ if (session_status() === PHP_SESSION_NONE) {
                         ?>
                         <a class="nav-link nav-link-custom" href="<?= $supportLink ?>" onclick="<?= $onClick ?>">
                             <i class="bi bi-headset me-1"></i> Hỗ trợ
+                            <!-- BỔ SUNG BADGE SỐ ĐẾM Ở ĐÂY -->
+                            <span id="customer-chat-badge" class="badge bg-danger rounded-pill ms-1 d-none" style="font-size: 0.7rem;">0</span>
                         </a>
                     </li>
                     
@@ -206,5 +208,68 @@ if (session_status() === PHP_SESSION_NONE) {
             </div>
         </div>
     </nav>
+<!-- Load thư viện Pusher nếu file này chưa có -->
+<script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 
+<script>
+    // 1. Hàm gọi API lấy số lượng tin nhắn chưa đọc
+    function updateCustomerChatBadge() {
+        fetch('index.php?action=getCustomerUnreadCount')
+            .then(res => res.json())
+            .then(data => {
+                const badge = document.getElementById('customer-chat-badge');
+                if (badge) {
+                    if (data.total > 0) {
+                        badge.innerText = data.total;
+                        badge.classList.remove('d-none');
+                    } else {
+                        badge.classList.add('d-none');
+                    }
+                }
+            })
+            .catch(err => console.error("Lỗi lấy badge chat:", err));
+    }
+
+    // 2. Hàm xử lý khi khách hàng bấm vào nút "Hỗ trợ"
+    function toggleChat() {
+        // GIẢ SỬ: Bạn đang dùng một the div có id="chat-container" làm khung chat
+        // và muốn ẩn/hiện nó khi bấm nút. Hãy sửa id này cho đúng với code HTML của bạn nhé!
+        const chatBox = document.getElementById('chat-container'); 
+        if (chatBox) {
+            chatBox.classList.toggle('d-none');
+        }
+
+        // Báo cho Server biết khách đã mở xem tin nhắn để đánh dấu "đã đọc"
+        fetch('index.php?action=markAsRead', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                // Nếu update thành công, lập tức ẩn cái badge đỏ đi
+                if (data.status === 'success') {
+                    const badge = document.getElementById('customer-chat-badge');
+                    if (badge) {
+                        badge.classList.add('d-none');
+                        badge.innerText = '0';
+                    }
+                }
+            })
+            .catch(error => console.error('Lỗi khi đánh dấu đã đọc:', error));
+    }
+
+    // 3. Khởi tạo khi trang tải xong
+    document.addEventListener("DOMContentLoaded", function() {
+        // Load số lượng ban đầu
+        updateCustomerChatBadge();
+        
+        // Cài đặt Pusher để nghe tin nhắn realtime
+        var pusher = new Pusher('dfb02b6665ceae1b4add', { cluster: 'ap1' });
+        var chatChannel = pusher.subscribe('live-chat');
+        
+        chatChannel.bind('new-message', function (data) {
+            // Nếu có tin nhắn mới từ Admin, kiểm tra và cập nhật lại số trên badge
+            if (data.sender_type !== 'customer') {
+                updateCustomerChatBadge();
+            }
+        });
+    });
+</script>
     <div class="main-content">
