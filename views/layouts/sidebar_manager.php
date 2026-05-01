@@ -134,6 +134,8 @@ $activeMenu = $activeMenu ?? 'dashboard';
             <a href="<?= $baseRouter ?>?action=chat"
                 class="admin-menu-item <?= ($activeMenu === 'chat') ? 'active' : '' ?>">
                 <i class="bi bi-chat-left-dots-fill"></i> Tin nhắn hỗ trợ
+                <!-- BỔ SUNG SPAN NÀY DÀNH CHO SỐ LƯỢNG CHƯA ĐỌC -->
+                <span id="sidebar-chat-badge" class="badge bg-danger ms-auto d-none" style="font-size: 0.75rem; border-radius: 50px; padding: 4px 8px;">0</span>
             </a>
             <a href="/manager.php?action=report"
                 class="admin-menu-item <?= ($activeMenu === 'report') ? 'active' : '' ?>">
@@ -158,27 +160,61 @@ $activeMenu = $activeMenu ?? 'dashboard';
 </div>
 
 <script>
-    // Bật log để debug xem có nhận được sóng không (khi chạy thật có thể xóa dòng này)
+    // Bật log để debug
     Pusher.logToConsole = true;
 
-    // 🔥 NHỚ THAY 'KEY_CỦA_BẠN' BẰNG ĐÚNG CÁI KEY BÊN TRANG PUSHER NHÉ 🔥
     var pusher = new Pusher('dfb02b6665ceae1b4add', {
-        cluster: 'ap1' // Cluster lúc bạn tạo là ap1
+        cluster: 'ap1' 
     });
 
-    // Bật kênh 'admin-channel' lên nghe (phải khớp với tên kênh bên PHP)
-    var channel = pusher.subscribe('admin-channel');
-
-    // Đợi tín hiệu 'new-booking'
-    channel.bind('new-booking', function (data) {
-
-        // Nhận được tín hiệu -> Nhét nội dung vào Toast
+    // 1. KÊNH THÔNG BÁO ĐẶT TOUR
+    var adminChannel = pusher.subscribe('admin-channel');
+    adminChannel.bind('new-booking', function (data) {
         document.getElementById('toastMessage').innerText = data.message;
-
-        // Kích hoạt show Toast của Bootstrap
-        const toastElement = document.getElementById('bookingToast');
-        const toast = new bootstrap.Toast(toastElement, { delay: 10000 }); // Hiện 10 giây rồi tự tắt
+        const toast = new bootstrap.Toast(document.getElementById('bookingToast'), { delay: 10000 });
         toast.show();
-
     });
+
+    // ========================================================
+    // 2. KÊNH THÔNG BÁO TIN NHẮN (BỔ SUNG)
+    // ========================================================
+    var chatChannel = pusher.subscribe('live-chat');
+    chatChannel.bind('new-message', function (data) {
+        // Chỉ hiện thông báo nếu người gửi là khách hàng (customer)
+        if (data.sender_type === 'customer') {
+            
+            // Hiện Toast thông báo có tin nhắn mới (Bạn có thể đổi màu background của toast nếu thích)
+            document.getElementById('toastMessage').innerText = "💬 Tin nhắn mới từ " + data.sender_name + ": " + data.message;
+            const toast = new bootstrap.Toast(document.getElementById('bookingToast'), { delay: 5000 });
+            toast.show();
+
+            // Cập nhật lại số lượng badge đỏ trên Sidebar
+            updateSidebarChatBadge();
+        }
+    });
+
+    // Hàm gọi API lấy tổng số tin nhắn chưa đọc
+    function updateSidebarChatBadge() {
+        // Tự động nhận diện đang ở admin hay manager
+        let apiUrl = '<?= $baseRouter ?>'; 
+        
+        fetch(apiUrl + '?action=getTotalUnread')
+            .then(res => res.json())
+            .then(data => {
+                const badge = document.getElementById('sidebar-chat-badge');
+                if (data.total > 0) {
+                    badge.innerText = data.total;
+                    badge.classList.remove('d-none'); // Hiện cục đỏ lên
+                } else {
+                    badge.classList.add('d-none'); // Ẩn cục đỏ đi nếu không có
+                }
+            })
+            .catch(err => console.error("Lỗi lấy badge chat:", err));
+    }
+
+    // Tự động gọi hàm này ngay khi load trang (dù đang ở trang Tổng quan hay Booking...)
+    document.addEventListener("DOMContentLoaded", function() {
+        updateSidebarChatBadge();
+    });
+
 </script>

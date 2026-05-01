@@ -61,7 +61,10 @@ switch ($action) {
         $chatController->markAsRead();
         break;
     // =======================================================
-    
+    // Thêm case này vào khu vực chat nhé
+    case 'getTotalUnread':
+        $chatController->getTotalUnread();
+        break;
     default:
         $controller->index();
 

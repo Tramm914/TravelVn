@@ -179,5 +179,16 @@ class ChatController
         echo json_encode(['status' => 'error']);
         exit;
     }
-    
+    // Đếm tổng tin nhắn chưa đọc để hiển thị lên Sidebar
+    public function getTotalUnread()
+    {
+        header('Content-Type: application/json');
+        
+        // Đếm toàn bộ tin nhắn chưa đọc có sender_type là 'customer'
+        $stmt = $this->db->query("SELECT COUNT(*) as total FROM chat_messages WHERE is_read = 0 AND sender_type = 'customer'");
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        echo json_encode(['total' => $result['total'] ?? 0]);
+        exit;
+    }
 }
