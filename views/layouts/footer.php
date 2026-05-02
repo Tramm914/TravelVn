@@ -470,13 +470,20 @@
         fetch('index.php?action=sendMessage', { method: 'POST', body: formData })
             .then(res => res.json())
             .then(data => {
-                // Nếu đây là tin nhắn đầu tiên, cập nhật mySessionId để nhận tin nhắn mới chuẩn
+                // SỬA LỖI RACE CONDITION Ở ĐÂY:
+                // Nếu là tin nhắn đầu tiên (chưa có mySessionId), Pusher bay về quá nhanh và bị JS chặn lại.
+                // Nên ta cần vẽ lại khung chat bằng cách gọi API để lấy luôn cả mã Session và tin nhắn của Bot.
                 if (mySessionId === '' && data.status === 'success') {
-                    // Cần load lại 1 lần để lấy session_id
                      fetch('index.php?action=getHistory')
                         .then(res => res.json())
                         .then(history => {
-                            if (history.length > 0) mySessionId = history[0].session_id;
+                            if (history.length > 0) {
+                                mySessionId = history[0].session_id; // Cập nhật Session
+                                
+                                // Vẽ lại toàn bộ tin nhắn để hiển thị tin nhắn của Bot vừa tạo
+                                chatBody.innerHTML = '<div class="text-center text-muted small mt-2 mb-3">Bắt đầu trò chuyện với TravelVN</div>';
+                                history.forEach(m => appendMessage(m.sender_type, m.message));
+                            }
                         });
                 }
             });
@@ -488,16 +495,16 @@
     document.addEventListener("DOMContentLoaded", function() {
         updateCustomerChatBadge(); // Lấy số chưa đọc ban đầu
 
-        // SỬ DỤNG ĐÚNG APP KEY MỚI
+        // Bổ sung thêm forceTLS: true để đảm bảo luôn Real-time ổn định trên host Render
         var chatPusher = new Pusher('e5405b1b2139fed6f8bc', { 
-            cluster: 'ap1' 
+            cluster: 'ap1',
+            forceTLS: true
         });
 
         var chatChannel = chatPusher.subscribe('live-chat');
 
         chatChannel.bind('new-message', function (data) {
-            // Kiểm tra xem tin nhắn trả về CÓ ĐÚNG là tin của khách hàng hiện tại không (dựa vào session_id)
-            // và KHÔNG PHẢI do chính khách hàng gửi (tránh in đúp tin nhắn)
+            // Kiểm tra xem tin nhắn trả về CÓ ĐÚNG là tin của khách hàng hiện tại không
             if (data.session_id === mySessionId && data.sender_type !== 'customer') {
                 
                 // Nếu đang mở khung chat -> In tin nhắn ra và báo đã đọc
