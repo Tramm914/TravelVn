@@ -197,7 +197,7 @@
     }
 
     // 5. Pusher Realtime
-    var chatPusher = new Pusher('NHẬP_KEY_CỦA_BẠN', { cluster: 'ap1' });
+    var chatPusher = new Pusher('dfb02b6665ceae1b4add', { cluster: 'ap1' });
     var chatChannel = chatPusher.subscribe('live-chat');
 
     chatChannel.bind('new-message', function(data) {
