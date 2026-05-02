@@ -331,23 +331,41 @@
                 }
             });
     }
-   // 6. Pusher Realtime (Dành cho giao diện Admin)
-    var chatPusher = new Pusher('e5405b1b2139fed6f8bc', { cluster: 'ap1' });
-    var chatChannel = chatPusher.subscribe('live-chat');
+  // =======================================================
+    // 6. PUSHER REALTIME (DÀNH RIÊNG CHO ADMIN)
+    // =======================================================
+    // Đổi tên biến thành adminPusher để KHÔNG BỊ XUNG ĐỘT với footer
+    Pusher.logToConsole = true; // Bật log F12 để kiểm tra kết nối
+
+    var adminPusher = new Pusher('e5405b1b2139fed6f8bc', { 
+        cluster: 'ap1',
+        forceTLS: true
+    });
     
-    chatChannel.bind('new-message', function (data) {
-        // LỌC Ở ĐÂY: Admin chỉ nhận tin nếu departure_id trống
+    var adminChannel = adminPusher.subscribe('live-chat');
+    
+    adminChannel.bind('new-message', function (data) {
+        console.log("Admin vừa nhận Real-time: ", data); // Báo log ra F12
+
+        // LỌC: Admin chỉ nhận tin nếu không thuộc tour nào (departure_id rỗng hoặc 0)
         if (!data.departure_id || data.departure_id == '0' || data.departure_id == '') {
             
+            // Nếu đang mở đúng khung chat của người vừa nhắn
             if (data.session_id === currentSessionId) { 
-                if (data.sender_type === 'customer') {
+                // Cho phép in ra tin nhắn của Khách VÀ của Bot tự động
+                if (data.sender_type === 'customer' || data.sender_name === 'TravelVN Bot') {
                     appendMessageUI(data.sender_type, data.message); 
+                    // Báo về server là Admin đã đọc
                     fetch(apiUrl + '?action=markAsRead&session_id=' + data.session_id, { method: 'POST' });
                 }
             }
+            // Luôn load lại danh sách hộp thư bên trái để cập nhật tin nhắn mới nhất
             loadSessions(); 
         }
     });
+
+    // CHẠY HÀM LOAD DANH SÁCH KHI VỪA VÀO TRANG
+    loadSessions();
 </script>
 
 <?php include __DIR__ . "/../layouts/footer.php"; ?>
