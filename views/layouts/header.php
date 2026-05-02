@@ -209,5 +209,6 @@ if (session_status() === PHP_SESSION_NONE) {
         </div>
     </nav>
 <!-- Load thư viện Pusher nếu file này chưa có -->
-
+<!-- BẮT BUỘC PHẢI CÓ DÒNG NÀY ĐỂ MENU DROPDOWN HOẠT ĐỘNG -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <div class="main-content">
