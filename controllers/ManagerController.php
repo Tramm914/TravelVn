@@ -25,17 +25,36 @@ class ManagerController
             exit();
         }
 
+        // ===== LẤY DỮ LIỆU BỘ LỌC TỪ GIAO DIỆN =====
+        // Nếu người dùng không chọn ngày, mặc định lấy ngày hôm nay
+        $filterDate = $_GET['filter_date'] ?? date('Y-m-d');
+        
+        // Lấy ngày mùng 1 của tháng được chọn (Dựa trên logic cũ của bạn là lấy từ đầu tháng đến ngày chọn)
+        $startOfMonth = date('Y-m-01', strtotime($filterDate));
+
         // ===== DATA =====
-        $totalTours = $this->db->query("SELECT COUNT(*) FROM tours")->fetchColumn();
+        // 1. Tổng số Tour (Thường thống kê tổng số tour đang active trên hệ thống)
+        $totalTours = $this->db->query("SELECT COUNT(*) FROM tours WHERE status = 'active'")->fetchColumn();
 
-        $totalBookings = $this->db->query("SELECT COUNT(*) FROM bookings")->fetchColumn();
+        // 2. Tổng Đơn Đặt (Tính từ đầu tháng đến ngày được chọn trên bộ lọc)
+        $stmtBookings = $this->db->prepare("
+            SELECT COUNT(*) 
+            FROM bookings 
+            WHERE DATE(booking_date) BETWEEN ? AND ?
+        ");
+        $stmtBookings->execute([$startOfMonth, $filterDate]);
+        $totalBookings = $stmtBookings->fetchColumn();
 
-        $totalRevenue = $this->db->query("
+        // 3. Tổng Doanh Thu (Tính từ đầu tháng đến ngày được chọn trên bộ lọc)
+        $stmtRev = $this->db->prepare("
             SELECT COALESCE(SUM(total_price),0) 
             FROM bookings 
             WHERE status IN ('confirmed','completed','checked_in')
-            AND DATE(booking_date) BETWEEN DATE_FORMAT(NOW(), '%Y-%m-01') AND CURDATE()
-        ")->fetchColumn();
+            AND DATE(booking_date) BETWEEN ? AND ?
+        ");
+        $stmtRev->execute([$startOfMonth, $filterDate]);
+        $totalRevenue = $stmtRev->fetchColumn();
+
         $userName = $_SESSION['user']['full_name']
             ?? $_SESSION['user']['name']
             ?? 'Quản trị viên';
@@ -43,7 +62,6 @@ class ManagerController
         // ===== LOAD VIEW =====
         require __DIR__ . '/../views/manager/dashboard.php';
     }
-
     // ================= TOUR LIST =================
     public function tours()
     {

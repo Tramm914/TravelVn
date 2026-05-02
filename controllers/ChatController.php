@@ -28,49 +28,135 @@ class ChatController
 
     // 1. Gửi tin nhắn
     public function sendMessage()
-    {
-        header('Content-Type: application/json');
-        $message = $_POST['message'] ?? '';
-        $senderType = $_SESSION['user']['role'] ?? 'customer';
-        $senderName = $_SESSION['user']['full_name'] ?? 'Khách vãng lai';
-        $departureId = $_POST['departure_id'] ?? null;
+{
+    header('Content-Type: application/json');
 
-        // Phân biệt Khách và Nhân viên
-        if ($senderType === 'customer') {
-            if (isset($_SESSION['user']['user_id'])) {
-                $sessionId = 'user_' . $_SESSION['user']['user_id'];
-            } else {
-                if (!isset($_SESSION['chat_session_id'])) {
-                    $_SESSION['chat_session_id'] = uniqid('chat_');
-                }
-                $sessionId = $_SESSION['chat_session_id'];
-            }
+    $message = $_POST['message'] ?? '';
+    $senderType = $_SESSION['user']['role'] ?? 'customer';
+    $senderName = $_SESSION['user']['full_name'] ?? 'Khách vãng lai';
+    $departureId = $_POST['departure_id'] ?? null;
+
+    // =========================
+    // XÁC ĐỊNH SESSION CHAT
+    // =========================
+    if ($senderType === 'customer') {
+
+        // Nếu khách đã đăng nhập
+        if (isset($_SESSION['user']['user_id'])) {
+
+            $sessionId = 'user_' . $_SESSION['user']['user_id'];
+
         } else {
-            $sessionId = $_POST['session_id'] ?? '';
+
+            // Khách vãng lai
+            if (!isset($_SESSION['chat_session_id'])) {
+                $_SESSION['chat_session_id'] = uniqid('chat_');
+            }
+
+            $sessionId = $_SESSION['chat_session_id'];
         }
 
-        if (!empty($message) && !empty($sessionId)) {
-            date_default_timezone_set('Asia/Ho_Chi_Minh');
-            $currentTime = date('Y-m-d H:i:s'); 
+    } else {
 
-            $stmt = $this->db->prepare("INSERT INTO chat_messages (session_id, sender_type, sender_name, message, departure_id, created_at) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$sessionId, $senderType, $senderName, $message, $departureId, $currentTime]);
-
-            $data = [
-                'session_id' => $sessionId,
-                'sender_type' => $senderType,
-                'sender_name' => $senderName,
-                'departure_id' => $departureId,
-                'message' => htmlspecialchars($message),
-                'time' => date('H:i') 
-            ];
-
-            $this->pusher->trigger('live-chat', 'new-message', $data);
-            echo json_encode(['status' => 'success']);
-        }
-        exit;
+        // Admin / Guide / Manager
+        $sessionId = $_POST['session_id'] ?? '';
     }
 
+    // =========================
+    // KIỂM TRA DỮ LIỆU
+    // =========================
+    if (!empty($message) && !empty($sessionId)) {
+
+        date_default_timezone_set('Asia/Ho_Chi_Minh');
+
+        $currentTime = date('Y-m-d H:i:s');
+
+        // =========================
+        // LƯU TIN NHẮN KHÁCH / ADMIN
+        // =========================
+        $stmt = $this->db->prepare("
+            INSERT INTO chat_messages 
+            (session_id, sender_type, sender_name, message, departure_id, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        ");
+
+        $stmt->execute([
+            $sessionId,
+            $senderType,
+            $senderName,
+            $message,
+            $departureId,
+            $currentTime
+        ]);
+
+        // =========================
+        // PUSH REALTIME
+        // =========================
+        $data = [
+            'session_id' => $sessionId,
+            'sender_type' => $senderType,
+            'sender_name' => $senderName,
+            'departure_id' => $departureId,
+            'message' => htmlspecialchars($message),
+            'time' => date('H:i')
+        ];
+
+        $this->pusher->trigger('live-chat', 'new-message', $data);
+
+        // ==================================================
+        // AUTO REPLY CHO TIN NHẮN ĐẦU TIÊN CỦA KHÁCH
+        // ==================================================
+        if ($senderType === 'customer') {
+
+            $checkStmt = $this->db->prepare("
+                SELECT COUNT(*) as total
+                FROM chat_messages
+                WHERE session_id = ?
+            ");
+
+            $checkStmt->execute([$sessionId]);
+
+            $count = $checkStmt->fetch(PDO::FETCH_ASSOC);
+
+            // Nếu chỉ có đúng 1 tin nhắn => tin đầu tiên
+            if ($count['total'] == 1) {
+
+                $autoReply = "🤖 Xin chào! TravelVN đã nhận được tin nhắn của bạn. Nhân viên sẽ phản hồi sớm nhất ❤️";
+
+                $botTime = date('Y-m-d H:i:s');
+
+                // Lưu bot message
+                $botStmt = $this->db->prepare("
+                    INSERT INTO chat_messages
+                    (session_id, sender_type, sender_name, message, departure_id, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ");
+
+                $botStmt->execute([
+                    $sessionId,
+                    'admin',
+                    'TravelVN Bot',
+                    $autoReply,
+                    $departureId,
+                    $botTime
+                ]);
+
+                // PUSH BOT MESSAGE REALTIME
+                $this->pusher->trigger('live-chat', 'new-message', [
+                    'session_id' => $sessionId,
+                    'sender_type' => 'admin',
+                    'sender_name' => 'TravelVN Bot',
+                    'message' => $autoReply,
+                    'time' => date('H:i')
+                ]);
+            }
+        }
+
+        echo json_encode(['status' => 'success']);
+    }
+
+    exit;
+}
     // 2. Lấy danh sách phiên chat
     public function getSessions()
     {
