@@ -368,7 +368,7 @@
     <?php endif; ?>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Load thư viện Pusher 1 lần duy nhất -->
 <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 
 <script>
@@ -376,8 +376,19 @@
     const chatBody = document.getElementById('chatBody');
     const chatInput = document.getElementById('chatInput');
     let isChatOpen = false;
+    let mySessionId = ''; // Biến để lưu ID phiên chat của khách hàng
 
-    // 🔥 HÀM MỚI: Lấy số đếm cập nhật cho Navbar và Bong Bóng Chat
+    // Lấy Session ID hiện tại của khách từ Server khi load trang
+    fetch('index.php?action=getHistory')
+        .then(response => response.json())
+        .then(data => {
+            if (data.length > 0) {
+                mySessionId = data[0].session_id; // Lấy session_id từ tin nhắn đầu tiên
+            }
+        });
+
+
+    // 1. Hàm gọi API lấy số lượng tin nhắn chưa đọc
     function updateCustomerChatBadge() {
         fetch('index.php?action=getCustomerUnreadCount')
             .then(res => res.json())
@@ -386,14 +397,8 @@
                 const bubbleBadge = document.getElementById('bubble-chat-badge'); 
                 
                 if (data.total > 0) {
-                    if (navBadge) {
-                        navBadge.innerText = data.total;
-                        navBadge.classList.remove('d-none');
-                    }
-                    if (bubbleBadge) {
-                        bubbleBadge.innerText = data.total;
-                        bubbleBadge.classList.remove('d-none');
-                    }
+                    if (navBadge) { navBadge.innerText = data.total; navBadge.classList.remove('d-none'); }
+                    if (bubbleBadge) { bubbleBadge.innerText = data.total; bubbleBadge.classList.remove('d-none'); }
                 } else {
                     if (navBadge) navBadge.classList.add('d-none');
                     if (bubbleBadge) bubbleBadge.classList.add('d-none');
@@ -402,7 +407,7 @@
             .catch(err => console.error("Lỗi lấy badge chat:", err));
     }
 
-    // 🔥 CẬP NHẬT: Gọi API đánh dấu đã đọc khi khách bấm mở khung Chat
+    // 2. Hàm mở/đóng khung chat
     function toggleChat() {
         isChatOpen = !isChatOpen;
         chatPanel.style.display = isChatOpen ? 'flex' : 'none';
@@ -410,15 +415,13 @@
         if (isChatOpen) {
             loadChatHistory();
 
-            // Báo cho Server biết khách đã mở xem tin nhắn -> Đánh dấu "đã đọc"
+            // Đánh dấu đã đọc
             fetch('index.php?action=markAsRead', { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        // Ẩn lập tức cả 2 badge (navbar và bong bóng)
                         const navBadge = document.getElementById('customer-chat-badge');
                         const bubbleBadge = document.getElementById('bubble-chat-badge');
-                        
                         if (navBadge) { navBadge.classList.add('d-none'); navBadge.innerText = '0'; }
                         if (bubbleBadge) { bubbleBadge.classList.add('d-none'); bubbleBadge.innerText = '0'; }
                     }
@@ -427,6 +430,7 @@
         }
     }
 
+    // 3. Hàm in tin nhắn ra màn hình
     function appendMessage(type, text) {
         const div = document.createElement('div');
         div.className = `msg-bubble msg-${type}`;
@@ -435,6 +439,7 @@
         chatBody.scrollTop = chatBody.scrollHeight;
     }
 
+    // 4. Hàm load lịch sử
     function loadChatHistory() {
         fetch('index.php?action=getHistory')
             .then(response => response.json())
@@ -446,55 +451,64 @@
             });
     }
 
+    // 5. Hàm gửi tin nhắn
     function sendChatMessage(e) {
         e.preventDefault();
         const msg = chatInput.value.trim();
         if (!msg) return;
 
-        appendMessage('customer', msg);
+        appendMessage('customer', msg); // Vẽ ngay lập tức
         chatInput.value = '';
 
         const formData = new FormData();
         formData.append('message', msg);
         formData.append('sender_type', 'customer');
 
-        fetch('index.php?action=sendMessage', {
-            method: 'POST',
-            body: formData
-        });
+        fetch('index.php?action=sendMessage', { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => {
+                // Nếu đây là tin nhắn đầu tiên, cập nhật mySessionId để nhận tin nhắn mới chuẩn
+                if (mySessionId === '' && data.status === 'success') {
+                    // Cần load lại 1 lần để lấy session_id
+                     fetch('index.php?action=getHistory')
+                        .then(res => res.json())
+                        .then(history => {
+                            if (history.length > 0) mySessionId = history[0].session_id;
+                        });
+                }
+            });
     }
 
     // ==========================================
-    // KHỞI TẠO PUSHER & TỰ ĐỘNG CHẠY BADGE
+    // 6. KHỞI TẠO PUSHER VỚI KEY MỚI
     // ==========================================
     document.addEventListener("DOMContentLoaded", function() {
-        // Tự động load số đỏ khi vừa vào web
-        updateCustomerChatBadge();
+        updateCustomerChatBadge(); // Lấy số chưa đọc ban đầu
 
-        var chatPusher = new Pusher('dfb02b6665ceae1b4add', { // Đã sửa đúng API KEY của bạn
-            cluster: 'ap1'
+        // SỬ DỤNG ĐÚNG APP KEY MỚI
+        var chatPusher = new Pusher('e5405b1b2139fed6f8bc', { 
+            cluster: 'ap1' 
         });
 
         var chatChannel = chatPusher.subscribe('live-chat');
 
         chatChannel.bind('new-message', function (data) {
-            // Nếu có tin nhắn mới từ Admin
-            if (data.sender_type !== 'customer') {
-                appendMessage('admin', data.message);
+            // Kiểm tra xem tin nhắn trả về CÓ ĐÚNG là tin của khách hàng hiện tại không (dựa vào session_id)
+            // và KHÔNG PHẢI do chính khách hàng gửi (tránh in đúp tin nhắn)
+            if (data.session_id === mySessionId && data.sender_type !== 'customer') {
                 
-                if (!isChatOpen) {
-                    // Nếu khách ĐANG ĐÓNG khung chat -> Hiện cục thông báo màu đỏ
-                    updateCustomerChatBadge();
-                } else {
-                    // Nếu khách ĐANG MỞ khung chat -> Đánh dấu đã đọc luôn
+                // Nếu đang mở khung chat -> In tin nhắn ra và báo đã đọc
+                if (isChatOpen) {
+                    appendMessage('admin', data.message);
                     fetch('index.php?action=markAsRead', { method: 'POST' });
+                } else {
+                    // Nếu đang đóng khung chat -> Cộng số đỏ lên 1
+                    updateCustomerChatBadge(); 
                 }
             }
         });
     });
-</script>
 
-<script>
     // Chạy ngầm quét đơn hàng quá hạn (Mỗi 15 giây)
     setInterval(function() {
         fetch('index.php?action=triggerCleanup')

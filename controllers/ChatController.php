@@ -19,9 +19,9 @@ class ChatController
             'useTLS' => true
         );
         $this->pusher = new Pusher\Pusher(
-            'dfb02b6665ceae1b4add',
-            '8897f5d7c596c6ca98eb',
-            '2146792',
+            'e5405b1b2139fed6f8bc',
+            '2f482d4b39a5f0acd508',
+            '2149497',
             $options
         );
     }

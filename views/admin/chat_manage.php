@@ -333,21 +333,27 @@
     }
 
     // 6. Pusher Realtime
-    var chatPusher = new Pusher('dfb02b6665ceae1b4add', { cluster: 'ap1' });
+   // 6. Pusher Realtime
+    var chatPusher = new Pusher('e5405b1b2139fed6f8bc', { cluster: 'ap1' });
     var chatChannel = chatPusher.subscribe('live-chat');
+    
     chatChannel.bind('new-message', function (data) {
+        // Nếu tin nhắn thuộc về đoạn chat đang mở
         if (data.session_id === currentSessionId) { 
-            appendMessageUI(data.sender_type, data.message); 
-            // Đánh dấu đã đọc ngay lập tức nếu đang mở chat này
-            fetch(apiUrl + '?action=markAsRead&session_id=' + data.session_id, { method: 'POST' });
+            
+            // QUAN TRỌNG: Chỉ in tin nhắn ra màn hình nếu đó là tin của Khách.
+            // (Tin của Admin/Manager đã được in ngay lúc bấm nút gửi ở hàm adminSendMessage rồi)
+            if (data.sender_type === 'customer') {
+                appendMessageUI(data.sender_type, data.message); 
+                
+                // Đánh dấu đã đọc ngay lập tức vì đang mở khung chat
+                fetch(apiUrl + '?action=markAsRead&session_id=' + data.session_id, { method: 'POST' });
+            }
         }
-        loadSessions(); // Load lại danh sách bên trái để cập nhật badge hoặc nội dung mới
+        
+        // Load lại sidebar bên trái để cập nhật số tin nhắn chưa đọc hoặc đưa tin nhắn mới lên đầu
+        loadSessions(); 
     });
-
-    loadSessions();
-    if (typeof updateChatBell === 'function') {
-        updateChatBell();
-    }
 </script>
 
 <?php include __DIR__ . "/../layouts/footer.php"; ?>
