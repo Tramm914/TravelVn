@@ -331,28 +331,22 @@
                 }
             });
     }
-
-    // 6. Pusher Realtime
-   // 6. Pusher Realtime
+   // 6. Pusher Realtime (Dành cho giao diện Admin)
     var chatPusher = new Pusher('e5405b1b2139fed6f8bc', { cluster: 'ap1' });
     var chatChannel = chatPusher.subscribe('live-chat');
     
     chatChannel.bind('new-message', function (data) {
-        // Nếu tin nhắn thuộc về đoạn chat đang mở
-        if (data.session_id === currentSessionId) { 
+        // LỌC Ở ĐÂY: Admin chỉ nhận tin nếu departure_id trống
+        if (!data.departure_id || data.departure_id == '0' || data.departure_id == '') {
             
-            // QUAN TRỌNG: Chỉ in tin nhắn ra màn hình nếu đó là tin của Khách.
-            // (Tin của Admin/Manager đã được in ngay lúc bấm nút gửi ở hàm adminSendMessage rồi)
-            if (data.sender_type === 'customer') {
-                appendMessageUI(data.sender_type, data.message); 
-                
-                // Đánh dấu đã đọc ngay lập tức vì đang mở khung chat
-                fetch(apiUrl + '?action=markAsRead&session_id=' + data.session_id, { method: 'POST' });
+            if (data.session_id === currentSessionId) { 
+                if (data.sender_type === 'customer') {
+                    appendMessageUI(data.sender_type, data.message); 
+                    fetch(apiUrl + '?action=markAsRead&session_id=' + data.session_id, { method: 'POST' });
+                }
             }
+            loadSessions(); 
         }
-        
-        // Load lại sidebar bên trái để cập nhật số tin nhắn chưa đọc hoặc đưa tin nhắn mới lên đầu
-        loadSessions(); 
     });
 </script>
 

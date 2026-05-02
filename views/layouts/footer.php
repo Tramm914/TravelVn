@@ -290,9 +290,12 @@
                     <ul class="footer-contact">
                         <li>
     <i class="bi bi-geo-alt-fill"></i>
-    <a href="https://www.google.com/maps/search/?api=1&query=123+Nguyễn+Văn+Bảo,+Quận+Gò Vấp,+TP.HCM" target="_blank" rel="noopener noreferrer">
-        Tòa nhà TravelVN, 12 Nguyễn Văn Bảo, quận Gò Vấp, TP.HCM
-    </a>
+    <a href="https://www.google.com/maps/search/?api=1&query=123+Nguyễn+Văn+Bảo,+Quận+Gò Vấp,+TP.HCM"
+   target="_blank"
+   rel="noopener noreferrer"
+   style="text-decoration: none; color: inherit;">
+    Tòa nhà TravelVN, 12 Nguyễn Văn Bảo, quận Gò Vấp, TP.HCM
+</a>
 </li>
                         <li>
                             <i class="bi bi-telephone-fill"></i>

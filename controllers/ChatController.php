@@ -78,9 +78,7 @@ class ChatController
         exit;
     }
 
-    // 2. Lấy danh sách phiên chat (PHÂN QUYỀN TẠI ĐÂY)
     // 2. Lấy danh sách phiên chat (PHÂN QUYỀN VÀ SỬA LỖI TÊN HIỂN THỊ)
-// 2. Lấy danh sách phiên chat (PHÂN QUYỀN VÀ KÈM SỐ TIN NHẮN CHƯA ĐỌC)
     public function getSessions()
     {
         header('Content-Type: application/json');
@@ -88,7 +86,7 @@ class ChatController
         $userId = $_SESSION['user']['user_id'] ?? $_SESSION['user']['id'] ?? 0;
 
         if ($role === 'admin' || $role === 'tour_manager') {
-            // SỬA SQL: Subquery để đếm số tin nhắn chưa đọc của customer
+            // SỬA SQL: Chỉ lấy các chat không gắn với tour nào (Hỗ trợ chung)
             $sql = "SELECT 
                         m1.session_id, 
                         (SELECT sender_name FROM chat_messages WHERE session_id = m1.session_id ORDER BY message_id ASC LIMIT 1) AS sender_name, 
@@ -98,19 +96,23 @@ class ChatController
                     FROM chat_messages m1
                     JOIN (SELECT MAX(message_id) as last_id FROM chat_messages GROUP BY session_id) m2 
                     ON m1.message_id = m2.last_id
+                    WHERE m1.departure_id IS NULL OR m1.departure_id = 0 OR m1.departure_id = ''
                     ORDER BY m1.created_at DESC";
             $stmt = $this->db->query($sql);
 
         } else if ($role === 'guide') {
+            // SỬA SQL: Lấy danh sách chat có departure_id khớp với tour mà guide này được phân công và lấy thêm tên Tour
             $sql = "SELECT 
                         m1.session_id, 
                         (SELECT sender_name FROM chat_messages WHERE session_id = m1.session_id ORDER BY message_id ASC LIMIT 1) AS sender_name, 
                         m1.message, 
                         m1.created_at,
+                        d.tour_name,
                         (SELECT COUNT(*) FROM chat_messages WHERE session_id = m1.session_id AND is_read = 0 AND sender_type = 'customer') AS unread_count
                     FROM chat_messages m1
                     JOIN (SELECT MAX(message_id) as last_id FROM chat_messages GROUP BY session_id) m2 ON m1.message_id = m2.last_id
-                    JOIN departure_guides dg ON m1.departure_id = dg.departure_id
+                    JOIN departures d ON m1.departure_id = d.departure_id
+                    JOIN departure_guides dg ON d.departure_id = dg.departure_id
                     WHERE dg.guide_id = ?
                     ORDER BY m1.created_at DESC";
             $stmt = $this->db->prepare($sql);
@@ -124,7 +126,6 @@ class ChatController
         exit;
     }
 
-    // BỔ SUNG: Hàm đánh dấu đã đọc
     // Hàm đánh dấu đã đọc (Dùng chung cho cả Admin và Khách hàng)
     public function markAsRead()
     {
@@ -155,13 +156,13 @@ class ChatController
         echo json_encode(['status' => 'success']);
         exit;
     }
+
     // 3. Lấy lịch sử tin nhắn
     public function getHistory()
     {
         header('Content-Type: application/json');
         $role = $_SESSION['user']['role'] ?? 'customer';
 
-        // --- SỬA LOGIC TẠI ĐÂY ---
         if ($role === 'customer') {
             // Khách tự xem lịch sử của mình
             if (isset($_SESSION['user']['user_id'])) {
@@ -184,6 +185,7 @@ class ChatController
         echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
         exit;
     }
+
     // Xóa toàn bộ lịch sử của một cuộc trò chuyện
     public function deleteSession()
     {
@@ -200,18 +202,20 @@ class ChatController
         echo json_encode(['status' => 'error']);
         exit;
     }
+
     // Đếm tổng tin nhắn chưa đọc để hiển thị lên Sidebar
     public function getTotalUnread()
     {
         header('Content-Type: application/json');
         
-        // Đếm toàn bộ tin nhắn chưa đọc có sender_type là 'customer'
-        $stmt = $this->db->query("SELECT COUNT(*) as total FROM chat_messages WHERE is_read = 0 AND sender_type = 'customer'");
+        // Đếm toàn bộ tin nhắn chưa đọc có sender_type là 'customer' và KHÔNG thuộc tour nào
+        $stmt = $this->db->query("SELECT COUNT(*) as total FROM chat_messages WHERE is_read = 0 AND sender_type = 'customer' AND (departure_id IS NULL OR departure_id = 0 OR departure_id = '')");
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         
         echo json_encode(['total' => $result['total'] ?? 0]);
         exit;
     }
+
     // Đếm số tin nhắn Admin gửi mà Khách chưa đọc
     public function getCustomerUnreadCount()
     {
