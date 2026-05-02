@@ -101,17 +101,18 @@ class ChatController
             $stmt = $this->db->query($sql);
 
         } else if ($role === 'guide') {
-            // SỬA SQL: Lấy danh sách chat có departure_id khớp với tour mà guide này được phân công và lấy thêm tên Tour
+            // Đã sửa: JOIN thêm bảng `tours` thông qua `tour_id` để lấy đúng `tour_name`
             $sql = "SELECT 
                         m1.session_id, 
                         (SELECT sender_name FROM chat_messages WHERE session_id = m1.session_id ORDER BY message_id ASC LIMIT 1) AS sender_name, 
                         m1.message, 
                         m1.created_at,
-                        d.tour_name,
+                        t.tour_name, 
                         (SELECT COUNT(*) FROM chat_messages WHERE session_id = m1.session_id AND is_read = 0 AND sender_type = 'customer') AS unread_count
                     FROM chat_messages m1
                     JOIN (SELECT MAX(message_id) as last_id FROM chat_messages GROUP BY session_id) m2 ON m1.message_id = m2.last_id
                     JOIN departures d ON m1.departure_id = d.departure_id
+                    JOIN tours t ON d.tour_id = t.tour_id
                     JOIN departure_guides dg ON d.departure_id = dg.departure_id
                     WHERE dg.guide_id = ?
                     ORDER BY m1.created_at DESC";

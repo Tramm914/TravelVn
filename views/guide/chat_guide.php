@@ -122,27 +122,41 @@
 <script>
     let currentSessionId = null;
 
-    // 1. Tải danh sách khách (Lưu ý: Gọi đến guide.php)
+    // 1. Tải danh sách khách
     function loadSessions() {
         fetch('guide.php?action=getSessions')
             .then(res => res.json())
             .then(data => {
                 const list = document.getElementById('sessionList');
                 if (data.length === 0) {
-                    list.innerHTML = '<div class="text-center p-4 text-muted small">Chưa có tin nhắn nào</div>';
+                    list.innerHTML = '<div class="text-center p-5 text-muted small"><i class="bi bi-chat-square-dots fs-1 d-block mb-2 opacity-50"></i>Chưa có khách hàng nào nhắn tin.</div>';
                     return;
                 }
                 list.innerHTML = '';
                 data.forEach(s => {
-                    const isActive = s.session_id === currentSessionId ? 'active' : '';
+                    const isActive = s.session_id === currentSessionId ? 'bg-primary bg-opacity-10 border-start border-primary border-4' : '';
+                    
+                    // Thêm badge đếm số tin nhắn chưa đọc
+                    const unreadBadge = (s.unread_count > 0 && s.session_id !== currentSessionId) 
+                        ? `<span class="badge bg-danger rounded-pill" style="font-size: 0.65rem;">${s.unread_count}</span>` 
+                        : '';
+                        
+                    const msgStyle = (s.unread_count > 0 && s.session_id !== currentSessionId) ? 'fw-bold text-dark' : 'text-muted';
+
                     list.innerHTML += `
                         <button onclick="openChat('${s.session_id}', '${s.sender_name || 'Khách vãng lai'}')" 
                                 class="list-group-item list-group-item-action p-3 border-bottom ${isActive}" style="border:none">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="fw-bold text-primary small text-truncate">${s.sender_name || 'Khách vãng lai'}</span>
-                                <span style="font-size: 10px;" class="text-muted">${new Date(s.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                <span class="fw-bold text-primary small text-truncate" style="max-width: 60%;">${s.sender_name || 'Khách vãng lai'}</span>
+                                <div class="d-flex align-items-center gap-1">
+                                    <span style="font-size: 10px;" class="text-muted">${new Date(s.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                    ${unreadBadge}
+                                </div>
                             </div>
-                            <div class="text-muted small text-truncate" style="max-width: 200px;">${s.message}</div>
+                            <div class="text-truncate mb-1 ${msgStyle}" style="font-size: 0.85rem; max-width: 200px;">${s.message}</div>
+                            <div class="text-truncate" style="font-size: 0.75rem; color: #10b981;">
+                                <i class="bi bi-geo-alt-fill me-1"></i>${s.tour_name || 'Đang hỗ trợ'}
+                            </div>
                         </button>`;
                 });
             });
@@ -154,6 +168,9 @@
         document.getElementById('adminChatForm').classList.remove('d-none');
         document.getElementById('chatHeader').innerHTML = `<i class="bi bi-person-circle me-2 text-primary"></i> Đang hỗ trợ: ${senderName}`;
         
+        // Gọi API đánh dấu đã đọc
+        fetch('guide.php?action=markAsRead&session_id=' + sessionId, { method: 'POST' });
+
         fetch(`guide.php?action=getHistory&session_id=${sessionId}`)
             .then(res => res.json())
             .then(data => {
@@ -163,6 +180,7 @@
                     appendMessageUI(msg.sender_type, msg.message);
                 });
                 body.scrollTop = body.scrollHeight;
+                loadSessions(); // Load lại để mất dấu đỏ
             });
     }
 
@@ -193,6 +211,9 @@
         formData.append('session_id', currentSessionId);
 
         fetch('guide.php?action=sendMessage', { method: 'POST', body: formData });
+        
+        // Vẽ tin nhắn lên luôn cho mượt
+        appendMessageUI('guide', msg);
         input.value = '';
     }
 
@@ -201,10 +222,14 @@
     var chatChannel = chatPusher.subscribe('live-chat');
 
     chatChannel.bind('new-message', function(data) {
+        // Chỉ in tin nhắn lên nếu đang mở đúng chat và tin đó do Khách gửi
         if (data.session_id === currentSessionId) {
-            appendMessageUI(data.sender_type, data.message);
+            if (data.sender_type === 'customer') {
+                appendMessageUI(data.sender_type, data.message);
+                fetch('guide.php?action=markAsRead&session_id=' + data.session_id, { method: 'POST' });
+            }
         }
-        loadSessions();
+        loadSessions(); // Load lại menu bên trái để tin nhắn mới ngoi lên đầu
     });
 
     loadSessions();
