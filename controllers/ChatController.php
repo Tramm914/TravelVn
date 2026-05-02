@@ -53,8 +53,15 @@ class ChatController
         // -------------------------
 
         if (!empty($message) && !empty($sessionId)) {
-            $stmt = $this->db->prepare("INSERT INTO chat_messages (session_id, sender_type, sender_name, message, departure_id) VALUES (?, ?, ?, ?, ?)");
-            $stmt->execute([$sessionId, $senderType, $senderName, $message, $departureId]);
+            // 1. Set múi giờ cho PHP
+            date_default_timezone_set('Asia/Ho_Chi_Minh');
+            $currentTime = date('Y-m-d H:i:s'); // Lấy giờ chuẩn hiện tại
+
+            // 2. Thêm trường created_at vào câu lệnh SQL
+            $stmt = $this->db->prepare("INSERT INTO chat_messages (session_id, sender_type, sender_name, message, departure_id, created_at) VALUES (?, ?, ?, ?, ?, ?)");
+            
+            // 3. Truyền thêm $currentTime vào mảng thực thi
+            $stmt->execute([$sessionId, $senderType, $senderName, $message, $departureId, $currentTime]);
 
             $data = [
                 'session_id' => $sessionId,
@@ -62,7 +69,7 @@ class ChatController
                 'sender_name' => $senderName,
                 'departure_id' => $departureId,
                 'message' => htmlspecialchars($message),
-                'time' => date('H:i')
+                'time' => date('H:i') // Bây giờ date('H:i') cũng sẽ ra đúng giờ VN
             ];
 
             $this->pusher->trigger('live-chat', 'new-message', $data);
