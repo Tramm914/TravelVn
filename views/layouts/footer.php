@@ -336,12 +336,15 @@
                 cho bạn?</div>
         </div>
         <div class="chat-footer">
-            <form id="chatForm" onsubmit="sendChatMessage(event)">
-                <input type="text" id="chatInput" class="chat-input" placeholder="Nhập tin nhắn..." required
-                    autocomplete="off">
-                <button type="submit" class="chat-submit"><i class="bi bi-send-fill"></i></button>
-            </form>
-        </div>
+    <form id="chatForm" onsubmit="sendChatMessage(event)">
+        <!-- Input ẩn để lưu ID tour khách đang tham gia/hỏi -->
+        <input type="hidden" id="chatDepartureId" value="<?php echo $_GET['departure_id'] ?? ''; ?>">
+        
+        <input type="text" id="chatInput" class="chat-input" placeholder="Nhập tin nhắn..." required
+            autocomplete="off">
+        <button type="submit" class="chat-submit"><i class="bi bi-send-fill"></i></button>
+    </form>
+</div>
     </div>
 
     <?php
@@ -455,9 +458,13 @@
     }
 
     // 5. Hàm gửi tin nhắn
+    // 5. Hàm gửi tin nhắn
     function sendChatMessage(e) {
         e.preventDefault();
         const msg = chatInput.value.trim();
+        // Lấy giá trị departure_id
+        const departureId = document.getElementById('chatDepartureId') ? document.getElementById('chatDepartureId').value : '';
+
         if (!msg) return;
 
         appendMessage('customer', msg); // Vẽ ngay lập tức
@@ -466,13 +473,13 @@
         const formData = new FormData();
         formData.append('message', msg);
         formData.append('sender_type', 'customer');
+        // Gửi kèm departure_id lên Server
+        formData.append('departure_id', departureId);
 
         fetch('index.php?action=sendMessage', { method: 'POST', body: formData })
             .then(res => res.json())
             .then(data => {
                 // SỬA LỖI RACE CONDITION Ở ĐÂY:
-                // Nếu là tin nhắn đầu tiên (chưa có mySessionId), Pusher bay về quá nhanh và bị JS chặn lại.
-                // Nên ta cần vẽ lại khung chat bằng cách gọi API để lấy luôn cả mã Session và tin nhắn của Bot.
                 if (mySessionId === '' && data.status === 'success') {
                      fetch('index.php?action=getHistory')
                         .then(res => res.json())
