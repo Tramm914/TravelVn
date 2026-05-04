@@ -457,8 +457,7 @@
             });
     }
 
-    // 5. Hàm gửi tin nhắn
-    // 5. Hàm gửi tin nhắn
+    /// 5. Hàm gửi tin nhắn
     function sendChatMessage(e) {
         e.preventDefault();
         const msg = chatInput.value.trim();
@@ -473,13 +472,16 @@
         const formData = new FormData();
         formData.append('message', msg);
         formData.append('sender_type', 'customer');
-        // Gửi kèm departure_id lên Server
-        formData.append('departure_id', departureId);
+        
+        // 🔥 SỬA Ở ĐÂY: Chỉ gửi departure_id nếu nó có giá trị (tránh lỗi Database)
+        if (departureId !== '') {
+            formData.append('departure_id', departureId);
+        }
 
         fetch('index.php?action=sendMessage', { method: 'POST', body: formData })
             .then(res => res.json())
             .then(data => {
-                // SỬA LỖI RACE CONDITION Ở ĐÂY:
+                // Xử lý khi tin nhắn gửi thành công
                 if (mySessionId === '' && data.status === 'success') {
                      fetch('index.php?action=getHistory')
                         .then(res => res.json())
@@ -493,9 +495,11 @@
                             }
                         });
                 }
+            })
+            .catch(err => {
+                console.error("Lỗi khi gửi tin nhắn:", err);
             });
     }
-
     // ==========================================
     // 6. KHỞI TẠO PUSHER VỚI KEY MỚI
     // ==========================================
