@@ -631,7 +631,7 @@ class ManagerController
         exit;
     }
 
-    public function report()
+public function report()
     {
         // 1. Lấy tham số từ bộ lọc (Nếu rỗng thì để mặc định)
         $startDate = !empty($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01');
@@ -669,6 +669,7 @@ class ManagerController
         $totalTours = $this->db->query("SELECT COUNT(*) FROM tours WHERE status = 'active'")->fetchColumn();
 
         // ===== Doanh thu theo ngày/tháng (Dùng cho biểu đồ Line) =====
+        // 🔥 ĐÃ SỬA LỖI Ở ĐÂY: Thêm MIN(booking_date) vào ORDER BY
         $stmtChart = $this->db->prepare("
             SELECT 
                 DATE_FORMAT(booking_date, '%d/%m') as month,
@@ -676,7 +677,7 @@ class ManagerController
             FROM bookings b
             $where AND b.status IN ('confirmed', 'completed', 'checked_in')
             GROUP BY month
-            ORDER BY booking_date ASC
+            ORDER BY MIN(booking_date) ASC
         ");
         $stmtChart->execute($params);
         $revenueByMonth = $stmtChart->fetchAll(PDO::FETCH_ASSOC);

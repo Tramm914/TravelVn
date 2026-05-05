@@ -162,9 +162,10 @@
                         
                         <?php 
                             // Tính toán phần trăm ghế đã đặt
-                            $max = (int)$d['max_seats'];
-                            $booked = (int)$d['booked_seats'];
-                            $percent = ($max > 0) ? round(($booked / $max) * 100) : 0;
+$max = (int)$d['max_seats'];
+// Tính số ghế đã đặt bằng (Tổng số ghế - Số ghế còn trống)
+$booked = $max - (int)$d['available_seats']; 
+$percent = ($max > 0) ? round(($booked / $max) * 100) : 0;
                             
                             // Đổi màu thanh tiến trình tùy theo tỷ lệ lấp đầy
                             $progressColor = 'bg-success'; // Xanh lá nếu còn nhiều chỗ
