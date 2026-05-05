@@ -1,5 +1,34 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
 
+<?php
+// TỔ CHỨC LẠI DỮ LIỆU: Nhóm các đơn đặt theo "Tour + Ngày khởi hành"
+$groupedBookings = [];
+if (!empty($bookings)) {
+    foreach ($bookings as $b) {
+        // Tạo khóa nhóm: ID tour + Ngày khởi hành
+        $groupKey = $b['tour_id'] . '_' . $b['start_date'];
+        
+        if (!isset($groupedBookings[$groupKey])) {
+            $groupedBookings[$groupKey] = [
+                'tour_name' => $b['tour_name'],
+                'start_date' => $b['start_date'],
+                'total_revenue' => 0,
+                'total_bookings' => 0,
+                'items' => []
+            ];
+        }
+        
+        $groupedBookings[$groupKey]['items'][] = $b;
+        $groupedBookings[$groupKey]['total_bookings']++;
+        
+        // Chỉ cộng doanh thu những đơn đã duyệt/hoàn thành
+        if ($b['status'] == 'confirmed' || $b['status'] == 'completed') {
+            $groupedBookings[$groupKey]['total_revenue'] += $b['total_price'];
+        }
+    }
+}
+?>
+
 <style>
     /* --- BIẾN MÀU & CẤU TRÚC CHUNG --- */
     :root {
@@ -8,7 +37,7 @@
         --admin-warning: #f59e0b;
         --admin-danger: #ef4444;
         --admin-info: #0ea5e9;
-        --admin-bg: #f8fafc; 
+        --admin-bg: #f1f5f9; 
         --admin-surface: #ffffff;
         --admin-border: #e2e8f0;
         --admin-text-main: #0f172a; 
@@ -16,60 +45,74 @@
     }
 
     body { background-color: var(--admin-bg); font-family: 'Inter', 'Segoe UI', sans-serif; }
-    
     .admin-container { max-width: 1400px; margin: 40px auto; padding: 0 15px; }
-    
     .admin-title { font-size: 1.8rem; font-weight: 800; color: var(--admin-text-main); margin-bottom: 5px; }
     
-    .admin-card {
+    /* BỘ LỌC CHUYÊN NGHIỆP */
+    .filter-card {
         background: var(--admin-surface);
         border-radius: 16px;
         padding: 24px;
         border: 1px solid var(--admin-border);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        margin-bottom: 24px;
     }
     
-    /* BẢNG DỮ LIỆU */
+    .filter-label { font-size: 0.85rem; font-weight: 700; color: var(--admin-text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-control, .form-select { border-radius: 10px; border-color: var(--admin-border); padding: 10px 15px; box-shadow: none !important; transition: 0.2s; }
+    .form-control:focus, .form-select:focus { border-color: var(--admin-primary); background-color: #f8fafc; }
+    .input-group-text { border-radius: 10px; background-color: white; border-color: var(--admin-border); color: var(--admin-text-muted); }
+
+    /* ACCORDION (NHÓM TOUR) */
+    .tour-accordion .accordion-item {
+        border: 1px solid var(--admin-border);
+        border-radius: 16px !important;
+        margin-bottom: 16px;
+        background-color: white;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+    }
+    .tour-accordion .accordion-button {
+        padding: 20px 24px;
+        background-color: white;
+        color: var(--admin-text-main);
+        box-shadow: none !important;
+    }
+    .tour-accordion .accordion-button:not(.collapsed) {
+        background-color: #f8fafc;
+        border-bottom: 1px solid var(--admin-border);
+    }
+    .tour-group-title { font-size: 1.1rem; font-weight: 800; color: var(--admin-text-main); display: flex; align-items: center; gap: 10px; }
+    .tour-group-meta { font-size: 0.9rem; color: var(--admin-text-muted); font-weight: 500; display: flex; gap: 20px; align-items: center; margin-top: 5px; }
+    
+    /* BẢNG CHI TIẾT TRONG ACCORDION */
     .table th {
-        background-color: #f8fafc; color: var(--admin-text-muted); font-weight: 700;
+        background-color: #f1f5f9; color: var(--admin-text-muted); font-weight: 700;
         text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; padding: 16px;
-        border-bottom: 2px solid var(--admin-border); white-space: nowrap;
+        border-bottom: none; white-space: nowrap;
     }
     .table td { padding: 16px; vertical-align: middle; color: var(--admin-text-main); border-bottom: 1px solid var(--admin-border); }
-    .table tbody tr { transition: all 0.2s; }
+    .table tbody tr:last-child td { border-bottom: none; }
     .table tbody tr:hover { background-color: #f8fafc; }
 
-    /* NÚT HÀNH ĐỘNG MỚI (Icon ngang, gọn gàng) */
-    .action-group { display: flex; gap: 8px; justify-content: center; }
-    .btn-icon {
-        width: 36px; height: 36px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center;
-        font-size: 1.1rem; border: none; transition: 0.2s; background: #f1f5f9; color: var(--admin-text-muted); text-decoration: none;
-    }
-    .btn-icon-info:hover { background: #e0f2fe; color: var(--admin-info); }
-    .btn-icon-success:hover { background: #d1fae5; color: var(--admin-success); }
-    .btn-icon-warning:hover { background: #fef3c7; color: var(--admin-warning); }
-    .btn-icon-danger:hover { background: #fee2e2; color: var(--admin-danger); }
-
     /* BADGE TRẠNG THÁI */
-    .badge-status { padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.75rem; display: inline-block; min-width: 90px; text-align: center; }
+    .badge-status { padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; display: inline-block; min-width: 90px; text-align: center; }
     .status-pending { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
     .status-confirmed { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
     .status-cancelled { background: #fef2f2; color: #dc2626; border: 1px solid #fecdd3; }
     .status-refunded { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
 
-    /* BỘ LỌC TÌM KIẾM */
-    .filter-tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
-    .filter-tab {
-        padding: 8px 16px; border-radius: 8px; background: white; border: 1px solid var(--admin-border);
-        color: var(--admin-text-muted); font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap;
+    /* NÚT THAO TÁC */
+    .action-group { display: flex; gap: 8px; justify-content: center; }
+    .btn-icon {
+        width: 34px; height: 34px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center;
+        font-size: 1rem; border: none; transition: 0.2s; background: white; color: var(--admin-text-muted); text-decoration: none; border: 1px solid var(--admin-border);
     }
-    .filter-tab:hover { border-color: var(--admin-primary); color: var(--admin-primary); }
-    .filter-tab.active { background: var(--admin-primary); color: white; border-color: var(--admin-primary); box-shadow: 0 4px 10px rgba(1, 148, 243, 0.2); }
-    
-    .search-box { min-width: 250px; }
-    .search-box .input-group-text { background: white; border-right: none; color: #94a3b8; }
-    .search-box .form-control { border-left: none; box-shadow: none !important; }
-    .search-box .form-control:focus { border-color: #dee2e6; }
+    .btn-icon:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
+    .btn-icon-info:hover { border-color: var(--admin-info); color: var(--admin-info); background: #e0f2fe; }
+    .btn-icon-success:hover { border-color: var(--admin-success); color: var(--admin-success); background: #d1fae5; }
+    .btn-icon-warning:hover { border-color: var(--admin-warning); color: var(--admin-warning); background: #fef3c7; }
+    .btn-icon-danger:hover { border-color: var(--admin-danger); color: var(--admin-danger); background: #fee2e2; }
 </style>
 
 <div class="admin-container">
@@ -81,171 +124,228 @@
         ?>
 
         <div class="col-lg-9">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
-                <div>
-                    <h1 class="admin-title">Quản Lý Đơn Đặt Tour</h1>
-                    <p class="text-muted mb-0 fw-medium">Theo dõi giao dịch và cập nhật trạng thái đơn hàng của hệ thống.</p>
-                </div>
-                
-                <div class="search-box">
-                    <div class="input-group shadow-sm rounded-3">
-                        <span class="input-group-text rounded-start-3"><i class="bi bi-search"></i></span>
-                        <input type="text" id="searchInput" class="form-control rounded-end-3 py-2" placeholder="Tìm tên, mã đơn..." onkeyup="filterBookings()">
+            <div class="mb-4">
+                <h1 class="admin-title">Quản Lý Đơn Đặt Tour</h1>
+                <p class="text-muted mb-0 fw-medium">Phân loại chi tiết theo từng chuyến đi và quản lý bộ lọc chuyên sâu.</p>
+            </div>
+
+            <!-- BỘ LỌC TÌM KIẾM NÂNG CAO -->
+            <div class="filter-card">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="filter-label">Tìm kiếm chung</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" id="searchInput" class="form-control border-start-0 ps-0" placeholder="Mã đơn, Tên khách hàng..." onkeyup="filterData()">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="filter-label">Trạng thái đơn</label>
+                        <select id="statusFilter" class="form-select" onchange="filterData()">
+                            <option value="all">Tất cả trạng thái</option>
+                            <option value="pending">⏳ Chờ duyệt</option>
+                            <option value="confirmed">✅ Đã duyệt / Thành công</option>
+                            <option value="cancelled">❌ Đã hủy</option>
+                            <option value="refunded">🔄 Đã hoàn tiền</option>
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="filter-label">Ngày đặt (Từ - Đến)</label>
+                        <div class="input-group">
+                            <input type="date" id="dateFrom" class="form-control" onchange="filterData()">
+                            <span class="input-group-text bg-light text-muted px-2 border-start-0 border-end-0">đến</span>
+                            <input type="date" id="dateTo" class="form-control" onchange="filterData()">
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="filter-tabs" id="statusTabs">
-                <button class="filter-tab active" onclick="filterByStatus('all', this)">Tất cả đơn</button>
-                <button class="filter-tab" onclick="filterByStatus('pending', this)">⏳ Chờ duyệt</button>
-                <button class="filter-tab" onclick="filterByStatus('confirmed', this)">✅ Đã duyệt</button>
-                <button class="filter-tab" onclick="filterByStatus('cancelled', this)">❌ Đã hủy</button>
-                <button class="filter-tab" onclick="filterByStatus('refunded', this)">🔄 Đã hoàn tiền</button>
-            </div>
+            <!-- DANH SÁCH TOUR ACCORDION -->
+            <?php if (!empty($groupedBookings)): ?>
+                <div class="accordion tour-accordion" id="tourAccordion">
+                    
+                    <?php $index = 0; foreach ($groupedBookings as $key => $group): $index++; ?>
+                        <div class="accordion-item group-container">
+                            <h2 class="accordion-header" id="heading_<?= $index ?>">
+                                <button class="accordion-button <?= $index === 1 ? '' : 'collapsed' ?>" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_<?= $index ?>" aria-expanded="<?= $index === 1 ? 'true' : 'false' ?>">
+                                    <div class="w-100 pe-3">
+                                        <div class="tour-group-title">
+                                            <i class="bi bi-map-fill text-primary"></i> <?= htmlspecialchars($group['tour_name']) ?>
+                                            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill ms-2" style="font-size: 0.8rem; font-weight: 700; border: 1px solid #bae6fd;">
+                                                <?= $group['total_bookings'] ?> Đơn đặt
+                                            </span>
+                                        </div>
+                                        <div class="tour-group-meta">
+                                            <span><i class="bi bi-calendar3 me-1 text-warning"></i> Khởi hành: <strong><?= date('d/m/Y', strtotime($group['start_date'])) ?></strong></span>
+                                            <span class="text-success"><i class="bi bi-cash-coin me-1"></i> Tạm tính: <strong><?= number_format($group['total_revenue']) ?> đ</strong> (Đã duyệt)</span>
+                                        </div>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="collapse_<?= $index ?>" class="accordion-collapse collapse <?= $index === 1 ? 'show' : '' ?>" data-bs-parent="#tourAccordion">
+                                <div class="accordion-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table mb-0 align-middle">
+                                            <thead>
+                                                <tr>
+                                                    <th width="12%" class="ps-4">Mã Đơn</th>
+                                                    <th width="20%">Ngày đặt</th>
+                                                    <th width="25%">Khách hàng</th>
+                                                    <th width="15%" class="text-end">Tổng tiền</th>
+                                                    <th width="13%" class="text-center">Trạng thái</th>
+                                                    <th width="15%" class="text-center pe-4">Thao tác</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($group['items'] as $b): ?>
+                                                    <tr class="booking-row" 
+                                                        data-status="<?= $b['status'] ?>" 
+                                                        data-date="<?= date('Y-m-d', strtotime($b['booking_date'])) ?>">
+                                                        
+                                                        <td class="ps-4">
+                                                            <div class="fw-bold text-primary search-target">#<?= $b['booking_id'] ?></div>
+                                                        </td>
+                                                        
+                                                        <td>
+                                                            <div class="fw-medium text-dark"><?= date('d/m/Y', strtotime($b['booking_date'])) ?></div>
+                                                            <div class="small text-muted"><?= date('H:i', strtotime($b['booking_date'])) ?></div>
+                                                        </td>
 
-            <div class="admin-card">
-                <div class="table-responsive">
-                    <table class="table mb-0 align-middle" id="bookingsTable">
-                        <thead>
-                            <tr>
-                                <th width="12%">Mã Đơn</th>
-                                <th width="20%">Khách hàng</th>
-                                <th width="30%">Tour & Khởi hành</th>
-                                <th width="15%" class="text-end">Tổng tiền</th>
-                                <th width="10%" class="text-center">Trạng thái</th>
-                                <th width="13%" class="text-center">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (!empty($bookings)): ?>
-                                <?php foreach ($bookings as $b): ?>
-                                    <tr class="booking-row" data-status="<?= $b['status'] ?>">
-                                        <td>
-                                            <div class="fw-bold text-primary search-target">#<?= $b['booking_id'] ?></div>
-                                            <div class="small text-muted mt-1"><?= date('d/m/Y', strtotime($b['booking_date'] ?? 'now')) ?></div>
-                                        </td>
+                                                        <td>
+                                                            <div class="fw-bold text-dark search-target"><?= htmlspecialchars($b['customer_name']) ?></div>
+                                                            <div class="small text-muted mt-1"><i class="bi bi-people-fill me-1"></i><?= $b['number_of_people'] ?> khách</div>
+                                                        </td>
+                                                        
+                                                        <td class="text-end">
+                                                            <div class="fw-bold text-danger"><?= number_format($b['total_price']) ?> đ</div>
+                                                        </td>
 
-                                        <td>
-                                            <div class="fw-bold text-dark search-target"><?= htmlspecialchars($b['customer_name']) ?></div>
-                                            <div class="small text-muted mt-1"><i class="bi bi-people-fill me-1"></i><?= $b['number_of_people'] ?> khách</div>
-                                        </td>
-                                        
-                                        <td>
-                                            <div class="fw-bold text-dark mb-1 search-target" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                                                <?= htmlspecialchars($b['tour_name']) ?>
-                                            </div>
-                                            <div class="small text-muted fw-medium"><i class="bi bi-calendar3 me-1"></i>KH: <?= date('d/m/Y', strtotime($b['start_date'])) ?></div>
-                                        </td>
-                                        
-                                        <td class="text-end">
-                                            <div class="fw-bold text-danger"><?= number_format($b['total_price']) ?> đ</div>
-                                        </td>
+                                                        <td class="text-center">
+                                                            <?php if ($b['status'] == 'pending'): ?>
+                                                                <span class="badge-status status-pending">Chờ duyệt</span>
+                                                            <?php elseif ($b['status'] == 'confirmed' || $b['status'] == 'completed'): ?>
+                                                                <span class="badge-status status-confirmed">Đã duyệt</span>
+                                                            <?php elseif ($b['status'] == 'cancelled'): ?>
+                                                                <span class="badge-status status-cancelled">Đã hủy</span>
+                                                            <?php elseif ($b['status'] == 'refunded'): ?>
+                                                                <span class="badge-status status-refunded">Hoàn tiền</span>
+                                                            <?php endif; ?>
+                                                        </td>
 
-                                        <td class="text-center">
-                                            <?php if ($b['status'] == 'pending'): ?>
-                                                <span class="badge-status status-pending">Chờ duyệt</span>
-                                            <?php elseif ($b['status'] == 'confirmed'): ?>
-                                                <span class="badge-status status-confirmed">Đã duyệt</span>
-                                            <?php elseif ($b['status'] == 'cancelled'): ?>
-                                                <span class="badge-status status-cancelled">Đã hủy</span>
-                                            <?php elseif ($b['status'] == 'refunded'): ?>
-                                                <span class="badge-status status-refunded">Hoàn tiền</span>
-                                            <?php endif; ?>
-                                        </td>
+                                                        <td class="text-center pe-4">
+                                                            <div class="action-group">
+                                                                <a href="manager.php?action=bookingDetail&id=<?= $b['booking_id'] ?>" class="btn-icon btn-icon-info" title="Xem chi tiết" data-bs-toggle="tooltip"><i class="bi bi-eye"></i></a>
+                                                                
+                                                                <?php if ($b['status'] == 'pending'): ?>
+                                                                    <a href="manager.php?action=confirmBooking&id=<?= $b['booking_id'] ?>" class="btn-icon btn-icon-success" title="Duyệt đơn" data-bs-toggle="tooltip" onclick="return confirm('Xác nhận duyệt đơn này?')"><i class="bi bi-check-lg"></i></a>
+                                                                <?php endif; ?>
 
-                                        <td>
-                                            <div class="action-group">
-                                                <a href="manager.php?action=bookingDetail&id=<?= $b['booking_id'] ?>" class="btn-icon btn-icon-info" title="Xem chi tiết"><i class="bi bi-eye"></i></a>
-                                                
-                                                <?php if ($b['status'] == 'pending'): ?>
-                                                    <a href="manager.php?action=confirmBooking&id=<?= $b['booking_id'] ?>" class="btn-icon btn-icon-success" title="Duyệt đơn" onclick="return confirm('Xác nhận duyệt đơn này?')"><i class="bi bi-check-lg"></i></a>
-                                                <?php endif; ?>
+                                                                <?php if ($b['status'] == 'confirmed'): ?>
+                                                                    <a href="manager.php?action=refundBooking&id=<?= $b['booking_id'] ?>" class="btn-icon btn-icon-warning" title="Hoàn tiền" data-bs-toggle="tooltip" onclick="return confirm('Xác nhận hoàn tiền cho đơn này?')"><i class="bi bi-arrow-counterclockwise"></i></a>
+                                                                <?php endif; ?>
 
-                                                <?php if ($b['status'] == 'confirmed'): ?>
-                                                    <a href="manager.php?action=refundBooking&id=<?= $b['booking_id'] ?>" class="btn-icon btn-icon-warning" title="Hoàn tiền" onclick="return confirm('Xác nhận hoàn tiền cho đơn này?')"><i class="bi bi-arrow-counterclockwise"></i></a>
-                                                <?php endif; ?>
-
-                                                <?php if ($b['status'] != 'cancelled' && $b['status'] != 'refunded'): ?>
-                                                    <a href="manager.php?action=cancelBooking&id=<?= $b['booking_id'] ?>" class="btn-icon btn-icon-danger" title="Hủy đơn" onclick="return confirm('Chắc chắn hủy đơn này?')"><i class="bi bi-x-lg"></i></a>
-                                                <?php endif; ?>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr id="noDataRow">
-                                    <td colspan="6" class="text-center py-5 text-muted">
-                                        <i class="bi bi-inbox fs-1 d-block mb-3 text-secondary opacity-25"></i>
-                                        <h5 class="fw-bold text-dark">Chưa có đơn đặt nào</h5>
-                                        <p class="mb-0">Các đơn đặt tour mới sẽ xuất hiện tại đây.</p>
-                                    </td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
+                                                                <?php if ($b['status'] != 'cancelled' && $b['status'] != 'refunded'): ?>
+                                                                    <a href="manager.php?action=cancelBooking&id=<?= $b['booking_id'] ?>" class="btn-icon btn-icon-danger" title="Hủy đơn" data-bs-toggle="tooltip" onclick="return confirm('Chắc chắn hủy đơn này?')"><i class="bi bi-x-lg"></i></a>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                    
                 </div>
-            </div>
-            
+                
+                <!-- Thông báo khi lọc không ra kết quả -->
+                <div id="noDataMsg" class="text-center py-5 bg-white rounded-4 border d-none">
+                    <i class="bi bi-search fs-1 d-block mb-3 text-secondary opacity-25"></i>
+                    <h5 class="fw-bold text-dark">Không tìm thấy kết quả phù hợp</h5>
+                    <p class="mb-0 text-muted">Vui lòng thay đổi bộ lọc tìm kiếm hoặc từ khóa.</p>
+                </div>
+                
+            <?php else: ?>
+                <div class="text-center py-5 bg-white rounded-4 border shadow-sm">
+                    <i class="bi bi-inbox fs-1 d-block mb-3 text-secondary opacity-25"></i>
+                    <h5 class="fw-bold text-dark">Chưa có đơn đặt nào</h5>
+                    <p class="mb-0 text-muted">Hệ thống chưa ghi nhận giao dịch nào từ khách hàng.</p>
+                </div>
+            <?php endif; ?>
+
         </div>
     </div>
 </div>
 
 <script>
-    let currentStatusFilter = 'all';
+    // Kích hoạt Tooltip của Bootstrap cho các nút chức năng
+    document.addEventListener("DOMContentLoaded", function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
 
-    // Hàm Lọc theo Trạng thái (Click vào Tabs)
-    function filterByStatus(status, btnElement) {
-        currentStatusFilter = status;
-        
-        // Đổi màu tab active
-        document.querySelectorAll('.filter-tab').forEach(btn => btn.classList.remove('active'));
-        btnElement.classList.add('active');
-        
-        applyFilters();
-    }
+    // LỌC DỮ LIỆU BẰNG JAVASCRIPT
+    function filterData() {
+        // Lấy giá trị từ các ô input
+        const searchText = document.getElementById('searchInput').value.toLowerCase();
+        const statusFilter = document.getElementById('statusFilter').value;
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
 
-    // Hàm Lọc theo Text (Gõ vào ô Search)
-    function filterBookings() {
-        applyFilters();
-    }
+        let visibleGroups = 0;
+        const groups = document.querySelectorAll('.group-container');
 
-    // Hàm Gộp Cả 2 Bộ Lọc (Tìm kiếm + Tabs Trạng thái)
-    function applyFilters() {
-        let input = document.getElementById('searchInput').value.toLowerCase();
-        let rows = document.querySelectorAll('.booking-row');
-        let visibleCount = 0;
+        groups.forEach(group => {
+            let visibleRowsInGroup = 0;
+            const rows = group.querySelectorAll('.booking-row');
 
-        rows.forEach(row => {
-            let rowStatus = row.getAttribute('data-status');
-            
-            // Lấy text của các cột có gắn class search-target (Mã đơn, Khách hàng, Tên Tour)
-            let targets = row.querySelectorAll('.search-target');
-            let rowContent = "";
-            targets.forEach(t => rowContent += t.innerText.toLowerCase() + " ");
+            rows.forEach(row => {
+                // 1. Kiểm tra Text
+                let rowContent = "";
+                row.querySelectorAll('.search-target').forEach(t => rowContent += t.innerText.toLowerCase() + " ");
+                const matchSearch = rowContent.includes(searchText);
 
-            // Kiểm tra điều kiện: Đúng tab trạng thái VÀ chứa từ khóa tìm kiếm
-            let matchStatus = (currentStatusFilter === 'all' || rowStatus === currentStatusFilter);
-            let matchSearch = rowContent.includes(input);
+                // 2. Kiểm tra Trạng thái
+                const rowStatus = row.getAttribute('data-status');
+                const matchStatus = (statusFilter === 'all' || rowStatus === statusFilter);
 
-            if (matchStatus && matchSearch) {
-                row.style.display = '';
-                visibleCount++;
+                // 3. Kiểm tra Thời gian
+                const rowDate = row.getAttribute('data-date');
+                let matchDate = true;
+                if (dateFrom && rowDate < dateFrom) matchDate = false;
+                if (dateTo && rowDate > dateTo) matchDate = false;
+
+                // Nếu thỏa mãn tất cả điều kiện -> Hiển thị dòng đó
+                if (matchSearch && matchStatus && matchDate) {
+                    row.style.display = '';
+                    visibleRowsInGroup++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Nếu Group (Tour) không có dòng nào thỏa mãn, ẩn luôn cả Group đó đi
+            if (visibleRowsInGroup > 0) {
+                group.style.display = '';
+                visibleGroups++;
             } else {
-                row.style.display = 'none';
+                group.style.display = 'none';
             }
         });
 
-        // Xử lý hiện thông báo nếu lọc không ra kết quả nào
-        let noDataRow = document.getElementById('noDataRow');
-        if(visibleCount === 0 && rows.length > 0) {
-            if(!noDataRow) {
-                let tbody = document.querySelector('#bookingsTable tbody');
-                tbody.insertAdjacentHTML('beforeend', '<tr id="noDataRow"><td colspan="6" class="text-center py-5 text-muted">Không tìm thấy kết quả phù hợp.</td></tr>');
+        // Hiển thị thông báo "Không có dữ liệu" nếu toàn bộ group bị ẩn
+        const noDataMsg = document.getElementById('noDataMsg');
+        if (noDataMsg) {
+            if (visibleGroups === 0 && groups.length > 0) {
+                noDataMsg.classList.remove('d-none');
             } else {
-                noDataRow.style.display = '';
+                noDataMsg.classList.add('d-none');
             }
-        } else if(noDataRow) {
-            noDataRow.style.display = 'none';
         }
     }
 </script>
