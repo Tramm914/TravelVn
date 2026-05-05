@@ -1,17 +1,21 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
 
 <?php
-// TỔ CHỨC LẠI DỮ LIỆU: Nhóm các đơn đặt theo "Tour + Ngày khởi hành"
+// TỔ CHỨC LẠI DỮ LIỆU: Nhóm các đơn đặt theo "Tên Tour + Ngày khởi hành"
 $groupedBookings = [];
 if (!empty($bookings)) {
     foreach ($bookings as $b) {
-        // Tạo khóa nhóm: ID tour + Ngày khởi hành
-        $groupKey = $b['tour_id'] . '_' . $b['start_date'];
+        // --- SỬA Ở ĐÂY: Dùng tour_name thay vì tour_id ---
+        $tourName = $b['tour_name'] ?? 'Tour không xác định';
+        $startDate = $b['start_date'] ?? '';
+        
+        // Tạo khóa nhóm: Tên tour + Ngày khởi hành
+        $groupKey = md5($tourName . '_' . $startDate); // Dùng md5 để tạo key mảng an toàn
         
         if (!isset($groupedBookings[$groupKey])) {
             $groupedBookings[$groupKey] = [
-                'tour_name' => $b['tour_name'],
-                'start_date' => $b['start_date'],
+                'tour_name' => $tourName,
+                'start_date' => $startDate,
                 'total_revenue' => 0,
                 'total_bookings' => 0,
                 'items' => []
