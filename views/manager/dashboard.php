@@ -200,33 +200,37 @@
                     </div>
                 </div>
 
-                <div class="col-md-4">
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <span class="stat-label">Đơn Đặt (Bookings)</span>
-                            <div class="stat-icon green"><i class="bi bi-bag-check-fill"></i></div>
-                        </div>
-                        <h3 class="stat-value"><?= number_format($totalBookings ?? 0) ?></h3>
-                        <div class="stat-trend trend-up">
-                            <i class="bi bi-arrow-up-right-circle-fill"></i> Tỷ lệ chuyển đổi cao
-                        </div>
-                    </div>
-                </div>
+                <!-- Cột Đơn Đặt -->
+<div class="col-md-4">
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-label">Đơn Đặt (Bookings)</span>
+            <div class="stat-icon green"><i class="bi bi-bag-check-fill"></i></div>
+        </div>
+        <!-- Thêm id="val-bookings" -->
+        <h3 class="stat-value" id="val-bookings"><?= number_format($totalBookings ?? 0) ?></h3>
+        <div class="stat-trend trend-up">
+            <i class="bi bi-arrow-up-right-circle-fill"></i> Tỷ lệ chuyển đổi cao
+        </div>
+    </div>
+</div>
 
-                <div class="col-md-4">
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <span class="stat-label">Tổng Doanh Thu</span>
-                            <div class="stat-icon orange"><i class="bi bi-wallet2"></i></div>
-                        </div>
-                        <h3 class="stat-value text-danger">
-                            <?= number_format($totalRevenue ?? 0) ?> <span style="font-size: 1.2rem; font-weight: 600; color: var(--admin-text-muted);">đ</span>
-                        </h3>
-                        <div class="stat-trend trend-up">
-                            <i class="bi bi-arrow-up-right-circle-fill"></i> Doanh thu đã xác nhận
-                        </div>
-                    </div>
-                </div>
+<!-- Cột Tổng Doanh Thu -->
+<div class="col-md-4">
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-label">Tổng Doanh Thu</span>
+            <div class="stat-icon orange"><i class="bi bi-wallet2"></i></div>
+        </div>
+        <!-- Thêm id="val-revenue" -->
+        <h3 class="stat-value text-danger" id="val-revenue">
+            <?= number_format($totalRevenue ?? 0) ?> <span style="font-size: 1.2rem; font-weight: 600; color: var(--admin-text-muted);">đ</span>
+        </h3>
+        <div class="stat-trend trend-up">
+            <i class="bi bi-arrow-up-right-circle-fill"></i> Doanh thu đã xác nhận
+        </div>
+    </div>
+</div>
             </div>
 
             <div class="quick-actions-box">
@@ -262,5 +266,50 @@
         </div>
     </div>
 </div>
+<!-- Bổ sung thư viện Pusher và script lắng nghe -->
+<script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Khởi tạo Pusher
+        var pusher = new Pusher('e5405b1b2139fed6f8bc', {
+            cluster: 'ap1',
+            forceTLS: true
+        });
 
+        // Đăng ký kênh 'dashboard-channel'
+        var channel = pusher.subscribe('dashboard-channel');
+
+        // Lắng nghe sự kiện 'payment-success'
+        channel.bind('payment-success', function(data) {
+            console.log("Đã nhận dữ liệu mới: ", data);
+
+            // Hàm format số tiền kiểu Việt Nam (ví dụ: 5000 -> 5,000)
+            const formatNumber = (num) => {
+                return new Intl.NumberFormat('en-US').format(num); 
+            };
+
+            // 1. Cập nhật số lượng đơn đặt
+            const valBookings = document.getElementById('val-bookings');
+            if (valBookings && data.totalBookings !== undefined) {
+                valBookings.innerText = formatNumber(data.totalBookings);
+                
+                // Thêm hiệu ứng nháy sáng để user biết có dữ liệu mới
+                valBookings.style.transition = "color 0.3s";
+                valBookings.style.color = "#10b981"; // Đổi xanh lá
+                setTimeout(() => valBookings.style.color = "", 1500); // Trả lại màu cũ
+            }
+
+            // 2. Cập nhật tổng doanh thu
+            const valRevenue = document.getElementById('val-revenue');
+            if (valRevenue && data.totalRevenue !== undefined) {
+                // Giữ lại cái đuôi chữ "đ" nhỏ phía sau
+                valRevenue.innerHTML = formatNumber(data.totalRevenue) + ' <span style="font-size: 1.2rem; font-weight: 600; color: var(--admin-text-muted);">đ</span>';
+                
+                valRevenue.style.transition = "color 0.3s";
+                valRevenue.style.color = "#10b981"; 
+                setTimeout(() => valRevenue.style.color = "", 1500); 
+            }
+        });
+    });
+</script>
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

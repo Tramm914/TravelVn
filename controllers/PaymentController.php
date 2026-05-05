@@ -133,7 +133,7 @@ class PaymentController
             }
         }
 
-        if ($is_paid) {
+         if ($is_paid) {
             // Cập nhật Database
             $stmt = $this->db->prepare("UPDATE payments SET payment_status = 'paid' WHERE payment_id = ?");
             $stmt->execute([$payment_id]);
@@ -145,6 +145,32 @@ class PaymentController
             if ($payData) {
                 $this->db->prepare("UPDATE bookings SET status = 'confirmed' WHERE booking_id = ?")
                     ->execute([$payData['booking_id']]);
+                // === BẮT ĐẦU: GỬI THÔNG BÁO PUSHER ===
+                try {
+                    $options = array(
+                        'cluster' => 'ap1',
+                        'useTLS' => true
+                    );
+
+                    // THAY 3 MÃ CỦA BẠN VÀO ĐÂY
+                    $pusher = new Pusher\Pusher(
+                        'e5405b1b2139fed6f8bc',
+                        '2f482d4b39a5f0acd508',
+                        '2149497',
+                        $options
+                    );
+
+                    // Lấy tên khách hàng để thông báo cho sinh động (nếu DB có trường này)
+                    $customerName = "một khách hàng";
+
+                    $data['message'] = "💰 Ting ting! Khách hàng vừa chuyển khoản thành công đơn #" . $payData['booking_id'];
+
+                    // Phát sóng sự kiện 'new-booking' lên kênh 'admin-channel'
+                    $pusher->trigger('admin-channel', 'new-booking', $data);
+                } catch (Exception $e) {
+                    error_log("Lỗi Pusher: " . $e->getMessage());
+                }
+                // === KẾT THÚC: GỬI THÔNG BÁO PUSHER ===
             }
             echo json_encode(["status" => "paid"]);
         } else {
