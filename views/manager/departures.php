@@ -161,11 +161,15 @@
                     <?php foreach ($departures as $d): ?>
                         
                         <?php 
-                            // Tính toán phần trăm ghế đã đặt
-$max = (int)$d['max_seats'];
-// Tính số ghế đã đặt bằng (Tổng số ghế - Số ghế còn trống)
-$booked = $max - (int)$d['available_seats']; 
-$percent = ($max > 0) ? round(($booked / $max) * 100) : 0;
+                            // 1. TÍNH TOÁN LẠI CHUẨN XÁC DỰA VÀO BOOKED_SEATS
+                            $max = (int)$d['max_seats'];
+                            $booked = (int)$d['booked_seats']; 
+                            
+                            // 2. Tự tính số ghế còn trống (chặn số âm nếu lỡ overbook)
+                            $available = $max - $booked;
+                            if ($available < 0) $available = 0; 
+                            
+                            $percent = ($max > 0) ? round(($booked / $max) * 100) : 0;
                             
                             // Đổi màu thanh tiến trình tùy theo tỷ lệ lấp đầy
                             $progressColor = 'bg-success'; // Xanh lá nếu còn nhiều chỗ
@@ -208,7 +212,8 @@ $percent = ($max > 0) ? round(($booked / $max) * 100) : 0;
                                     <div class="progress-bar <?= $progressColor ?>" role="progressbar" style="width: <?= $percent ?>%;" aria-valuenow="<?= $percent ?>" aria-valuemin="0" aria-valuemax="100"></div>
                                 </div>
                                 <div class="text-end mt-1 text-muted" style="font-size: 0.75rem;">
-                                    Còn trống: <?= $d['available_seats'] ?>
+                                    <!-- IN RA SỐ GHẾ TRỐNG VỪA TÍNH CHUẨN XÁC Ở TRÊN -->
+                                    Còn trống: <?= $available ?>
                                 </div>
                             </div>
 
