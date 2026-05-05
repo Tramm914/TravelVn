@@ -9,6 +9,8 @@ class AdminController
 
     public function __construct()
     {
+        require_once __DIR__ . '/../config/middleware.php';
+        Middleware::adminOnly();
         $db = (new Database())->connect();
         $this->user = new User($db);
     }
