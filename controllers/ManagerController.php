@@ -461,12 +461,18 @@ class ManagerController
     }
 
     public function departures()
-    {
-        $stmt = $this->db->query("
+{
+    $stmt = $this->db->query("
         SELECT 
             d.*,
             t.tour_name,
-            GROUP_CONCAT(u.full_name SEPARATOR ', ') AS guides
+            GROUP_CONCAT(DISTINCT u.full_name SEPARATOR ', ') AS guides,
+            -- Đếm tổng số người từ các booking đã confirmed hoặc completed
+            (SELECT COALESCE(SUM(b.number_of_people), 0) 
+             FROM bookings b 
+             WHERE b.departure_id = d.departure_id 
+             AND b.status IN ('confirmed', 'completed', 'checked_in')
+            ) AS real_booked_seats
         FROM departures d
         JOIN tours t ON d.tour_id = t.tour_id
         LEFT JOIN departure_guides dg ON d.departure_id = dg.departure_id
@@ -476,10 +482,9 @@ class ManagerController
         ORDER BY d.start_date DESC
     ");
 
-        $departures = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        require __DIR__ . '/../views/manager/departures.php';
-    }
+    $departures = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    require __DIR__ . '/../views/manager/departures.php';
+}
 
     public function deleteDeparture()
     {

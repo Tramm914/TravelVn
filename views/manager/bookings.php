@@ -31,7 +31,7 @@ if (!empty($bookings)) {
         }
     }
 }
-?>
+?>  
 
 <style>
     /* --- BIẾN MÀU & CẤU TRÚC CHUNG --- */

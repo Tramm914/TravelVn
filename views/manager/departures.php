@@ -137,7 +137,7 @@
 <div class="admin-container">
     <div class="row g-4">
         
-        <?php 
+        <?php   
             $activeMenu = 'departures'; 
             include __DIR__ . '/../layouts/sidebar_manager.php'; 
         ?>
@@ -161,21 +161,20 @@
                     <?php foreach ($departures as $d): ?>
                         
                         <?php 
-                            // 1. TÍNH TOÁN LẠI CHUẨN XÁC DỰA VÀO BOOKED_SEATS
-                            $max = (int)$d['max_seats'];
-                            $booked = (int)$d['booked_seats']; 
-                            
-                            // 2. Tự tính số ghế còn trống (chặn số âm nếu lỡ overbook)
-                            $available = $max - $booked;
-                            if ($available < 0) $available = 0; 
-                            
-                            $percent = ($max > 0) ? round(($booked / $max) * 100) : 0;
-                            
-                            // Đổi màu thanh tiến trình tùy theo tỷ lệ lấp đầy
-                            $progressColor = 'bg-success'; // Xanh lá nếu còn nhiều chỗ
-                            if ($percent >= 80 && $percent < 100) $progressColor = 'bg-warning'; // Vàng nếu sắp đầy
-                            if ($percent >= 100) $progressColor = 'bg-danger'; // Đỏ nếu đã full
-                        ?>
+    $max = (int)$d['max_seats'];
+    // Sử dụng cột real_booked_seats vừa query được
+    $booked = (int)$d['real_booked_seats']; 
+    
+    $available = $max - $booked;
+    if ($available < 0) $available = 0; 
+    
+    $percent = ($max > 0) ? round(($booked / $max) * 100) : 0;
+    
+    // Giữ nguyên logic đổi màu thanh progress của bạn
+    $progressColor = 'bg-success'; 
+    if ($percent >= 80 && $percent < 100) $progressColor = 'bg-warning'; 
+    if ($percent >= 100) $progressColor = 'bg-danger'; 
+?>
 
                         <div class="departure-card">
                             
