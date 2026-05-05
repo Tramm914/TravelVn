@@ -78,6 +78,7 @@ class PaymentController
     }
 
     // --- ĐÂY LÀ HÀM QUAN TRỌNG NHẤT: THAY THẾ WEBHOOK ---
+    // --- ĐÂY LÀ HÀM QUAN TRỌNG NHẤT: THAY THẾ WEBHOOK ---
     public function checkPaymentStatus()
     {
         header('Content-Type: application/json');
@@ -96,21 +97,16 @@ class PaymentController
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        // Nếu kết nối thất bại hoàn toàn (Lỗi 0)
         if ($response === false) {
-            $error_msg = curl_error($ch); // Lấy tin nhắn lỗi thật
+            $error_msg = curl_error($ch); 
             echo json_encode(["status" => "error", "message" => "Curl Error: " . $error_msg]);
             curl_close($ch);
             exit;
         }
         curl_close($ch);
 
-        // --- BƯỚC DEBUG: Nếu bạn muốn xem API SePay trả về gì, hãy tạm thời bỏ comment dòng dưới
-        // die($response); 
-
         $result = json_decode($response, true);
 
-        // Kiểm tra nếu Token sai hoặc hết hạn
         if ($httpCode !== 200) {
             echo json_encode(["status" => "error", "message" => "API Error: " . $httpCode]);
             exit;
@@ -119,10 +115,7 @@ class PaymentController
         $is_paid = false;
         if (isset($result['transactions'])) {
             foreach ($result['transactions'] as $trans) {
-                // SePay v2 thường dùng key 'content' cho nội dung chuyển khoản
                 $content = strtoupper($trans['content'] ?? $trans['transaction_content'] ?? '');
-
-                // Tìm mã THANHTOAN36 (không quan tâm dấu cách)
                 $search = "THANHTOAN" . $payment_id;
                 $cleanContent = str_replace(' ', '', $content);
 
@@ -145,6 +138,7 @@ class PaymentController
             if ($payData) {
                 $this->db->prepare("UPDATE bookings SET status = 'confirmed' WHERE booking_id = ?")
                     ->execute([$payData['booking_id']]);
+                
                 // === BẮT ĐẦU: GỬI THÔNG BÁO PUSHER ===
                 try {
                     $options = array(
@@ -152,7 +146,6 @@ class PaymentController
                         'useTLS' => true
                     );
 
-                    // THAY 3 MÃ CỦA BẠN VÀO ĐÂY
                     $pusher = new Pusher\Pusher(
                         'e5405b1b2139fed6f8bc',
                         '2f482d4b39a5f0acd508',
@@ -160,13 +153,26 @@ class PaymentController
                         $options
                     );
 
-                    // Lấy tên khách hàng để thông báo cho sinh động (nếu DB có trường này)
-                    $customerName = "một khách hàng";
+                    // 1. Gửi thông báo Notification chung (kênh admin-channel)
+                    $notificationData['message'] = "💰 Ting ting! Khách hàng vừa chuyển khoản thành công đơn #" . $payData['booking_id'];
+                    $pusher->trigger('admin-channel', 'new-booking', $notificationData);
 
-                    $data['message'] = "💰 Ting ting! Khách hàng vừa chuyển khoản thành công đơn #" . $payData['booking_id'];
+                    // 2. Tính toán lại Doanh thu và Số lượng đơn để update Dashboard
+                    // Lấy tổng doanh thu của các đơn hợp lệ
+                    $stmtRev = $this->db->query("SELECT COALESCE(SUM(total_price), 0) FROM bookings WHERE status IN ('confirmed', 'completed', 'checked_in')");
+                    $newTotalRevenue = $stmtRev->fetchColumn();
 
-                    // Phát sóng sự kiện 'new-booking' lên kênh 'admin-channel'
-                    $pusher->trigger('admin-channel', 'new-booking', $data);
+                    // Lấy tổng số lượng đơn (hoặc bạn có thể thêm điều kiện lọc tùy ý)
+                    $stmtCount = $this->db->query("SELECT COUNT(*) FROM bookings"); 
+                    $newTotalBookings = $stmtCount->fetchColumn();
+
+                    // Gửi thêm một tín hiệu lên kênh 'dashboard-channel'
+                    $dashboardData = [
+                        'totalBookings' => $newTotalBookings,
+                        'totalRevenue'  => $newTotalRevenue
+                    ];
+                    $pusher->trigger('dashboard-channel', 'payment-success', $dashboardData);
+
                 } catch (Exception $e) {
                     error_log("Lỗi Pusher: " . $e->getMessage());
                 }
@@ -174,7 +180,6 @@ class PaymentController
             }
             echo json_encode(["status" => "paid"]);
         } else {
-            // Nếu chưa thấy tiền, trả về pending để JS tiếp tục đợi
             echo json_encode(["status" => "pending"]);
         }
         exit;
