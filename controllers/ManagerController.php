@@ -7,6 +7,8 @@ class ManagerController
 
     public function __construct()
     {
+        require_once __DIR__ . '/../config/middleware.php';
+        Middleware::managerOnly();
         // Khởi tạo session ở đây để dùng chung cho toàn bộ controller (hiển thị thông báo)
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
