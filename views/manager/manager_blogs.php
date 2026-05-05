@@ -50,7 +50,7 @@
                                         <td>
                                             <?php
                                             // Nhận diện link ảnh hoặc file local
-                                            $imgSrc = !empty($b['image']) ? (strpos($b['image'], 'http') === 0 ? $b['image'] : '../public/uploads/' . $b['image']) : 'https://via.placeholder.com/150';
+                                            $imgSrc = !empty($b['image']) ? (strpos($b['image'], 'http') === 0 ? $b['image'] : '/uploads/' . $b['image']) : 'https://via.placeholder.com/150';
                                             ?>
                                             <img src="<?= $imgSrc ?>" alt="img" class="rounded border shadow-sm"
                                                 style="width: 90px; height: 65px; object-fit: cover;">
