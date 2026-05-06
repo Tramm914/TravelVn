@@ -7,6 +7,8 @@ class GuideController
 
     public function __construct()
     {
+        require_once __DIR__ . '/../config/middleware.php';
+        Middleware::guideOnly();
         $this->db = (new Database())->connect();
 
         // Kiểm tra session an toàn để tránh lỗi Notice
