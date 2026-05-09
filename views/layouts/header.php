@@ -233,5 +233,5 @@ if (session_status() === PHP_SESSION_NONE) {
             </div>
         </div>
     </nav>
-
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <div class="main-content">
