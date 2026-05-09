@@ -536,24 +536,6 @@
             .then(response => response.json())
             .catch(error => console.log('Cleanup background task running...'));
     }, 15000); 
-    // 1. Thông báo cho Admin khi có khách nhắn tin
-adminChannel.bind('chat-notification', function(data) {
-    // Hiển thị thông báo trình duyệt hoặc Toast
-    if (confirm("🔔 " + data.title + "\nNội dung: " + data.message + "\n\nBạn có muốn trả lời ngay?")) {
-        window.location.href = "manager.php?action=chat&session_id=" + data.session_id;
-    }
-});
-
-// 2. Thông báo cho Khách hàng khi Admin trả lời
-<?php if(isset($_SESSION['chat_session_id']) || isset($_SESSION['user'])): 
-    $s_id = isset($_SESSION['user']) ? 'user_'.$_SESSION['user']['user_id'] : ($_SESSION['chat_session_id'] ?? '');
-?>
-    const chatChannel = pusher.subscribe('customer-channel-<?= $s_id ?>');
-    chatChannel.bind('chat-notification', function(data) {
-        // Hiện thông báo nhỏ góc màn hình
-        alert("💬 " + data.title + ": " + data.message);
-    });
-<?php endif; ?>
 </script>
 </body>
 
