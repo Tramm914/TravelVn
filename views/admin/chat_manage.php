@@ -17,9 +17,28 @@
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
         border: 1px solid var(--chat-border);
         height: 85vh;
+        min-height: 550px; /* Thêm min-height để không bị bóp nghẹt trên các màn hình PC chiều cao thấp */
         overflow: hidden;
     }
 
+    /* Thêm đoạn này để xử lý riêng cho màn hình nhỏ (Mobile/Tablet) */
+    @media (max-width: 767.98px) {
+        .support-card {
+            height: auto; /* Bỏ giới hạn chiều cao tĩnh */
+            overflow: hidden; 
+        }
+        
+        /* Cột hộp thư (bên trái): cho chiếm 40% chiều cao màn hình để cuộn list */
+        .session-list-col {
+            height: 40vh !important; 
+            border-bottom: 2px solid var(--chat-border);
+        }
+        
+        /* Cột khung chat (ở giữa): chiếm 60% chiều cao còn lại */
+        .chat-main-col {
+            height: 60vh !important;
+        }
+    }
     /* Thanh cuộn (Scrollbar) tinh tế */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -104,7 +123,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-6 h-100 d-flex flex-column" style="background: #f8fafc;">
+                    <div class="col-md-6 h-100 d-flex flex-column chat-main-col" style="background: #f8fafc;">
                         <div id="chatHeader" class="p-3 border-bottom bg-white d-flex align-items-center fw-bold" style="height: 70px; color: #0f172a;">
                             <span class="text-muted fw-normal"><i class="bi bi-chat-left-text me-2"></i>Chọn đoạn chat để bắt đầu</span>
                         </div>
