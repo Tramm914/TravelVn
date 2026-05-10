@@ -3,6 +3,31 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
+    /* Đổi tên class thêm tiền tố "guide-" để không xung đột với footer.php */
+    .guide-msg-bubble {
+        max-width: 80%;
+        padding: 12px 18px;
+        border-radius: 18px;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        position: relative;
+        word-wrap: break-word; /* Chống tràn chữ khi nhắn đoạn dài */
+    }
+    
+    /* Tin nhắn phía HDV (Me) */
+    .guide-msg-me {
+        background: var(--guide-primary);
+        color: white;
+        border-bottom-right-radius: 4px;
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+    }
+
+    /* Tin nhắn phía Khách hàng */
+    .guide-msg-customer {
+        background: #f1f5f9;
+        color: #1e293b;
+        border-bottom-left-radius: 4px;
+    }
     :root {
         --guide-primary: #0ea5e9;
         --guide-bg: #f8fafc;
@@ -190,7 +215,7 @@
         const isMe = (type !== 'customer'); 
         const msgHtml = `
             <div class="d-flex ${isMe ? 'justify-content-end' : 'justify-content-start'}">
-                <div class="msg-bubble ${isMe ? 'msg-me' : 'msg-customer'}">
+                <div class="guide-msg-bubble ${isMe ? 'guide-msg-me' : 'guide-msg-customer'}">
                     ${text}
                 </div>
             </div>`;
