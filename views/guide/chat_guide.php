@@ -3,31 +3,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
-    /* Đổi tên class thêm tiền tố "guide-" để không xung đột với footer.php */
-    .guide-msg-bubble {
-        max-width: 80%;
-        padding: 12px 18px;
-        border-radius: 18px;
-        font-size: 0.95rem;
-        line-height: 1.5;
-        position: relative;
-        word-wrap: break-word; /* Chống tràn chữ khi nhắn đoạn dài */
-    }
-    
-    /* Tin nhắn phía HDV (Me) */
-    .guide-msg-me {
-        background: var(--guide-primary);
-        color: white;
-        border-bottom-right-radius: 4px;
-        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
-    }
-
-    /* Tin nhắn phía Khách hàng */
-    .guide-msg-customer {
-        background: #f1f5f9;
-        color: #1e293b;
-        border-bottom-left-radius: 4px;
-    }
     :root {
         --guide-primary: #0ea5e9;
         --guide-bg: #f8fafc;
@@ -40,7 +15,7 @@
         font-family: 'Plus Jakarta Sans', sans-serif; 
     }
 
-    /* Ẩn bong bóng chat của khách hàng ở trang này để tránh bị chồng chéo */
+    /* Ẩn bong bóng chat của khách ở trang này */
     .chat-widget { display: none !important; }
 
     .chat-container {
@@ -58,34 +33,31 @@
         overflow: hidden;
     }
 
-    /* Tùy chỉnh thanh cuộn cho mượt */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
-    .msg-bubble {
+    /* ====== CSS TIN NHẮN MỚI ====== */
+    .guide-msg-bubble {
         max-width: 80%;
         padding: 12px 18px;
         border-radius: 18px;
         font-size: 0.95rem;
         line-height: 1.5;
         position: relative;
+        word-wrap: break-word; 
     }
     
-    /* Tin nhắn phía HDV (Me) */
-    .msg-me {
+    .guide-msg-me {
         background: var(--guide-primary);
         color: white;
-        align-self: flex-end;
         border-bottom-right-radius: 4px;
         box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
     }
 
-    /* Tin nhắn phía Khách hàng */
-    .msg-customer {
+    .guide-msg-customer {
         background: #f1f5f9;
         color: #1e293b;
-        align-self: flex-start;
         border-bottom-left-radius: 4px;
     }
 </style>
