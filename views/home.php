@@ -748,27 +748,37 @@
                 <div class="tour-item">
                     <a href="index.php?action=detail&slug=<?= $tour['slug'] ?>" class="text-decoration-none">
                         <div class="tvlk-card">
-                            <div class="discount-badge">-20%</div>
+    <?php if (isset($tour['discount_percent']) && $tour['discount_percent'] > 0): ?>
+        <div class="discount-badge">-<?= $tour['discount_percent'] ?>%</div>
+    <?php endif; ?>
 
-                            <div class="card-img-box">
-                                <img src="<?= !empty($tour['image']) ? '/uploads/' . $tour['image'] : 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800' ?>"
-                                    alt="<?= htmlspecialchars($tour['tour_name']) ?>">
-                                <div class="rating-badge"><i class="bi bi-star-fill text-warning"></i> <?= !empty($tour['review_count']) ? number_format($tour['avg_rating'], 1) : '5.0' ?> <span class="text-muted fw-normal">(<?= $tour['review_count'] ?? 0 ?>)</span></div>
-                            </div>
+    <div class="card-img-box">
+        <img src="<?= !empty($tour['image']) ? '/uploads/' . $tour['image'] : 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800' ?>"
+            alt="<?= htmlspecialchars($tour['tour_name']) ?>">
+        <div class="rating-badge"><i class="bi bi-star-fill text-warning"></i> <?= !empty($tour['review_count']) ? number_format($tour['avg_rating'], 1) : '5.0' ?> <span class="text-muted fw-normal">(<?= $tour['review_count'] ?? 0 ?>)</span></div>
+    </div>
 
-                            <div class="tvlk-card-body">
-                                <div class="tour-location"><i class="bi bi-geo-alt-fill me-1"
-                                        style="color: var(--tvlk-blue);"></i> <?= htmlspecialchars($tour['destination']) ?>
-                                </div>
-                                <h5 class="tour-title"><?= htmlspecialchars($tour['tour_name']) ?></h5>
+    <div class="tvlk-card-body">
+        <div class="tour-location"><i class="bi bi-geo-alt-fill me-1"
+                style="color: var(--tvlk-blue);"></i> <?= htmlspecialchars($tour['destination']) ?>
+        </div>
+        <h5 class="tour-title"><?= htmlspecialchars($tour['tour_name']) ?></h5>
 
-                                <div class="price-box">
-                                    <?php $oldPrice = $tour['price'] * 1.2; ?>
-                                    <div class="price-old"><?= number_format($oldPrice) ?> VND</div>
-                                    <div class="price-current"><?= number_format($tour['price']) ?> VND</div>
-                                </div>
-                            </div>
-                        </div>
+        <div class="price-box">
+            <?php if (isset($tour['discount_percent']) && $tour['discount_percent'] > 0): ?>
+                <?php 
+                    // Tính toán giá cũ và giá mới dựa trên % giảm giá trong CSDL
+                    $oldPrice = $tour['price']; 
+                    $currentPrice = $oldPrice - ($oldPrice * ($tour['discount_percent'] / 100));
+                ?>
+                <div class="price-old"><?= number_format($oldPrice) ?> VND</div>
+                <div class="price-current"><?= number_format($currentPrice) ?> VND</div>
+            <?php else: ?>
+                <div class="price-current"><?= number_format($tour['price']) ?> VND</div>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
                     </a>
                 </div>
             <?php endwhile; ?>
