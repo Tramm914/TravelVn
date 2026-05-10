@@ -9,10 +9,32 @@ if (empty($detail)) {
           </div>";
     exit;
 }
+
+// ==========================================
+// TÍNH TOÁN SỐ SAO Ở NGAY ĐÂY (TRƯỚC KHI HIỂN THỊ HTML)
+// ==========================================
+if (!isset($reviews)) {
+    $reviews = []; 
+}
+
+$totalReviews = count($reviews);
+$avgRating = 5.0; // Mặc định 5 sao nếu chưa có đánh giá
+
+if ($totalReviews > 0) {
+    $sum = 0;
+    foreach ($reviews as $r) {
+        $sum += (int)$r['rating'];
+    }
+    $avgRating = round($sum / $totalReviews, 1);
+}
+// ==========================================
+
 include 'layouts/header.php'; 
 ?>
 
 <style>
+/* ... CSS CỦA BẠN GIỮ NGUYÊN BÊN DƯỚI ... */
+
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
     :root {
@@ -365,23 +387,7 @@ include 'layouts/header.php';
                 </div>
             </div>
         </div>
-    </div> <?php
-    // An toàn kiểm tra biến $reviews
-    if (!isset($reviews)) {
-        $reviews = []; 
-    }
-
-    $totalReviews = count($reviews);
-    $avgRating = 0;
-    if ($totalReviews > 0) {
-        $sum = 0;
-        foreach ($reviews as $r) {
-            $sum += (int)$r['rating'];
-        }
-        $avgRating = round($sum / $totalReviews, 1);
-    }
-    ?>
-
+    </div> 
     <div class="row review-section">
         <div class="col-lg-8">
             <h3 class="section-title"><i class="bi bi-chat-quote-fill text-warning"></i> Đánh giá từ khách hàng</h3>
