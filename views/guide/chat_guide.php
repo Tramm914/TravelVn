@@ -8,6 +8,7 @@
         --guide-bg: #f8fafc;
         --guide-card: #ffffff;
         --guide-border: #e2e8f0;
+        --guide-text: #0f172a;
     }
 
     body { 
@@ -30,12 +31,14 @@
         border: 1px solid var(--guide-border);
         box-shadow: 0 10px 30px rgba(0,0,0,0.04);
         height: 75vh;
+        min-height: 500px;
         overflow: hidden;
     }
 
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
     /* ====== CSS TIN NHẮN MỚI ====== */
     .guide-msg-bubble {
@@ -56,9 +59,39 @@
     }
 
     .guide-msg-customer {
-        background: #f1f5f9;
-        color: #1e293b;
+        background: white;
+        color: var(--guide-text);
         border-bottom-left-radius: 4px;
+        border: 1px solid var(--guide-border);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .chat-input-wrapper {
+        background: var(--guide-bg);
+        border-radius: 16px;
+        padding: 4px;
+        border: 1px solid transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .chat-input-wrapper:focus-within {
+        border-color: var(--guide-primary);
+        background: white;
+        box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+    }
+
+    .session-item {
+        transition: all 0.2s ease;
+        border: none !important;
+        border-left: 4px solid transparent !important;
+        cursor: pointer;
+    }
+    .session-item:hover {
+        background: #f8fafc;
+    }
+    .session-item.active-session {
+        background: #f0f9ff;
+        border-left: 4px solid var(--guide-primary) !important;
     }
 </style>
 
@@ -75,36 +108,36 @@
 
     <div class="chat-card">
         <div class="row g-0 h-100">
-            <div class="col-md-4 border-end d-flex flex-column bg-white">
+            <div class="col-md-4 border-end d-flex flex-column bg-white h-100">
                 <div class="p-3 border-bottom">
-                    <div class="input-group">
-                        <span class="input-group-text bg-light border-0"><i class="bi bi-search text-muted"></i></span>
-                        <input type="text" class="form-control bg-light border-0" placeholder="Tìm kiếm khách..." style="font-size: 0.9rem;">
+                    <div class="chat-input-wrapper d-flex align-items-center px-3 py-1" style="background: #f1f5f9;">
+                        <i class="bi bi-search text-muted me-2"></i>
+                        <input type="text" class="form-control border-0 shadow-none bg-transparent px-0" placeholder="Tìm kiếm khách..." style="font-size: 0.95rem;">
                     </div>
                 </div>
-                <div class="list-group list-group-flush overflow-auto flex-grow-1" id="sessionList">
+                <div class="list-group list-group-flush overflow-auto flex-grow-1" id="sessionList" style="min-height: 0;">
                     <div class="text-center p-5 text-muted small">Đang tải danh sách khách hàng...</div>
                 </div>
             </div>
 
-            <div class="col-md-8 d-flex flex-column bg-light">
-                <div id="chatHeader" class="p-3 bg-white border-bottom d-flex align-items-center fw-bold" style="min-height: 70px; color: #0f172a;">
+            <div class="col-md-8 d-flex flex-column h-100" style="background: #f8fafc;">
+                <div id="chatHeader" class="p-3 bg-white border-bottom d-flex align-items-center fw-bold shadow-sm z-1" style="min-height: 70px; color: #0f172a;">
                     <span class="text-muted fw-normal small"><i class="bi bi-info-circle me-2"></i>Chọn một cuộc hội thoại từ bên trái</span>
                 </div>
 
-                <div id="adminChatBody" class="p-4 flex-grow-1 overflow-auto d-flex flex-column gap-3">
+                <div id="adminChatBody" class="p-4 flex-grow-1 overflow-auto d-flex flex-column gap-3" style="min-height: 0;">
                     <div class="text-center my-auto">
                         <img src="https://cdn-icons-png.flaticon.com/512/4080/4080911.png" style="width: 100px; opacity: 0.5;">
                         <p class="text-muted mt-3 small">Bắt đầu tư vấn cho khách hàng của bạn ngay bây giờ</p>
                     </div>
                 </div>
 
-                <div class="p-3 bg-white border-top">
-                    <form id="adminChatForm" onsubmit="adminSendMessage(event)" class="d-none">
-                        <div class="d-flex gap-2">
-                            <input type="text" id="adminChatInput" class="form-control border-0 bg-light px-3 py-2" 
-                                   placeholder="Nhập nội dung trả lời khách..." autocomplete="off" style="border-radius: 12px;">
-                            <button class="btn btn-primary px-4" type="submit" style="border-radius: 12px;">
+                <div id="chatFooter" class="p-3 bg-white border-top d-none">
+                    <form id="adminChatForm" onsubmit="adminSendMessage(event)">
+                        <div class="chat-input-wrapper d-flex align-items-center ps-3 pe-1 py-1" style="background: #f1f5f9;">
+                            <input type="text" id="adminChatInput" class="form-control border-0 shadow-none bg-transparent px-0" 
+                                   placeholder="Nhập nội dung trả lời khách..." autocomplete="off" style="font-size: 0.95rem;">
+                            <button class="btn btn-primary d-flex align-items-center justify-content-center ms-2" type="submit" style="border-radius: 12px; width: 40px; height: 40px; min-width: 40px;">
                                 <i class="bi bi-send-fill"></i>
                             </button>
                         </div>
@@ -131,7 +164,7 @@
                 }
                 list.innerHTML = '';
                 data.forEach(s => {
-                    const isActive = s.session_id === currentSessionId ? 'bg-primary bg-opacity-10 border-start border-primary border-4' : '';
+                    const isActive = s.session_id === currentSessionId ? 'active-session' : '';
                     
                     // Thêm badge đếm số tin nhắn chưa đọc
                     const unreadBadge = (s.unread_count > 0 && s.session_id !== currentSessionId) 
@@ -142,7 +175,7 @@
 
                     list.innerHTML += `
                         <button onclick="openChat('${s.session_id}', '${s.sender_name || 'Khách vãng lai'}')" 
-                                class="list-group-item list-group-item-action p-3 border-bottom ${isActive}" style="border:none">
+                                class="list-group-item list-group-item-action p-3 border-bottom session-item ${isActive}">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <span class="fw-bold text-primary small text-truncate" style="max-width: 60%;">${s.sender_name || 'Khách vãng lai'}</span>
                                 <div class="d-flex align-items-center gap-1">
@@ -162,8 +195,8 @@
     // 2. Mở khung chat chi tiết
     function openChat(sessionId, senderName) {
         currentSessionId = sessionId;
-        document.getElementById('adminChatForm').classList.remove('d-none');
-        document.getElementById('chatHeader').innerHTML = `<i class="bi bi-person-circle me-2 text-primary"></i> Đang hỗ trợ: ${senderName}`;
+        document.getElementById('chatFooter').classList.remove('d-none');
+        document.getElementById('chatHeader').innerHTML = `<i class="bi bi-person-circle me-2 text-primary fs-5"></i> Đang hỗ trợ: <span class="ms-1">${senderName}</span>`;
         
         // Gọi API đánh dấu đã đọc
         fetch('guide.php?action=markAsRead&session_id=' + sessionId, { method: 'POST' });
@@ -186,7 +219,7 @@
         const body = document.getElementById('adminChatBody');
         const isMe = (type !== 'customer'); 
         const msgHtml = `
-            <div class="d-flex ${isMe ? 'justify-content-end' : 'justify-content-start'}">
+            <div class="d-flex ${isMe ? 'justify-content-end' : 'justify-content-start'} w-100">
                 <div class="guide-msg-bubble ${isMe ? 'guide-msg-me' : 'guide-msg-customer'}">
                     ${text}
                 </div>
