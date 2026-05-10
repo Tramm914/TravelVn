@@ -178,6 +178,7 @@ class ChatController
             $stmt = $this->db->query($sql);
 
         } else if ($role === 'guide') {
+            // ĐÃ SỬA: Lấy MAX(departure_id) của toàn bộ session để đảm bảo không bị rớt mất chat
             $sql = "SELECT 
                         m1.session_id, 
                         (SELECT sender_name FROM chat_messages WHERE session_id = m1.session_id ORDER BY message_id ASC LIMIT 1) AS sender_name, 
@@ -186,12 +187,17 @@ class ChatController
                         t.tour_name, 
                         (SELECT COUNT(*) FROM chat_messages WHERE session_id = m1.session_id AND is_read = 0 AND sender_type = 'customer') AS unread_count
                     FROM chat_messages m1
-                    JOIN (SELECT MAX(message_id) as last_id FROM chat_messages GROUP BY session_id) m2 ON m1.message_id = m2.last_id
-                    JOIN departures d ON m1.departure_id = d.departure_id
+                    JOIN (
+                        SELECT session_id, MAX(message_id) as last_id, MAX(departure_id) as active_dep_id 
+                        FROM chat_messages 
+                        GROUP BY session_id
+                    ) m2 ON m1.message_id = m2.last_id
+                    JOIN departures d ON m2.active_dep_id = d.departure_id
                     JOIN tours t ON d.tour_id = t.tour_id
                     JOIN departure_guides dg ON d.departure_id = dg.departure_id
                     WHERE dg.guide_id = ?
                     ORDER BY m1.created_at DESC";
+                    
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$userId]);
         } else {
