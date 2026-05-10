@@ -153,6 +153,20 @@ include 'layouts/header.php';
     .review-meta small { color: var(--tvlk-gray); font-size: 0.85rem; }
     .review-meta .stars i { color: #ffc107; font-size: 0.9rem; }
     .review-comment { color: #4a5568; line-height: 1.6; margin: 0; font-size: 0.95rem; }
+    .hero-rating {
+        background: rgba(0, 0, 0, 0.4); 
+        backdrop-filter: blur(8px); 
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white; 
+        padding: 6px 16px; 
+        border-radius: 50px; 
+        font-weight: 700; 
+        font-size: 0.9rem; 
+        display: inline-flex; 
+        align-items: center; 
+        gap: 5px;
+    }
+    .hero-rating i { color: #ffc107; } /* Màu vàng chuẩn cho sao */
 </style>
 
 <div class="container mt-3">
@@ -167,13 +181,18 @@ include 'layouts/header.php';
     ?>
     <div class="hero-detail" style="background-image: url('<?= $imgSrc ?>');">
         <div class="hero-content p-4 w-100">
-            <div class="location-badge">
-                <i class="bi bi-geo-alt-fill me-2"></i><?= htmlspecialchars($detail['destination']); ?>
+            <div class="d-flex flex-wrap gap-2">
+                <div class="location-badge">
+                    <i class="bi bi-geo-alt-fill me-2"></i><?= htmlspecialchars($detail['destination']); ?>
+                </div>
+                <div class="hero-rating">
+                    <i class="bi bi-star-fill"></i> <?= number_format($avgRating, 1) ?> 
+                    <span class="text-white-50 fw-normal ms-1">(<?= $totalReviews ?>)</span>
+                </div>
             </div>
             <h1 class="hero-title"><?= htmlspecialchars($detail['tour_name']); ?></h1>
         </div>
     </div>
-
     <div class="row g-4 mb-5">
         <div class="col-lg-8">
 
