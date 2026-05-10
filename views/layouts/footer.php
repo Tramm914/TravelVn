@@ -538,5 +538,14 @@
     }, 15000); 
 </script>
 </body>
-
+<script>
+    // Kiểm tra xem input ẩn có tồn tại không và gán giá trị departure_id vào
+    document.addEventListener("DOMContentLoaded", function() {
+        const chatDepInput = document.getElementById('chatDepartureId');
+        if (chatDepInput) {
+            // Thay $booking['departure_id'] bằng đúng tên biến bạn đang dùng ở trang này nhé
+            chatDepInput.value = '<?= $booking['departure_id'] ?? '' ?>';
+        }
+    });
+</script>
 </html>
