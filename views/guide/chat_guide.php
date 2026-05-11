@@ -93,6 +93,22 @@
         background: #f0f9ff;
         border-left: 4px solid var(--guide-primary) !important;
     }
+    /* CSS Xử lý Responsive cho màn hình nhỏ (Mobile/Tablet) */
+    @media (max-width: 767.98px) {
+        .chat-card { 
+            height: 85vh !important; /* Tăng không gian hiển thị trên mobile */
+        }
+        /* Cột danh sách khách hàng: Cho chiếm 35% chiều cao */
+        .chat-card .col-md-4 { 
+            height: 35% !important; 
+            border-right: none !important; 
+            border-bottom: 2px solid var(--guide-border) !important;
+        }
+        /* Cột khung chat: Cho chiếm 65% chiều cao còn lại */
+        .chat-card .col-md-8 { 
+            height: 65% !important; 
+        }
+    }
 </style>
 
 <div class="chat-container">
@@ -192,26 +208,33 @@
             });
     }
 
-    // 2. Mở khung chat chi tiết
-    function openChat(sessionId, senderName) {
+    // 2. Mở khung chat chi tiết (Đã nâng cấp Async/Await)
+    async function openChat(sessionId, senderName) {
         currentSessionId = sessionId;
-        document.getElementById('chatFooter').classList.remove('d-none');
-        document.getElementById('chatHeader').innerHTML = `<i class="bi bi-person-circle me-2 text-primary fs-5"></i> Đang hỗ trợ: <span class="ms-1">${senderName}</span>`;
+        document.getElementById('adminChatForm').classList.remove('d-none');
+        document.getElementById('chatHeader').innerHTML = `<i class="bi bi-person-circle me-2 text-primary"></i> Đang hỗ trợ: ${senderName}`;
         
-        // Gọi API đánh dấu đã đọc
-        fetch('guide.php?action=markAsRead&session_id=' + sessionId, { method: 'POST' });
+        try {
+            // 1. CHỜ API đánh dấu đã đọc xử lý XONG hoàn toàn trên Database
+            await fetch('guide.php?action=markAsRead&session_id=' + sessionId, { method: 'POST' });
 
-        fetch(`guide.php?action=getHistory&session_id=${sessionId}`)
-            .then(res => res.json())
-            .then(data => {
-                const body = document.getElementById('adminChatBody');
-                body.innerHTML = '';
-                data.forEach(msg => {
-                    appendMessageUI(msg.sender_type, msg.message);
-                });
-                body.scrollTop = body.scrollHeight;
-                loadSessions(); // Load lại để mất dấu đỏ
+            // 2. Sau khi đã lưu xong, mới lấy lịch sử tin nhắn
+            const res = await fetch(`guide.php?action=getHistory&session_id=${sessionId}`);
+            const data = await res.json();
+            
+            const body = document.getElementById('adminChatBody');
+            body.innerHTML = '';
+            data.forEach(msg => {
+                appendMessageUI(msg.sender_type, msg.message);
             });
+            body.scrollTop = body.scrollHeight;
+            
+            // 3. Tải lại danh sách khách hàng (Lúc này chắc chắn sẽ mất dấu đỏ)
+            loadSessions(); 
+            
+        } catch (error) {
+            console.error('Lỗi khi mở đoạn chat:', error);
+        }
     }
 
     // 3. Hiển thị tin nhắn lên UI
