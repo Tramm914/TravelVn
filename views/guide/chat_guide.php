@@ -16,7 +16,6 @@
         font-family: 'Plus Jakarta Sans', sans-serif; 
     }
 
-    /* Ẩn bong bóng chat của khách ở trang này */
     .chat-widget { display: none !important; }
 
     .chat-container {
@@ -40,7 +39,7 @@
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-    /* ====== CSS TIN NHẮN MỚI ====== */
+    /* CSS TIN NHẮN CÁCH LY */
     .guide-msg-bubble {
         max-width: 80%;
         padding: 12px 18px;
@@ -93,21 +92,16 @@
         background: #f0f9ff;
         border-left: 4px solid var(--guide-primary) !important;
     }
-    /* CSS Xử lý Responsive cho màn hình nhỏ (Mobile/Tablet) */
+    
+    /* CSS Xử lý Responsive Mobile */
     @media (max-width: 767.98px) {
-        .chat-card { 
-            height: 85vh !important; /* Tăng không gian hiển thị trên mobile */
-        }
-        /* Cột danh sách khách hàng: Cho chiếm 35% chiều cao */
+        .chat-card { height: 85vh !important; }
         .chat-card .col-md-4 { 
             height: 35% !important; 
             border-right: none !important; 
             border-bottom: 2px solid var(--guide-border) !important;
         }
-        /* Cột khung chat: Cho chiếm 65% chiều cao còn lại */
-        .chat-card .col-md-8 { 
-            height: 65% !important; 
-        }
+        .chat-card .col-md-8 { height: 65% !important; }
     }
 </style>
 
@@ -169,9 +163,9 @@
 <script>
     let currentSessionId = null;
 
-    // 1. Tải danh sách khách
     function loadSessions() {
-        fetch('guide.php?action=getSessions')
+        // Chống cache bằng timestamp
+        fetch('guide.php?action=getSessions&t=' + new Date().getTime())
             .then(res => res.json())
             .then(data => {
                 const list = document.getElementById('sessionList');
@@ -181,18 +175,15 @@
                 }
                 list.innerHTML = '';
                 data.forEach(s => {
-                    const isActive = s.session_id === currentSessionId ? 'bg-primary bg-opacity-10 border-start border-primary border-4' : '';
-                    
-                    // Thêm badge đếm số tin nhắn chưa đọc
+                    const isActive = s.session_id === currentSessionId ? 'active-session' : '';
                     const unreadBadge = (s.unread_count > 0 && s.session_id !== currentSessionId) 
                         ? `<span class="badge bg-danger rounded-pill" style="font-size: 0.65rem;">${s.unread_count}</span>` 
                         : '';
-                        
                     const msgStyle = (s.unread_count > 0 && s.session_id !== currentSessionId) ? 'fw-bold text-dark' : 'text-muted';
 
                     list.innerHTML += `
                         <button onclick="openChat('${s.session_id}', '${s.sender_name || 'Khách vãng lai'}')" 
-                                class="list-group-item list-group-item-action p-3 border-bottom ${isActive}" style="border:none">
+                                class="list-group-item list-group-item-action p-3 session-item ${isActive}">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <span class="fw-bold text-primary small text-truncate" style="max-width: 60%;">${s.sender_name || 'Khách vãng lai'}</span>
                                 <div class="d-flex align-items-center gap-1">
@@ -209,18 +200,15 @@
             });
     }
 
-    // 2. Mở khung chat chi tiết (Đã bảo mật Async/Await)
     async function openChat(sessionId, senderName) {
         currentSessionId = sessionId;
-        document.getElementById('adminChatForm').classList.remove('d-none');
+        document.getElementById('chatFooter').classList.remove('d-none'); // Mở khóa lớp vỏ bên ngoài
         document.getElementById('chatHeader').innerHTML = `<i class="bi bi-person-circle me-2 text-primary"></i> Đang hỗ trợ: ${senderName}`;
         
         try {
-            // Chờ API đánh dấu đã đọc lưu thành công
             await fetch('guide.php?action=markAsRead&session_id=' + sessionId, { method: 'POST' });
 
-            // Lấy lịch sử tin nhắn
-            const res = await fetch(`guide.php?action=getHistory&session_id=${sessionId}`);
+            const res = await fetch(`guide.php?action=getHistory&session_id=${sessionId}&t=` + new Date().getTime());
             const data = await res.json();
             
             const body = document.getElementById('adminChatBody');
@@ -230,15 +218,12 @@
             });
             body.scrollTop = body.scrollHeight;
             
-            // Xóa ngay dấu chấm đỏ bên danh sách
             loadSessions(); 
-            
         } catch (error) {
             console.error('Lỗi khi mở đoạn chat:', error);
         }
     }
 
-    // 3. Hiển thị tin nhắn lên UI
     function appendMessageUI(type, text) {
         const body = document.getElementById('adminChatBody');
         const isMe = (type !== 'customer'); 
@@ -252,7 +237,6 @@
         body.scrollTop = body.scrollHeight;
     }
 
-    // 4. Gửi tin nhắn trả lời
     async function adminSendMessage(e) {
         e.preventDefault();
         const input = document.getElementById('adminChatInput');
@@ -264,35 +248,27 @@
         formData.append('sender_type', 'guide');
         formData.append('session_id', currentSessionId);
 
-        // Ép chờ lưu thành công vào CSDL rồi mới vẽ lên để tránh lỗi rớt mạng
         await fetch('guide.php?action=sendMessage', { method: 'POST', body: formData });
         
         appendMessageUI('guide', msg);
         input.value = '';
-        
-        // Cập nhật lại danh sách để đẩy khách hàng này lên đầu
         loadSessions();
     }
 
-    // 5. Pusher Realtime (SỬA LỖI ĐỤNG BIẾN VỚI FOOTER)
-    // 👉 Lưu ý: Đã đổi tên biến thành guidePusher để cách ly an toàn
     var guidePusher = new Pusher('e5405b1b2139fed6f8bc', { 
         cluster: 'ap1',
-        forceTLS: true // Bắt buộc phải có để chạy trên Render (HTTPS)
+        forceTLS: true 
     });
     var guideChannel = guidePusher.subscribe('live-chat');
 
     guideChannel.bind('new-message', async function(data) {
-        // Chỉ in ra nếu đúng là Khách hàng đó nhắn
         if (data.session_id === currentSessionId && data.sender_type === 'customer') {
             appendMessageUI(data.sender_type, data.message);
             await fetch('guide.php?action=markAsRead&session_id=' + data.session_id, { method: 'POST' });
         }
-        // Gọi loadSessions để tin nhắn mới ngoi lên đầu danh sách
         loadSessions(); 
     });
 
-    // Khởi chạy khi load trang
     loadSessions();
 </script>
 
