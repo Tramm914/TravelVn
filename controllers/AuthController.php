@@ -58,7 +58,7 @@ class AuthController
                             ];
                             
                             // Đăng nhập xong -> Chuyển hướng qua trang Tours
-                            header("Location: index.php?action=tours");
+                            header("Location: index.php?action=home");
                             exit();
                         }
                         } else {
