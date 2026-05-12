@@ -181,7 +181,7 @@ if (!empty($bookings)) {
                                         </div>
                                         <div class="tour-group-meta">
                                             <span><i class="bi bi-calendar3 me-1 text-warning"></i> Khởi hành: <strong><?= date('d/m/Y', strtotime($group['start_date'])) ?></strong></span>
-                                            <span class="text-success"><i class="bi bi-cash-coin me-1"></i> Tạm tính: <strong><?= number_format($group['total_revenue']) ?> đ</strong> (Đã duyệt)</span>
+                                            
                                         </div>
                                     </div>
                                 </button>
